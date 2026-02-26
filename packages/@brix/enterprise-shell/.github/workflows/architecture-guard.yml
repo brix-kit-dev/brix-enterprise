@@ -1,0 +1,341 @@
+# ============================================================================
+# Architecture Guard CI - Comprehensive Architecture Validation
+# ============================================================================
+#
+# This CI pipeline enforces architectural rules from the Architecture Review
+# Checklist (附录C). Applicable checks for shinwa-platform are implemented here.
+#
+# ============================================================================
+# 附录C 可 CI 化检查项对照表
+# ============================================================================
+#
+# | ID        | Check                              | Implementation      |
+# |-----------|------------------------------------|--------------------|
+# | R7.1-R7.2 | Frontend layer import restrictions | ESLint rules       |
+# | BP3/OS9   | Build artifacts not in Git         | git ls-files       |
+# | BP4/OS1   | Secret leak detection              | gitleaks           |
+# | FS5       | No localStorage in plugin layer    | ESLint rules       |
+#
+# 【Shell Layer Architecture】
+# - Shell layer is pure "UI assembly layer" - no business logic
+# - Responsibilities: Layout, Theme, Navigation, Micro-frontend loading
+# - No data fetching, business calculations, state management (except UI state)
+# ============================================================================
+
+name: Architecture Guard
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # ========================================
+  # 🔐 BP4/OS1: Secret Leak Detection
+  # ========================================
+  secret-scan:
+    name: Secret Leak Scan (BP4/OS1)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # ========================================
+  # 📦 BP3/OS9: Build Artifacts Check
+  # ========================================
+  build-artifacts-check:
+    name: Build Artifacts Not in Git (BP3/OS9)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Check for committed build artifacts
+        run: |
+          echo "🔍 Checking for committed build artifacts..."
+          
+          found=false
+          
+          DIST_FILES=$(git ls-files | grep -E "^dist/|/dist/" || true)
+          if [ -n "$DIST_FILES" ]; then
+            echo "❌ Found dist/ files committed to Git"
+            found=true
+          fi
+          
+          NODE_MODULES=$(git ls-files | grep -E "^node_modules/|/node_modules/" || true)
+          if [ -n "$NODE_MODULES" ]; then
+            echo "❌ Found node_modules/ files committed to Git"
+            found=true
+          fi
+          
+          if [ "$found" = true ]; then
+            exit 1
+          else
+            echo "✅ No build artifacts found in Git"
+          fi
+
+  # ========================================
+  # ESLint 架构规则检查
+  # ========================================
+  eslint-check:
+    name: ESLint Architecture Rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm lint
+
+  # ========================================
+  # Shell 层架构检查
+  # ========================================
+  shell-architecture:
+    name: Shell Layer Architecture
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check No Business Logic in Shell
+        run: |
+          echo "🔍 检查 Shell 层是否包含业务逻辑..."
+          
+          # Shell 层不应包含业务特定的目录
+          BUSINESS_DIRS="booking identity products partners contracts"
+          
+          for shell in shinwa-platform-shell-web shinwa-platform-shell-mobile; do
+            if [ -d "$shell/src" ]; then
+              for biz in $BUSINESS_DIRS; do
+                if [ -d "$shell/src/$biz" ] || [ -d "$shell/src/features/$biz" ]; then
+                  echo "❌ $shell 包含业务目录: $biz"
+                  echo "    Shell 层不应包含业务特定代码"
+                  echo "FAILED=true" >> $GITHUB_ENV
+                fi
+              done
+            fi
+          done
+          
+          if [ "${FAILED:-}" = "true" ]; then
+            exit 1
+          else
+            echo "✅ Shell 层无业务特定目录"
+          fi
+
+      - name: Check No Repository/Service in Shell
+        run: |
+          echo "🔍 检查 Shell 层是否包含 Repository/Service..."
+          
+          for shell in shinwa-platform-shell-web shinwa-platform-shell-mobile; do
+            if [ -d "$shell/src" ]; then
+              # 检查是否有 repositories 或 services 目录
+              if [ -d "$shell/src/repositories" ] || [ -d "$shell/src/services" ]; then
+                echo "❌ $shell 包含数据访问层代码"
+                echo "    Shell 层不应包含 repositories/ 或 services/ 目录"
+                echo "FAILED=true" >> $GITHUB_ENV
+              fi
+              
+              # 检查文件名称
+              REPO_FILES=$(find "$shell/src" -name "*Repository*" -o -name "*Service*" 2>/dev/null | grep -v node_modules || true)
+              
+              if [ -n "$REPO_FILES" ]; then
+                echo "⚠️  $shell 包含疑似数据访问层文件:"
+                echo "$REPO_FILES"
+              fi
+            fi
+          done
+          
+          if [ "${FAILED:-}" = "true" ]; then
+            exit 1
+          else
+            echo "✅ Shell 层无 Repository/Service 代码"
+          fi
+
+      - name: Check Shell Dependencies
+        run: |
+          echo "🔍 检查 Shell 层依赖是否合规..."
+          
+          for shell in shinwa-platform-shell-web shinwa-platform-shell-mobile; do
+            if [ -f "$shell/package.json" ]; then
+              echo "检查 $shell 依赖..."
+              
+              # Shell 层不应直接依赖业务模块
+              BUSINESS_DEPS=$(cat "$shell/package.json" | grep -E '"@shinwa/app-|"@brix/app-' || true)
+              
+              if [ -n "$BUSINESS_DEPS" ]; then
+                echo "⚠️  $shell 直接依赖业务模块:"
+                echo "$BUSINESS_DEPS"
+                echo ""
+                echo "    Shell 层应通过模块联邦动态加载业务模块"
+              fi
+            fi
+          done
+
+  # ========================================
+  # 死代码检查
+  # ========================================
+  dead-code-check:
+    name: Dead Code Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Unused OAuth Files
+        run: |
+          echo "🔍 检查是否存在待清理的 OAuth 文件..."
+          
+          # 根据改造计划，以下文件应该被删除
+          DEAD_FILES=(
+            "shinwa-platform-shell-web/src/oauth/google/GoogleOAuthService.ts"
+            "shinwa-platform-shell-web/src/oauth/google/google-types.ts"
+          )
+          
+          for f in "${DEAD_FILES[@]}"; do
+            if [ -f "$f" ]; then
+              echo "⚠️  发现待清理文件: $f"
+              echo "    此文件在 v3.0.4 改造计划中标记为删除"
+            fi
+          done
+
+      - name: Check Empty Directories
+        run: |
+          echo "🔍 检查空目录..."
+          
+          # 查找空目录
+          EMPTY_DIRS=$(find . -type d -empty -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null || true)
+          
+          if [ -n "$EMPTY_DIRS" ]; then
+            echo "⚠️  发现空目录:"
+            echo "$EMPTY_DIRS"
+          else
+            echo "✅ 无空目录"
+          fi
+
+  # ========================================
+  # 文件复杂度门控
+  # ========================================
+  file-complexity:
+    name: File Complexity Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: TypeScript File Complexity
+        run: |
+          echo "🔍 检查 TypeScript 文件复杂度（阈值: 500 行）..."
+          
+          failed=false
+          
+          find . -name '*.ts' -o -name '*.tsx' | grep -v node_modules | grep '/src/' | while read f; do
+            LINES=$(wc -l < "$f")
+            
+            if [ "$LINES" -gt 500 ]; then
+              echo "❌ $f: $LINES 行"
+              failed=true
+            fi
+          done
+          
+          if [ "$failed" = true ]; then
+            echo ""
+            echo "⚠️  存在超过 500 行的文件，建议重构"
+            # 暂不强制失败，仅警告
+          else
+            echo "✅ 文件复杂度检查通过"
+          fi
+
+  # ========================================
+  # 循环依赖检测
+  # ========================================
+  circular-deps:
+    name: Circular Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install madge
+        run: pnpm add -g madge
+
+      - name: Check Circular Dependencies
+        run: |
+          echo "🔍 检查循环依赖..."
+          
+          for shell in shinwa-platform-shell-web shinwa-platform-shell-mobile; do
+            if [ -d "$shell/src" ]; then
+              echo "检查 $shell..."
+              madge --circular --extensions ts,tsx "$shell/src" || true
+            fi
+          done
+
+  # ========================================
+  # 📋 Architecture Guard Summary
+  # ========================================
+  guard-summary:
+    name: Architecture Guard Summary
+    runs-on: ubuntu-latest
+    needs: [secret-scan, build-artifacts-check, eslint-check, shell-architecture]
+    if: always()
+    steps:
+      - name: Check all jobs
+        run: |
+          echo "============================================"
+          echo "Architecture Guard - 附录C 检查结果汇总"
+          echo "============================================"
+          echo ""
+          echo "| Check ID   | Job                     | Status |"
+          echo "|------------|-------------------------|--------|"
+          echo "| BP4/OS1    | Secret Leak Scan        | ${{ needs.secret-scan.result }} |"
+          echo "| BP3/OS9    | Build Artifacts Check   | ${{ needs.build-artifacts-check.result }} |"
+          echo "| R7.1-R7.2  | ESLint Rules            | ${{ needs.eslint-check.result }} |"
+          echo "| Shell      | Shell Architecture      | ${{ needs.shell-architecture.result }} |"
+          echo ""
+          
+          # Check if any job failed
+          if [ "${{ needs.secret-scan.result }}" = "failure" ] || \
+             [ "${{ needs.build-artifacts-check.result }}" = "failure" ] || \
+             [ "${{ needs.eslint-check.result }}" = "failure" ] || \
+             [ "${{ needs.shell-architecture.result }}" = "failure" ]; then
+            echo "❌ Some architecture checks failed. Please fix before merging."
+            exit 1
+          else
+            echo "✅ All architecture checks passed!"
+          fi

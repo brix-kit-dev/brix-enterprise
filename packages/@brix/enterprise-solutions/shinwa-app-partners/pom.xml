@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Shinwa App - Partners 合作伙伴管理模块
+  
+  基于 Runtime Shell v3.0 Capability Contract 架构重构
+  原 plugin-partner-catalog 模块迁移而来
+  
+  端口规划：
+  - 后端服务: 8084
+  - Web UI: 3004
+  - Mobile UI: 4004
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.shinwa.solutions</groupId>
+        <artifactId>shinwa-solutions-parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>shinwa-app-partners</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Shinwa App - Partners</name>
+    <description>合作伙伴管理模块 - 管理医院、酒店、交通、翻译等合作方信息</description>
+
+    <!-- =====================================================
+         模块聚合（v3.0 三层架构）
+         - api: 服务契约定义（DTO、Service 接口）
+         - core: 核心实现（实体、仓储、服务实现）
+         - server: HTTP 控制器与自动配置
+         ===================================================== -->
+    <modules>
+        <module>partners-api</module>
+        <module>partners-core</module>
+        <module>partners-server</module>
+    </modules>
+
+</project>

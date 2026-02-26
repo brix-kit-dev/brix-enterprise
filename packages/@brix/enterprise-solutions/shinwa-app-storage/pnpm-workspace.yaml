@@ -1,0 +1,6 @@
+# pnpm 工作空间配置
+# v3.0 Manifest-Driven 架构 - storage 应用工作空间
+
+packages:
+  - 'storage-shared'
+  - 'storage-ui-web'

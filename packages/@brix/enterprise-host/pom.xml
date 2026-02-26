@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2026 Brix Authors
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.brix.host</groupId>
+    <artifactId>host-assembly</artifactId>
+    <version>3.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Brix Host Assembly</name>
+    <description>
+        Brix Host Assembly - 运行壳组装层
+        
+        提供两种 Host 模式：
+        - host-standalone：独立产品模式，完整能力组装
+        - host-embedded：嵌入模式，轻量级能力组装
+        
+        Host 层职责：
+        1. 组装 RuntimeContext 实现
+        2. 集成基础设施适配器
+        3. 提供 Spring Boot 自动配置
+    </description>
+    <url>https://github.com/aspect-brix/host-assembly</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <modules>
+        <!-- ========== 运行壳（能力组装 + 可运行）========== -->
+        <module>host-shell-standalone</module>
+        <module>host-shell-embedded</module>
+        <!-- 前端运行壳 -->
+        <module>host-shell-standalone-web</module>
+    </modules>
+
+    <properties>
+        <!-- 编译配置 -->
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Spring Boot 版本 -->
+        <spring-boot.version>3.2.1</spring-boot.version>
+
+        <!-- Brix 组件版本 -->
+        <runtime-sdk.version>3.1.0-SNAPSHOT</runtime-sdk.version>
+        <infra-adapters.version>3.1.0-SNAPSHOT</infra-adapters.version>
+        <!-- 【4.5 修复】platform-common/platform-common-starter 版本从 1.0.0-SNAPSHOT 升至 3.0.0-SNAPSHOT，与全平台统一 -->
+        <platform-commons.version>3.0.0-SNAPSHOT</platform-commons.version>
+
+        <!-- 日志版本 -->
+        <slf4j.version>2.0.9</slf4j.version>
+
+        <!-- 测试版本 -->
+        <junit.version>5.10.1</junit.version>
+        <mockito.version>5.8.0</mockito.version>
+        <assertj.version>3.24.2</assertj.version>
+
+        <!-- Maven 插件版本 -->
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot BOM -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Runtime SDK -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-sdk-api</artifactId>
+                <version>${runtime-sdk.version}</version>
+            </dependency>
+            <!--
+            【9.4 修复】移除 runtime-sdk 幽灵依赖
+            runtime-sdk 模块已废弃并合并到 runtime-sdk-api，
+            BOM 中声明但无任何子模块引用，属于无效声明。
+            -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-manifest</artifactId>
+                <version>${runtime-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-orchestrator</artifactId>
+                <version>${runtime-sdk.version}</version>
+            </dependency>
+
+            <!-- Infrastructure Adapters -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-kafka-core</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-redis</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-simple</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-webhook</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-otel</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-fallback</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-database</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-minio</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <!-- Kafka Outbox 模块（事务性事件发布，作为 Kafka 的子模块） -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-kafka-outbox</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+
+            <!-- Platform Commons -->
+            <dependency>
+                <groupId>io.brix.platform</groupId>
+                <artifactId>platform-common-starter</artifactId>
+                <version>${platform-commons.version}</version>
+            </dependency>
+
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+
+            <!-- Testing -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Architecture Guard（架构红线守护） -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>architecture-guard</artifactId>
+                <version>3.1.0-SNAPSHOT</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
+                    <configuration>
+                        <charset>UTF-8</charset>
+                        <encoding>UTF-8</encoding>
+                        <docencoding>UTF-8</docencoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

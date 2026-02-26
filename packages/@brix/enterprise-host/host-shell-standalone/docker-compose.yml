@@ -1,0 +1,235 @@
+# ============================================================
+# Shinwa Platform - 产品模式 Docker Compose
+# ============================================================
+# 
+# 用途：完整产品模式部署，包含所有基础设施依赖
+# 模块：host-shell-standalone
+#
+# 启动命令：
+#   docker compose up -d            # 核心服务（host-shell, postgres, kafka, redis）
+#   docker compose --profile full up -d  # 完整服务（含可观测性组件）
+#
+# 停止命令：
+#   docker compose down
+#
+# 查看日志：
+#   docker compose logs -f host-shell
+#
+# Profiles:
+#   - (default): 核心服务 - host-shell, postgres, kafka, redis
+#   - full: 完整服务 - 包含 otel-collector, jaeger, prometheus, grafana
+#
+# ============================================================
+
+services:
+  # ============================================================
+  # 运行壳（产品模式）
+  # ============================================================
+  host-shell:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shinwa-host-shell-standalone
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=standalone
+      - DEBUG=false
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/shinwa
+      - SPRING_DATASOURCE_USERNAME=shinwa
+      # 🔴 安全警告：密码通过 .env 文件或 secrets 管理
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - REDIS_HOST=redis
+      - DB_HOST=postgres
+      - DB_NAME=shinwa
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      # Brix Kafka EventBus 配置（brix.infra.kafka.bootstrap-servers）
+      - BRIX_INFRA_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=host-shell-standalone
+      # Google OAuth2 配置（key 转换规则: identity.oauth2.google.client-id → IDENTITY_OAUTH2_GOOGLE_CLIENT_ID）
+      - IDENTITY_OAUTH2_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-1072922092148-0fqe1j87ktsdb8b4oqtf2ormhu8o5mqt.apps.googleusercontent.com}
+      - IDENTITY_OAUTH2_GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-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}
+      # Fallback Auth 配置（standalone 模式下启用 fallback 认证能力）
+      - BRIX_FALLBACK_AUTH_ENABLED=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - shinwa-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================================
+  # PostgreSQL 数据库
+  # ============================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: shinwa-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=shinwa
+      - POSTGRES_USER=shinwa
+      # 🔴 安全警告：密码通过 .env 文件或 secrets 管理
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shinwa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shinwa -d shinwa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Apache Kafka（消息总线 - KRaft 模式，无需 ZooKeeper）
+  # ============================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: shinwa-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # KRaft 模式配置（无需 ZooKeeper）
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # 集群 ID（KRaft 必需，固定值用于开发环境）
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - shinwa-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ============================================================
+  # Redis（状态存储 & 缓存）
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: shinwa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - shinwa-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # OpenTelemetry Collector（可观测性）
+  # Profile: full - 非核心服务，可选部署
+  # ============================================================
+  otel-collector:
+    profiles: ["full"]
+    image: otel/opentelemetry-collector-contrib:0.88.0
+    container_name: shinwa-otel-collector
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics (collector)
+      - "8889:8889"   # Prometheus exporter
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    networks:
+      - shinwa-network
+
+  # ============================================================
+  # Jaeger（分布式追踪）
+  # Profile: full - 非核心服务，可选部署
+  # ============================================================
+  jaeger:
+    profiles: ["full"]
+    image: jaegertracing/all-in-one:1.51
+    container_name: shinwa-jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14250:14250"  # gRPC
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - shinwa-network
+
+  # ============================================================
+  # Prometheus（指标采集）
+  # Profile: full - 非核心服务，可选部署
+  # ============================================================
+  prometheus:
+    profiles: ["full"]
+    image: prom/prometheus:v2.47.0
+    container_name: shinwa-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - shinwa-network
+
+  # ============================================================
+  # Grafana（可视化仪表盘）
+  # Profile: full - 非核心服务，可选部署
+  # ============================================================
+  grafana:
+    profiles: ["full"]
+    image: grafana/grafana:10.2.0
+    container_name: shinwa-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      # 🔴 安全警告：密码通过 .env 文件或 secrets 管理
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - shinwa-network
+
+networks:
+  shinwa-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+  prometheus_data:
+  grafana_data:

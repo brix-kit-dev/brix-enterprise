@@ -1,0 +1,78 @@
+# ===========================================================
+# shinwa-app-contracts 模块声明文件
+# v3.0 Runtime Shell 架构
+# ===========================================================
+
+module:
+  id: shinwa-app-contracts
+  version: 3.0.0-SNAPSHOT
+  name: 合同管理
+  vendor: Shinwa Solutions
+  description: |
+    合同管理模块，提供合同模板、合同生成、电子签章、合同归档等功能。
+    支持合同审批流程和到期提醒。
+
+# 模块结构
+structure:
+  api: contracts-api
+  core: contracts-core
+  server: contracts-server
+
+lifecycle:
+  startup-order: 100
+  # 事件消费者需声明事件源模块的依赖
+  dependencies:
+    - shinwa-app-storage   # 依赖存储模块存放合同文件
+    - shinwa-app-partners  # PartnerApprovedEvent 事件源
+
+capabilities:
+  required:
+    - EventBusCapability
+    - StateStoreCapability
+    - AuthContextCapability
+    - ObservabilityCapability
+    - ConfigStoreCapability
+
+  optional:
+    - LockCapability
+    # SchedulingCapability 已移除：待合同到期提醒功能实现后再添加
+
+events:
+  publishes:
+    - name: ContractCreatedEvent
+      description: 合同创建事件
+    - name: ContractSignedEvent
+      description: 合同签署完成事件
+    - name: ContractExpiredEvent
+      description: 合同到期事件
+    - name: ContractTerminatedEvent
+      description: 合同终止事件
+
+  subscribes:
+    - name: PartnerApprovedEvent
+      handler: com.shinwa.app.contracts.event.PartnerApprovedEventHandler#onPartnerApproved
+      description: 合作伙伴审核通过时生成合同
+
+permissions:
+  - id: "contract:read"
+    description: 查看合同
+  - id: "contract:create"
+    description: 创建合同
+  - id: "contract:sign"
+    description: 签署合同
+  - id: "contract:terminate"
+    description: 终止合同
+  - id: "contract:admin"
+    description: 合同管理
+
+config:
+  - key: "contract.expiry-reminder-days"
+    description: 到期提醒提前天数
+    default: "30"
+  - key: "contract.template-cache-ttl"
+    description: 模板缓存时间（秒）
+    default: "3600"
+
+# 端口配置
+ports:
+  server: 8090

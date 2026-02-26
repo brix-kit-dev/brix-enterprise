@@ -1,0 +1,112 @@
+# ===========================================================
+# shinwa-app-storage 模块声明文件
+# v3.0 Runtime Shell 架构
+# ===========================================================
+
+module:
+  id: shinwa-app-storage
+  version: 3.0.0-SNAPSHOT
+  name: 文件存储
+  vendor: Shinwa Solutions
+  license: Commercial
+  description: |
+    统一文件存储服务，支持多种存储后端（Local/MinIO/S3）。
+    提供文件上传、下载、删除、Pre-signed URL 等能力。
+    支持头像上传、附件管理等业务场景。
+
+# 模块结构
+structure:
+  api: storage-api
+  core: storage-core
+  server: storage-server
+
+lifecycle:
+  startup-order: 50  # 存储服务优先启动
+  dependencies: []
+
+capabilities:
+  required:
+    - EventBusCapability
+    - StateStoreCapability
+    - AuthContextCapability
+    - ObservabilityCapability
+    - ConfigStoreCapability
+
+  optional:
+    - LockCapability  # 用于并发上传控制
+
+events:
+  publishes:
+    - name: FileUploadedEvent
+      description: 文件上传完成事件
+      payload:
+        fileId: string
+        storagePath: string
+        contentType: string
+        fileSize: long
+        uploaderId: string
+    - name: FileDeletedEvent
+      description: 文件删除事件
+      payload:
+        fileId: string
+        storagePath: string
+    - name: AvatarUploadedEvent
+      description: 头像上传完成事件
+      payload:
+        userId: string
+        avatarUrl: string
+        thumbnails: object
+
+  subscribes:
+    - name: UserDeletedEvent
+      handler: com.shinwa.app.storage.event.UserDeletedEventHandler#onUserDeleted
+      description: 用户删除时清理关联文件
+
+permissions:
+  - id: "storage:upload"
+    description: 文件上传权限
+  - id: "storage:download"
+    description: 文件下载权限
+  - id: "storage:delete"
+    description: 文件删除权限
+  - id: "storage:admin"
+    description: 存储管理权限
+
+config:
+  - key: "storage.type"
+    description: 存储类型 (local/minio)
+    default: "local"
+  - key: "storage.max-file-size"
+    description: 最大文件大小（MB）
+    default: "50"
+  - key: "storage.avatar.max-size"
+    description: 头像最大大小（KB）
+    default: "500"
+  - key: "storage.avatar.thumbnails"
+    description: 头像缩略图尺寸
+    default: "48,128,256"
+
+# 端口配置
+ports:
+  server: 8086
+
+# ===== 容错配置 =====
+resilience:
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50
+    wait-duration-in-open-state: 30000
+    
+  retry:
+    max-attempts: 3
+    backoff-multiplier: 2.0
+    initial-interval: 1000
+    dlq:
+      enabled: true
+      topic: "storage.events.dlq"
+      retention-days: 7
+
+# ===== 健康检查 =====
+health:
+  enabled: true
+  include-details: true

@@ -1,0 +1,98 @@
+# ===========================================================
+# shinwa-app-products 模块声明文件
+# v3.0 Runtime Shell 架构
+# ===========================================================
+
+module:
+  id: shinwa-app-products
+  version: 3.0.0-SNAPSHOT
+  name: 产品管理
+  vendor: Shinwa Solutions
+  license: Commercial
+  description: |
+    产品管理模块，提供产品目录、SKU、库存、定价等管理功能。
+    支持多租户产品隔离和灵活的定价策略。
+
+# 模块结构
+structure:
+  api: products-api
+  core: products-core
+  server: products-server
+
+lifecycle:
+  startup-order: 80
+  dependencies: []
+
+capabilities:
+  required:
+    - EventBusCapability
+    - StateStoreCapability
+    - AuthContextCapability
+    - ObservabilityCapability
+    - ConfigStoreCapability
+
+  optional:
+    - LockCapability  # 用于库存并发控制
+
+events:
+  publishes:
+    - name: ProductCreatedEvent
+      description: 产品创建事件
+    - name: ProductUpdatedEvent
+      description: 产品更新事件
+    - name: ProductStatusChangedEvent
+      description: 产品状态变更事件
+    - name: InventoryChangedEvent
+      description: 库存变更事件
+    - name: PriceChangedEvent
+      description: 价格变更事件
+
+  subscribes:
+    - name: OrderCreatedEvent
+      handler: com.shinwa.app.products.event.OrderCreatedEventHandler#onOrderCreated
+      description: 订单创建时扣减库存
+
+permissions:
+  - id: "product:read"
+    description: 查看产品信息
+  - id: "product:create"
+    description: 创建产品
+  - id: "product:update"
+    description: 更新产品
+  - id: "product:delete"
+    description: 删除产品
+  - id: "product:inventory"
+    description: 库存管理
+
+config:
+  - key: "product.low-stock-threshold"
+    description: 低库存预警阈值
+    default: "10"
+  - key: "product.cache-ttl"
+    description: 产品缓存时间（秒）
+    default: "300"
+
+# 端口配置
+ports:
+  server: 8088
+
+# ===== 容错配置 =====
+resilience:
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50
+    wait-duration-in-open-state: 30000
+    
+  retry:
+    max-attempts: 3
+    backoff-multiplier: 2.0
+    initial-interval: 1000
+    dlq:
+      enabled: true
+      topic: "products.events.dlq"
+      retention-days: 7
+
+# ===== 健康检查 =====
+health:
+  enabled: true
+  include-details: true

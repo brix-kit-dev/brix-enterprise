@@ -1,0 +1,93 @@
+# ===========================================================
+# shinwa-app-partners 模块声明文件
+# v3.0 Runtime Shell 架构
+# ===========================================================
+
+module:
+  id: shinwa-app-partners
+  version: 3.0.0-SNAPSHOT
+  name: 合作伙伴管理
+  vendor: Shinwa Solutions
+  license: Commercial
+  description: |
+    合作伙伴管理模块，提供合作伙伴注册、审核、等级管理等功能。
+    支持多级合作伙伴体系和佣金结算。
+
+# 模块结构
+structure:
+  api: partners-api
+  core: partners-core
+  server: partners-server
+
+lifecycle:
+  startup-order: 100
+  dependencies:
+    - shinwa-app-identity  # 依赖身份认证模块
+
+capabilities:
+  required:
+    - EventBusCapability
+    - StateStoreCapability
+    - AuthContextCapability
+    - ObservabilityCapability
+    - ConfigStoreCapability
+
+  optional:
+    - LockCapability
+
+events:
+  publishes:
+    - name: PartnerCreatedEvent
+      description: 合作伙伴创建事件
+    - name: PartnerApprovedEvent
+      description: 合作伙伴审核通过事件
+    - name: PartnerLevelChangedEvent
+      description: 合作伙伴等级变更事件
+
+  subscribes:
+    - name: UserCreatedEvent
+      handler: com.shinwa.app.partners.event.UserCreatedEventHandler#onUserCreated
+      description: 用户创建时检查是否为合作伙伴邀请
+
+permissions:
+  - id: "partner:read"
+    description: 查看合作伙伴信息
+  - id: "partner:create"
+    description: 创建合作伙伴
+  - id: "partner:approve"
+    description: 审核合作伙伴
+  - id: "partner:admin"
+    description: 合作伙伴管理
+
+config:
+  - key: "partner.approval-required"
+    description: 是否需要审核
+    default: "true"
+  - key: "partner.default-level"
+    description: 默认合作伙伴等级
+    default: "1"
+
+# 端口配置
+ports:
+  server: 8089
+
+# ===== 容错配置 =====
+resilience:
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50
+    wait-duration-in-open-state: 30000
+    
+  retry:
+    max-attempts: 3
+    backoff-multiplier: 2.0
+    initial-interval: 1000
+    dlq:
+      enabled: true
+      topic: "partners.events.dlq"
+      retention-days: 7
+
+# ===== 健康检查 =====
+health:
+  enabled: true
+  include-details: true

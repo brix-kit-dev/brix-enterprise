@@ -1,0 +1,44 @@
+﻿{
+  "name": "@brix/enterprise-monorepo",
+  "version": "3.1.0",
+  "private": true,
+  "description": "Brix Enterprise - Commercial Extensions (PROPRIETARY)",
+  "keywords": [
+    "brix",
+    "enterprise",
+    "commercial",
+    "proprietary"
+  ],
+  "author": "Brix Platform Authors",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.example.com:brix/brix-enterprise.git"
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean && rimraf node_modules",
+    "typecheck": "pnpm -r run typecheck",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "release": "pnpm build && pnpm changeset:publish",
+    "prepare": "echo 'Brix Enterprise workspace ready'"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "@types/node": "^20.10.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

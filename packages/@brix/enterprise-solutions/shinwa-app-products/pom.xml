@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ========================================================================
+  Shinwa App - Products（产品套餐模块）
+  ========================================================================
+  
+  v3.0 业务模块迁移：从 plugin-service-package 迁移而来
+  
+  模块结构：
+  - products-api: API定义（DTO、枚举、服务接口）
+  - products-core: 核心实现（实体、仓储、服务实现）
+  - products-server: 服务器配置（控制器、自动配置）
+  - products-ui-web: Web UI（React + MUI）
+  - products-ui-mobile: Mobile UI（React Native + Paper）
+  
+  改造要点：
+  - 使用 RuntimeContext 获取能力契约
+  - 符合 v3.0 Capability Contract 架构
+  - 端口规划：8085 (server) / 3005 (web) / 4005 (mobile)
+  
+  @author Shinwa Platform Team
+  @since 3.0.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.shinwa.solutions</groupId>
+        <artifactId>shinwa-solutions-parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>shinwa-app-products</artifactId>
+    <packaging>pom</packaging>
+    
+    <name>Shinwa App - Products</name>
+    <description>产品套餐模块 - v3.0 业务模块（从 plugin-service-package 迁移）</description>
+
+    <!-- =====================================================
+         子模块聚合
+         ===================================================== -->
+    <modules>
+        <module>products-api</module>
+        <module>products-core</module>
+        <module>products-server</module>
+        <!-- UI 模块通过 npm 管理，不在 Maven 构建中 -->
+    </modules>
+
+    <!-- =====================================================
+         模块通用依赖
+         ===================================================== -->
+    <dependencies>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+</project>

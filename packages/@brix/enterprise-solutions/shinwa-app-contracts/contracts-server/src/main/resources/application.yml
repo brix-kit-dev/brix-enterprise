@@ -1,0 +1,60 @@
+# =====================================================
+# 合同管理服务配置
+# =====================================================
+server:
+  port: 8087
+
+spring:
+  application:
+    name: contracts-server
+
+  # 数据源配置
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shinwa_contracts
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      pool-name: ContractsHikariPool
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+
+# =====================================================
+# 日志配置
+# =====================================================
+logging:
+  level:
+    root: INFO
+    com.shinwa.app.contracts: DEBUG
+    org.hibernate.SQL: DEBUG
+
+# =====================================================
+# Actuator配置
+# =====================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

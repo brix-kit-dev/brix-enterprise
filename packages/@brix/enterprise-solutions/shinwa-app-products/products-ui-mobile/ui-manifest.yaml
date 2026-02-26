@@ -1,0 +1,65 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 产品模块 Mobile UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-31
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "products"
+  name: "产品"
+  version: "3.0.0"
+  description: "产品套餐展示"
+  vendor: "Shinwa Solutions"
+  icon: "shopping-bag"
+  category: "business"
+  platform: "mobile"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】使用 PageId 而非 screen name，与 Web 统一
+# ============================================================================
+pages:
+  # -------------------- 产品列表 --------------------
+  - pageId: "products:list"
+    component: "./screens/ProductListScreen"
+    title: "产品列表"
+    titleKey: "products.page.list.title"
+    permission: "products:read"
+
+  # -------------------- 产品详情 --------------------
+  - pageId: "products:detail"
+    component: "./screens/ProductDetailScreen"
+    title: "产品详情"
+    titleKey: "products.page.detail.title"
+    permission: "products:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+
+# ============================================================================
+# 导航配置
+# ============================================================================
+navigation:
+  tab:
+    name: "产品"
+    icon: "shopping-bag"
+    pageId: "products:list"
+    order: 3
+
+# ============================================================================
+# 依赖配置
+# ============================================================================
+dependencies:
+  api:
+    baseUrl: "/api/v1/products"
+    version: "v1"

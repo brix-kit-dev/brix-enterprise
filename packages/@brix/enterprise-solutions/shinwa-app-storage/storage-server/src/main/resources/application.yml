@@ -1,0 +1,72 @@
+# =====================================================
+# Storage Module - 文件存储模块配置
+# =====================================================
+# 端口: 8086
+# =====================================================
+
+server:
+  port: 8086
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: storage-service
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2MB
+
+  # JPA 配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# =====================================================
+# 存储配置
+# =====================================================
+storage:
+  # 存储类型: local / minio
+  type: local
+  
+  # 本地存储配置
+  local:
+    base-path: ./data/files
+    base-url: http://localhost:8086/files
+  
+  # MinIO 存储配置（生产环境）
+  minio:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket: shinwa-files
+
+# =====================================================
+# 文件类型限制
+# =====================================================
+file:
+  # 允许的文件类型
+  allowed-types:
+    - image/jpeg
+    - image/png
+    - image/gif
+    - image/webp
+    - application/pdf
+    - application/msword
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.ms-excel
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - text/plain
+    - video/mp4
+    - video/quicktime
+  
+  # 最大文件大小（字节）
+  max-size: 104857600  # 100MB

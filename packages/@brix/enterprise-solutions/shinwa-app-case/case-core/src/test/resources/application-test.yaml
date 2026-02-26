@@ -1,0 +1,83 @@
+# ============================================================================
+# Case Module Test Configuration
+# ============================================================================
+# Integration test configuration for Case module E2E tests.
+# Uses H2 in-memory database for test isolation.
+#
+# Author: Shinwa Team
+# Version: 3.0.0-SNAPSHOT
+# Date: 2026-02-24
+# ============================================================================
+
+spring:
+  application:
+    name: case-test
+
+  # ----- Database Configuration -----
+  # H2 in-memory database for test isolation
+  datasource:
+    url: jdbc:h2:mem:case_test_db;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # ----- JPA Configuration -----
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # ----- H2 Console (for debugging) -----
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# ============================================================================
+# Runtime Context Mock Configuration
+# ============================================================================
+# For integration tests, we use mock implementations of RuntimeContext
+# capabilities to isolate tests from external infrastructure.
+
+runtime:
+  context:
+    # Mock tenant ID for test isolation
+    tenant-id: test-tenant
+    
+    # Mock authentication context
+    auth:
+      enabled: false
+      mock-user-id: test-user
+      mock-roles:
+        - ROLE_ADMIN
+        - ROLE_USER
+    
+    # Mock event bus (in-memory for tests)
+    eventbus:
+      type: in-memory
+      
+    # Mock observability
+    observability:
+      metrics-enabled: false
+      tracing-enabled: false
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+logging:
+  level:
+    root: WARN
+    com.shinwa.app.casemanagement: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# ============================================================================
+# Server Configuration
+# ============================================================================
+server:
+  port: 0  # Random port for parallel test execution

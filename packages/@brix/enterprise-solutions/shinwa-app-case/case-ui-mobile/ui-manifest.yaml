@@ -1,0 +1,68 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest — Case 模块 Mobile UI 声明清单
+#
+# 由 @brix/create-brix 2026-02-23 自动生成
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0-SNAPSHOT
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "case"
+  name: "Case 模块"
+  version: "3.0.0-SNAPSHOT"
+  description: "Brix Platform v3.0 业务应用模块"
+  vendor: "Shinwa Solutions"
+  platform: "mobile"
+
+# ============================================================================
+# 页面声明（React Native）
+# ============================================================================
+pages:
+  # 列表页
+  - id: "case-list"
+    name: "Case 模块列表"
+    component: "./pages/CaseList"
+    route: "/case"
+    icon: "list"
+    navigation:
+      showInMenu: true
+      menuOrder: 100
+
+  # 详情页
+  - id: "case-detail"
+    name: "Case 模块详情"
+    component: "./pages/CaseDetail"
+    route: "/case/:id"
+    navigation:
+      showInMenu: false
+
+# ============================================================================
+# 能力依赖声明
+# ============================================================================
+capabilities:
+  required:
+    - HttpCapability       # HTTP 请求能力
+    - AuthContextCapability  # 认证上下文能力
+    - NavigationCapability   # 导航能力
+  optional:
+    - StorageCapability      # 本地存储能力
+    - NotificationCapability # 通知能力
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "case:list:view"
+    name: "查看Case 模块列表"
+    description: "允许查看Case 模块列表"
+  - code: "case:detail:view"
+    name: "查看Case 模块详情"
+    description: "允许查看Case 模块详情"

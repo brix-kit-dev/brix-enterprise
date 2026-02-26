@@ -1,0 +1,5 @@
+# pnpm 工作空间配置
+# v3.0 Manifest-Driven 架构 - contracts 应用工作空间
+
+packages:
+  - 'contracts-shared'

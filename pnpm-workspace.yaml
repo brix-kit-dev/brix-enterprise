@@ -1,0 +1,53 @@
+﻿# Brix Enterprise Monorepo Workspace Configuration
+#
+# PROPRIETARY AND CONFIDENTIAL
+# This file defines the workspace packages for the enterprise monorepo.
+#
+# CRITICAL DEPENDENCY RULE:
+# - Enterprise packages use version numbers (e.g., @brix/runtime-core@3.1.0)
+#   to depend on Core packages
+# - NEVER use workspace:* for cross-repo dependencies
+# - workspace:* is ONLY for internal enterprise package references
+#
+# Architecture Layer: Build Infrastructure
+# License: Proprietary
+# Version: 3.1.0
+# ============================================================================
+
+packages:
+  # ==================== Enterprise Packages ====================
+  # Enterprise Host - Production capability orchestration
+  - 'packages/@brix/enterprise-host'
+  - 'packages/@brix/enterprise-host/*'
+  
+  # Enterprise Solutions - Business application plugins
+  - 'packages/@brix/enterprise-solutions'
+  - 'packages/@brix/enterprise-solutions/*'
+  
+  # Enterprise Shell - Commercial UI components
+  - 'packages/@brix/enterprise-shell'
+  - 'packages/@brix/enterprise-shell/*'
+  
+  # ==================== Examples ====================
+  - 'examples/*'
+
+# ============================================================================
+# Catalog (pnpm 8.6+) - Shared dependency versions
+# ============================================================================
+catalog:
+  # Build Tools
+  typescript: ^5.3.0
+  tsup: ^8.0.1
+  vite: ^5.0.0
+  vitest: ^1.2.0
+  
+  # Code Quality
+  eslint: ^8.56.0
+  prettier: ^3.2.0
+  
+  # React Ecosystem
+  react: ^18.3.0
+  react-dom: ^18.3.0
+  
+  # Release Management
+  "@changesets/cli": ^2.27.1

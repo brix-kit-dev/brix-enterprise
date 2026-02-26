@@ -1,0 +1,201 @@
+# ===========================================================
+# shinwa-app-intake Module Manifest
+# 
+# This file defines module metadata, capability requirements,
+# event declarations, and configuration for the Runtime Shell.
+# 
+# The Runtime Shell uses this manifest for:
+# - Capability injection
+# - Event routing
+# - Configuration binding
+# - Permission validation
+# - Lifecycle management (startup/shutdown ordering)
+# 
+# Architecture: v3.0.4 Runtime Shell Design Blueprint
+# Version: 3.0.0-SNAPSHOT
+# Date: 2026-02-24
+# ===========================================================
+
+# ===== Module Basic Information =====
+module:
+  # Unique module identifier (matches Maven artifactId)
+  id: shinwa-app-intake
+  # Module version (semantic versioning)
+  version: 3.0.0-SNAPSHOT
+  # Display name for UI/admin console
+  name: Medical Intake
+  # Module vendor
+  vendor: Shinwa Solutions
+  # License type
+  license: Commercial
+  # Module description
+  description: |
+    Medical Intake Module - Document Collection and Review Management
+    
+    Provides comprehensive intake functionality including:
+    - Intake task creation and assignment
+    - Document checklist definition and tracking
+    - Customer document submission interface
+    - Staff document review interface
+    - Intake status tracking and notifications
+    - Integration with Case module for case processing
+
+# ===== Lifecycle Configuration =====
+lifecycle:
+  # Startup priority (lower number starts first)
+  # 50: Infrastructure modules (gateway, identity)
+  # 100: Core business modules
+  # 150: Standard business modules
+  startup-order: 150
+  
+  # Dependencies on other modules (must start before this module)
+  dependencies:
+    - shinwa-app-identity    # User authentication and authorization
+
+# ===== Capability Requirements =====
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - EventBusCapability      # Event publishing for workflow triggers
+    - AuthContextCapability   # Authentication context for user/tenant info
+    - ObservabilityCapability # Logging, metrics, and tracing
+    - ConfigStoreCapability   # Module configuration retrieval
+
+  # Optional capabilities (module runs in degraded mode if missing)
+  optional:
+    - StateStoreCapability    # Caching for intake task data
+    - FileStorageCapability   # Document storage (fallback to DB if missing)
+
+# ===== Event Declarations =====
+events:
+  # Events published by this module
+  publishes:
+    # Intake task created event
+    - eventType: intake.task.created
+      description: Published when a new intake task is created
+      payload:
+        taskId: String          # Unique task ID
+        taskNo: String          # Human-readable task number
+        customerId: String      # Associated customer ID
+        caseId: String          # Associated case ID (optional)
+        assigneeId: String      # Assigned staff member
+        tenantId: String        # Tenant identifier
+        createdAt: Instant      # Creation timestamp
+
+    # Intake task submitted event
+    - eventType: intake.task.submitted
+      description: Published when customer submits intake documents
+      payload:
+        taskId: String
+        taskNo: String
+        submittedBy: String     # Customer ID
+        submittedAt: Instant
+        documentCount: Integer  # Number of documents submitted
+        tenantId: String
+
+    # Intake task approved event
+    - eventType: intake.task.approved
+      description: Published when intake is approved by staff
+      payload:
+        taskId: String
+        taskNo: String
+        approvedBy: String      # Staff member ID
+        approvedAt: Instant
+        caseId: String          # Case to be created/updated
+        tenantId: String
+
+    # Intake task rejected event
+    - eventType: intake.task.rejected
+      description: Published when intake is rejected, needs resubmission
+      payload:
+        taskId: String
+        taskNo: String
+        rejectedBy: String
+        rejectedAt: Instant
+        rejectReason: String
+        tenantId: String
+
+  # Events subscribed by this module
+  subscribes:
+    # Subscribe to case created events for linking
+    - eventType: case.created
+      handler: IntakeEventHandler.onCaseCreated
+      description: Link intake task to newly created case
+
+# ===== Permission Declarations =====
+permissions:
+  # Permissions defined by this module
+  - id: intake:task:read
+    name: View Intake Tasks
+    description: Allows viewing intake tasks
+  - id: intake:task:create
+    name: Create Intake Tasks
+    description: Allows creating new intake tasks
+  - id: intake:task:assign
+    name: Assign Intake Tasks
+    description: Allows assigning intake tasks to staff
+  - id: intake:submit
+    name: Submit Intake Documents
+    description: Allows customers to submit intake documents
+  - id: intake:review
+    name: Review Intake
+    description: Allows staff to review and approve/reject intake
+  - id: intake:admin
+    name: Intake Administration
+    description: Full administrative access to intake module
+
+# ===== Configuration Items =====
+config:
+  # Module-level configuration (provided by Host)
+  - key: intake.enabled
+    type: boolean
+    default: true
+    description: Enable or disable intake module
+  - key: intake.auto-assign
+    type: boolean
+    default: false
+    description: Enable automatic task assignment based on workload
+  - key: intake.max-documents
+    type: integer
+    default: 20
+    description: Maximum number of documents per intake task
+  - key: intake.document.max-size-mb
+    type: integer
+    default: 10
+    description: Maximum file size per document in MB
+  - key: intake.review.sla-hours
+    type: integer
+    default: 48
+    description: SLA for intake review in hours
+  - key: intake.notification.enabled
+    type: boolean
+    default: true
+    description: Enable email/SMS notifications for intake events
+
+# ===== Resilience Configuration =====
+resilience:
+  # Circuit breaker configuration
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50          # Failure rate threshold (%)
+    slow-call-rate-threshold: 100       # Slow call rate threshold (%)
+    slow-call-duration-threshold: "5s"  # Slow call duration threshold
+    wait-duration-in-open-state: "30s"  # Circuit breaker open wait duration
+  
+  # Rate limiter configuration
+  rate-limiter:
+    enabled: false
+    limit-for-period: 50
+    limit-refresh-period: "1s"
+    timeout-duration: "10s"
+
+# ===== Health Check Configuration =====
+health:
+  # Custom health indicators for this module
+  indicators:
+    - name: intake-database
+      type: database
+      description: Check intake database connectivity
+    - name: intake-storage
+      type: custom
+      description: Check document storage availability

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  host-shell-embedded - 嵌入模式运行壳
+  
+  职责：
+  - 组装轻量级运行时能力（Webhook EventBus, In-Memory StateStore）
+  - 提供 Spring Boot 可执行入口
+  - 支持嵌入到客户系统
+  
+  版本: 3.0.0-SNAPSHOT
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.host</groupId>
+        <artifactId>host-assembly</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>host-shell-embedded</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Brix Host Shell - Embedded</name>
+    <description>
+        嵌入模式运行壳（Embedded Mode Runtime Shell）
+        
+        ═══════════════════════════════════════════════════════════════════════
+        【定位】轻量级可运行运行壳，无需重量级基础设施（Kafka/Redis）
+        ═══════════════════════════════════════════════════════════════════════
+        
+        提供轻量级能力组装：
+        - Webhook EventBus（HTTP 回调）
+        - In-Memory StateStore（本地内存）
+        - In-Memory Lock（本地锁）
+        - Logging Observability（日志可观测性）
+        
+        适用场景：
+        - 嵌入到客户系统
+        - 本地开发测试
+        - 无 Kafka/Redis 依赖环境
+        - 单插件或插件组合独立售卖
+        
+        启动命令：
+        java -jar host-shell-embedded.jar --spring.profiles.active=embedded
+    </description>
+
+    <properties>
+        <start-class>io.host.shell.embedded.ShellApplication</start-class>
+    </properties>
+
+    <dependencies>
+        <!-- ========== Platform Commons（公共基类）========== -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-common-starter</artifactId>
+        </dependency>
+
+        <!-- ========== Runtime SDK（契约接口 + 编排引擎）========== -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-manifest</artifactId>
+        </dependency>
+        <!-- runtime-orchestrator 提供 DefaultCapabilityRegistry 和 RegistryDrivenRuntimeContext -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-orchestrator</artifactId>
+        </dependency>
+
+        <!-- ========== Infrastructure Adapters - 轻量级组装 ========== -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-simple</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-webhook</artifactId>
+        </dependency>
+
+        <!-- ========== Spring Boot Starter ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ========== Logging ========== -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- ========== Testing ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>architecture-guard</artifactId>
+            <version>3.1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>${start-class}</mainClass>
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

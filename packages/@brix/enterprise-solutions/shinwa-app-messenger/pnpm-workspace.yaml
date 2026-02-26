@@ -1,0 +1,7 @@
+# pnpm 工作空间配置
+# v3.0 Manifest-Driven 架构 - messenger 应用工作空间
+
+packages:
+  - 'messenger-shared'
+  - 'messenger-ui-web'
+  - 'messenger-ui-mobile'

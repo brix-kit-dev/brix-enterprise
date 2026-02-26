@@ -1,0 +1,259 @@
+# ============================================================================
+# Runtime Shell Performance Optimization Configuration
+# ============================================================================
+# Production-grade performance configuration for Shinwa Platform
+# Following v3.0.4 architecture design guidelines
+#
+# Author: Shinwa Team
+# Version: 3.0.0-SNAPSHOT
+# Date: 2026-02-24
+# ============================================================================
+
+# ============================================================================
+# Spring Boot Optimization
+# ============================================================================
+spring:
+  # ----- JPA/Hibernate Performance Tuning -----
+  jpa:
+    open-in-view: false  # [IMPORTANT] Disable OSIV to prevent N+1 queries
+    properties:
+      hibernate:
+        # Batch processing for bulk operations
+        jdbc:
+          batch_size: 50
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        
+        # Query optimization
+        query:
+          in_clause_parameter_padding: true
+          plan_cache_max_size: 2048
+        
+        # Statistics for monitoring
+        generate_statistics: true
+        
+        # Second-level cache (disabled by default, enable with Redis)
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+
+  # ----- DataSource Connection Pool (HikariCP) -----
+  datasource:
+    hikari:
+      # Connection pool sizing
+      minimum-idle: 5
+      maximum-pool-size: 20
+      
+      # Connection timeout settings (ms)
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      
+      # Leak detection
+      leak-detection-threshold: 60000
+      
+      # Connection validation
+      validation-timeout: 5000
+      
+      # Pool name for monitoring
+      pool-name: ShinwaPlatformHikariCP
+
+  # ----- Jackson JSON Performance -----
+  jackson:
+    serialization:
+      # Disable unnecessary features
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  # ----- Web Server Optimization -----
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+      location: ${java.io.tmpdir}
+
+# ============================================================================
+# Server Performance Configuration
+# ============================================================================
+server:
+  # ----- Tomcat Thread Pool -----
+  tomcat:
+    threads:
+      min-spare: 10
+      max: 200
+    max-connections: 10000
+    accept-count: 100
+    connection-timeout: 20000
+    
+    # Enable access logging for performance monitoring
+    accesslog:
+      enabled: true
+      pattern: "%h %l %u %t \"%r\" %s %b %D"  # %D = response time in ms
+      directory: logs
+      prefix: access
+      suffix: .log
+      rotate: true
+
+  # ----- Response Compression -----
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types:
+      - application/json
+      - application/xml
+      - text/html
+      - text/xml
+      - text/plain
+      - application/javascript
+      - text/css
+
+  # ----- HTTP/2 Support -----
+  http2:
+    enabled: true
+
+# ============================================================================
+# Caching Configuration (Redis)
+# ============================================================================
+spring.cache:
+  type: redis
+  redis:
+    time-to-live: 3600000  # 1 hour default TTL
+    cache-null-values: false
+    use-key-prefix: true
+    key-prefix: shinwa:cache:
+
+spring.data.redis:
+  # Connection settings (externalize to environment)
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  timeout: 3000
+  
+  # Connection pool
+  lettuce:
+    pool:
+      min-idle: 5
+      max-idle: 10
+      max-active: 20
+      max-wait: 3000
+
+# ============================================================================
+# Observability Configuration
+# ============================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,httptrace
+      base-path: /actuator
+  
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+
+  # ----- Metrics Configuration -----
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+    
+    enable:
+      jvm: true
+      system: true
+      tomcat: true
+      hikaricp: true
+      http: true
+    
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      slo:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s
+
+  # ----- Tracing Configuration -----
+  tracing:
+    sampling:
+      probability: 1.0  # 100% in dev, reduce in production
+
+# ============================================================================
+# Logging Optimization
+# ============================================================================
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] %-40.40logger{39} : %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] %-40.40logger{39} : %m%n"
+  
+  level:
+    root: INFO
+    com.shinwa: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.type: OFF
+    
+  # ----- Log File Configuration -----
+  file:
+    name: logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
+
+# ============================================================================
+# Runtime Shell Capability Performance
+# ============================================================================
+runtime:
+  performance:
+    # Event Bus optimization
+    eventbus:
+      batch-size: 100
+      queue-capacity: 10000
+      thread-pool-size: 4
+      
+    # HTTP Client optimization
+    http-client:
+      connect-timeout: 5000
+      read-timeout: 30000
+      max-connections: 100
+      max-connections-per-route: 20
+      
+    # State Store optimization
+    state-store:
+      max-size: 10000
+      eviction-policy: LRU
+      ttl-seconds: 3600
+
+# ============================================================================
+# Query Performance Indexes (Reference)
+# ============================================================================
+# The following indexes should be created in production database:
+#
+# Case Module:
+#   CREATE INDEX idx_case_tenant_status ON cases(tenant_id, status);
+#   CREATE INDEX idx_case_created_at ON cases(created_at DESC);
+#
+# Contracts Module:
+#   CREATE INDEX idx_contract_no ON contracts(contract_no);
+#   CREATE INDEX idx_contract_case_id ON contracts(case_id);
+#   CREATE INDEX idx_contract_status ON contracts(status);
+#
+# Storage Module:
+#   CREATE INDEX idx_file_business_type ON file_metadata(business_type);
+#   CREATE INDEX idx_file_tenant_uploaded_at ON file_metadata(tenant_id, uploaded_at DESC);
+#
+# Intake Module:
+#   CREATE INDEX idx_intake_case_id ON intake_tasks(case_id);
+#   CREATE INDEX idx_intake_status ON intake_tasks(status);
+#   CREATE INDEX idx_intake_due_date ON intake_tasks(due_date);

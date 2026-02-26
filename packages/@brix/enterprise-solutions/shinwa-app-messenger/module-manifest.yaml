@@ -1,0 +1,91 @@
+# ===========================================================
+# shinwa-app-messenger 模块声明文件
+# v3.0 Runtime Shell 架构
+# ===========================================================
+
+module:
+  id: shinwa-app-messenger
+  version: 3.0.0-SNAPSHOT
+  name: 消息通知
+  vendor: Shinwa Solutions
+  description: |
+    消息通知业务模块，提供站内消息、推送通知、消息模板等功能。
+    支持多渠道消息发送和消息模板管理。
+
+# 模块结构
+structure:
+  api: messenger-api
+  core: messenger-core
+  server: messenger-server
+  ui-web: messenger-ui-web
+  ui-mobile: messenger-ui-mobile
+
+lifecycle:
+  startup-order: 100
+  # 事件消费者需声明事件源模块的依赖
+  dependencies:
+    - shinwa-app-identity   # UserCreatedEvent 事件源
+    - shinwa-app-booking    # BookingConfirmedEvent 事件源
+
+capabilities:
+  required:
+    - EventBusCapability       # 用于接收业务事件触发通知
+    - StateStoreCapability     # 用于缓存消息模板
+    - AuthContextCapability    # 用于获取用户信息
+    - ObservabilityCapability  # 用于日志和监控
+    - ConfigStoreCapability    # 用于获取通知配置
+
+  optional:
+    # SchedulingCapability 已移除：待定时消息发送功能实现后再添加
+
+# 端口配置
+ports:
+  server: 8084
+  ui-web: 3004
+  ui-mobile: 4004
+
+# 事件定义
+events:
+  publishes:
+    - name: MessageSentEvent
+      description: 消息发送成功事件
+    - name: MessageReadEvent
+      description: 消息已读事件
+    - name: NotificationPushedEvent
+      description: 推送通知发送事件
+
+  subscribes:
+    - name: UserCreatedEvent
+      handler: com.shinwa.app.messenger.event.UserCreatedEventHandler#onUserCreated
+      description: 用户创建时发送欢迎通知
+    - name: OrderCreatedEvent
+      handler: com.shinwa.app.messenger.event.OrderCreatedEventHandler#onOrderCreated
+      description: 订单创建时发送通知
+    - name: BookingConfirmedEvent
+      handler: com.shinwa.app.messenger.event.BookingConfirmedEventHandler#onBookingConfirmed
+      description: 预约确认时发送通知
+
+permissions:
+  - id: "message:read"
+    description: 查看消息
+  - id: "message:send"
+    description: 发送消息
+  - id: "message:admin"
+    description: 消息管理
+
+config:
+  - key: "messenger.max-content-length"
+    description: 消息内容最大长度
+    default: "2000"
+  - key: "messenger.template-cache-ttl"
+    description: 模板缓存时间（秒）
+    default: "3600"
+
+# API 端点
+endpoints:
+  - path: /api/v1/messenger/messages
+    description: 站内信管理
+  - path: /api/v1/messenger/notifications
+    description: 推送通知管理
+  - path: /api/v1/messenger/templates
+    description: 消息模板管理

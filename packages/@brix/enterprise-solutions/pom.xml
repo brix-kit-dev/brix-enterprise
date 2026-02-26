@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  Shinwa Solutions - 业务应用模块集合
+  
+  本仓库包含所有基于 Runtime Shell 架构的商业业务模块。
+  每个模块仅依赖 runtime-sdk-api 能力契约，
+  不直接依赖任何基础设施（Kafka/Redis/etc.）。
+  
+  版本: 3.0.0-SNAPSHOT
+  日期: 2026-01-27
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ==================== 项目坐标 ==================== -->
+    <groupId>com.shinwa.solutions</groupId>
+    <artifactId>shinwa-solutions-parent</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Shinwa Solutions Parent</name>
+    <description>
+        Shinwa 商业业务模块集合
+        
+        包含：
+        - shinwa-app-booking: 预约管理
+        - shinwa-app-identity: 用户身份
+        - shinwa-app-messenger: 消息通知
+        - shinwa-app-carousel: 轮播组件
+        - shinwa-app-partners: 合作方目录
+        - shinwa-app-products: 产品目录
+        - shinwa-app-storage: 存储服务
+        - shinwa-app-contracts: 合同管理
+        - shinwa-app-workflow: 工作流引擎
+        - shinwa-app-intake: 医疗进件
+        - shinwa-app-compliance: 风控合规
+        
+        所有模块仅依赖 Runtime Capability Contract，不依赖基础设施。
+    </description>
+
+    <!-- ==================== 子模块 ==================== -->
+    <modules>
+        <!-- P0: 试点模块 -->
+        <module>shinwa-app-booking</module>
+        
+        <!-- P1: 核心模块 -->
+        <module>shinwa-app-identity</module>
+        <module>shinwa-app-messenger</module>
+        
+        <!-- P2: 基础模块 -->
+        <module>shinwa-app-carousel</module>
+        <module>shinwa-app-partners</module>
+        <module>shinwa-app-products</module>
+        
+        <!-- P3: 功能模块 -->
+        <module>shinwa-app-storage</module>
+        <module>shinwa-app-contracts</module>
+        
+        <!-- P4: 案例管理 -->
+        <module>shinwa-app-case</module>
+        
+        <!-- P5: 复杂模块 (待创建)
+        <module>shinwa-app-workflow</module>
+        <module>shinwa-app-intake</module>
+        <module>shinwa-app-compliance</module>
+        -->
+    </modules>
+
+    <!-- ==================== 属性配置 ==================== -->
+    <properties>
+        <!-- 编译配置 -->
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Runtime SDK 版本（开源核心层） -->
+        <runtime-sdk.version>3.0.0-SNAPSHOT</runtime-sdk.version>
+        
+        <!-- Spring Boot 版本 -->
+        <spring-boot.version>3.2.2</spring-boot.version>
+        
+        <!-- 持久层依赖 -->
+        <jakarta-persistence.version>3.1.0</jakarta-persistence.version>
+        <hibernate.version>6.4.1.Final</hibernate.version>
+        
+        <!-- 工具类 -->
+        <lombok.version>1.18.30</lombok.version>
+        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <jackson.version>2.16.1</jackson.version>
+        
+        <!-- 测试框架 -->
+        <junit.version>5.10.1</junit.version>
+        <mockito.version>5.8.0</mockito.version>
+        <assertj.version>3.24.2</assertj.version>
+        <archunit.version>1.2.1</archunit.version>
+        
+        <!-- 架构守护 -->
+        <architecture-guard.version>3.1.0-SNAPSHOT</architecture-guard.version>
+        
+        <!-- OpenAPI 文档（Phase 5: OpenAPI 驱动的前后端契约自动化） -->
+        <swagger-annotations.version>2.2.28</swagger-annotations.version>
+        <springdoc-openapi-maven-plugin.version>1.4</springdoc-openapi-maven-plugin.version>
+
+        <!-- Pact 契约测试（Phase 5.3: Consumer-Driven Contract Testing） -->
+        <pact.version>4.6.16</pact.version>
+        
+        <!-- Maven 插件 -->
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
+    </properties>
+
+    <!-- ==================== 依赖管理 ==================== -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- ========== Runtime SDK（开源核心层）========== -->
+            <!--
+                【架构约束】业务模块只允许依赖 runtime-sdk-api
+                禁止直接依赖任何 infra-adapter-* 或 host-*
+            -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-sdk-api</artifactId>
+                <version>${runtime-sdk.version}</version>
+            </dependency>
+            <!-- runtime-sdk 已废弃，合并到 runtime-sdk-api -->
+
+            <!-- ========== 业务模块 API（跨模块事件契约）========== -->
+            <dependency>
+                <groupId>com.shinwa.solutions</groupId>
+                <artifactId>identity-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shinwa.solutions</groupId>
+                <artifactId>booking-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shinwa.solutions</groupId>
+                <artifactId>messenger-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- ========== Spring Boot BOM ========== -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- ========== Platform Commons（开源基础能力）========== -->
+            <!-- [红线 R2 修复] 已移除 io.brix.platform:platform-auth 依赖。
+                 安全能力通过 runtime-sdk-api 中的 AuthContextCapability 契约获取。-->
+
+            <!-- ========== 持久层（JPA 允许保留）========== -->
+            <dependency>
+                <groupId>jakarta.persistence</groupId>
+                <artifactId>jakarta.persistence-api</artifactId>
+                <version>${jakarta-persistence.version}</version>
+            </dependency>
+
+            <!-- ========== 工具类 ========== -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
+            <!-- ========== OpenAPI 注解（Phase 5: OpenAPI 驱动的前后端契约自动化）========== -->
+            <!--
+                用于 API 模块的 DTO/Request/Response 类型定义
+                @Schema 注解描述字段含义、示例、约束等
+            -->
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
+
+            <!-- ========== 测试依赖 ========== -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <!-- ========== 架构测试（ArchUnit）========== -->
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- ========== 架构守护（Brix Architecture Guard）========== -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>architecture-guard</artifactId>
+                <version>${architecture-guard.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- ==================== 公共依赖 ==================== -->
+    <dependencies>
+        <!-- 
+            【核心依赖】Runtime SDK API
+            这是业务模块唯一允许的运行壳依赖
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- Lombok（编译期） -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- 测试依赖 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- 架构约束测试 -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 架构守护（Brix Architecture Guard 共享规则库） -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>architecture-guard</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- ==================== 构建配置 ==================== -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <parameters>true</parameters>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                                <version>${mapstruct.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <argLine>-Dfile.encoding=UTF-8</argLine>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                </plugin>
+
+                <!-- ========================================
+                     Springdoc OpenAPI Maven Plugin
+                     ========================================
+                     
+                     【功能说明】
+                     Phase 5.1-6: CI 增加 `mvn springdoc-openapi:generate` 步骤
+                     每次构建自动输出 `openapi.json` 到 `{name}-api/src/main/resources/`
+                     
+                     【使用方式】
+                     1. 在 server 模块的 pom.xml 中启用此插件
+                     2. 运行: mvn springdoc-openapi:generate
+                     3. 生成的 openapi.json 可用于前端代码生成 (orval)
+                     
+                     【CI 集成】
+                     在 GitHub Actions 中添加步骤:
+                     mvn springdoc-openapi:generate -pl :booking-server,:identity-server
+                ======================================== -->
+                <plugin>
+                    <groupId>org.springdoc</groupId>
+                    <artifactId>springdoc-openapi-maven-plugin</artifactId>
+                    <version>${springdoc-openapi-maven-plugin.version}</version>
+                    <configuration>
+                        <apiDocsUrl>http://localhost:${server.port}/v3/api-docs</apiDocsUrl>
+                        <outputDir>${project.basedir}/../${project.artifactId.replace('-server', '-api')}/src/main/resources</outputDir>
+                        <outputFileName>openapi.json</outputFileName>
+                    </configuration>
+                </plugin>
+
+                <!-- ========================================
+                     Maven Enforcer Plugin - 架构约束检查
+                     ========================================
+                     
+                     【功能说明】
+                     在构建时强制检查架构约束：
+                     1. 禁止直接依赖基础设施（Kafka/Redis/MinIO）
+                     2. 禁止跨业务模块直接依赖 Core/Server 层
+                     3. 强制 JDK 版本
+                     
+                     【设计依据】
+                     参考 v3.0 运行壳架构设计蓝图 4.2.1 依赖规则
+                     业务模块只能通过 Capability 接口访问基础设施
+                     
+                     【执行方式】
+                     mvn enforcer:enforce
+                ======================================== -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.4.1</version>
+                    <executions>
+                        <execution>
+                            <id>enforce-architecture-rules</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <!-- 禁止直接依赖基础设施 -->
+                                    <bannedDependencies>
+                                        <excludes>
+                                            <!-- 禁止直接依赖 Kafka -->
+                                            <exclude>org.apache.kafka:kafka-clients</exclude>
+                                            <exclude>org.springframework.kafka:spring-kafka</exclude>
+                                            
+                                            <!-- 禁止直接依赖 Redis -->
+                                            <exclude>redis.clients:jedis</exclude>
+                                            <exclude>io.lettuce:lettuce-core</exclude>
+                                            <exclude>org.springframework.data:spring-data-redis</exclude>
+                                            
+                                            <!-- 禁止直接依赖 MinIO -->
+                                            <exclude>io.minio:minio</exclude>
+                                            
+                                            <!-- 禁止直接依赖 AWS SDK -->
+                                            <exclude>software.amazon.awssdk:*</exclude>
+                                            
+                                            <!-- 禁止直接依赖 infra-adapters（应由 Host 层组装）-->
+                                            <exclude>io.brix:infra-adapter-kafka</exclude>
+                                            <exclude>io.brix:infra-adapter-redis</exclude>
+                                            <exclude>io.brix:infra-adapter-minio</exclude>
+                                            <exclude>io.brix:infra-adapter-otel</exclude>
+                                        </excludes>
+                                        <message>
+                                            [架构约束] 业务模块禁止直接依赖基础设施！
+                                            请通过 Capability 接口（EventBusCapability、StateStoreCapability 等）访问基础设施。
+                                            参考：v3.0 运行壳架构设计蓝图 4.2.1 依赖规则
+                                        </message>
+                                        <searchTransitive>true</searchTransitive>
+                                    </bannedDependencies>
+                                    
+                                    <!-- 强制 JDK 版本 -->
+                                    <requireJavaVersion>
+                                        <version>[17,)</version>
+                                        <message>[架构约束] 需要 JDK 17 或更高版本</message>
+                                    </requireJavaVersion>
+                                    
+                                    <!-- 强制 Maven 版本 -->
+                                    <requireMavenVersion>
+                                        <version>[3.8.0,)</version>
+                                        <message>[架构约束] 需要 Maven 3.8.0 或更高版本</message>
+                                    </requireMavenVersion>
+                                </rules>
+                                <fail>true</fail>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <!-- 启用 Enforcer 检查（构建时自动执行）-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ==================== 仓库配置 ==================== -->
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </repositories>
+</project>

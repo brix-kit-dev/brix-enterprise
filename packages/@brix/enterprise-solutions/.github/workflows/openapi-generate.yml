@@ -1,0 +1,318 @@
+# ============================================================================
+# OpenAPI 文档生成与前端类型自动生成 CI（Phase 5.1-6, 5.2-6, 5.2-7）
+# ============================================================================
+# 
+# 【功能说明】
+# 此 CI 管线自动生成 OpenAPI 文档和前端类型：
+# 1. 启动 Spring Boot 应用，获取 /v3/api-docs 端点的 OpenAPI 规范
+# 2. 输出 openapi.json 到 {module}-api/src/main/resources/
+# 3. 运行 orval 生成前端 TypeScript 类型和 Repository 客户端
+# 4. 检测 Generated Code Drift（比较生成代码与仓库中代码）
+# 
+# 【使用场景】
+# - 每次 PR 合并到 main/develop 时自动生成
+# - 手动触发生成
+# 
+# 【依赖】
+# - springdoc-openapi-starter-webmvc-ui 依赖
+# - springdoc-openapi-maven-plugin 插件配置
+# - orval (前端代码生成)
+# - pnpm (前端包管理)
+# 
+# 【Phase 5.1-6】CI 增加 openapi.json 生成
+# 【Phase 5.2-6】CI 增加 pnpm run generate:api 步骤
+# 【Phase 5.2-7】CI 增加 Generated Code Drift 检测
+# ============================================================================
+
+name: OpenAPI Generate
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**/src/main/java/**/*.java'
+      - '**/pom.xml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**/src/main/java/**/*.java'
+      - '**/pom.xml'
+      - '**/*-shared/**/*.ts'
+      - '**/orval.config.ts'
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: '要生成 OpenAPI 的模块（逗号分隔，如 booking-server,identity-server）'
+        required: false
+        default: 'all'
+
+jobs:
+  # ========================================
+  # OpenAPI 文档生成（后端）
+  # ========================================
+  generate-openapi:
+    name: Generate OpenAPI Specs
+    runs-on: ubuntu-latest
+    
+    # 使用服务容器启动数据库（如果需要）
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    outputs:
+      openapi-changed: ${{ steps.check-changes.outputs.changed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with: 
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Build all modules
+        run: mvn clean install -DskipTests -B
+      
+      - name: Generate OpenAPI for booking-server
+        run: |
+          echo "📄 生成 booking-server OpenAPI 文档..."
+          cd shinwa-app-booking
+          
+          # 启动应用并等待就绪
+          mvn -pl booking-server spring-boot:run -Dspring-boot.run.profiles=test &
+          APP_PID=$!
+          
+          # 等待应用启动
+          echo "⏳ 等待应用启动..."
+          for i in {1..60}; do
+            if curl -s http://localhost:8082/v3/api-docs > /dev/null 2>&1; then
+              echo "✅ 应用已启动"
+              break
+            fi
+            sleep 2
+          done
+          
+          # 获取 OpenAPI 文档
+          curl -s http://localhost:8082/v3/api-docs > booking-api/src/main/resources/openapi.json
+          
+          # 停止应用
+          kill $APP_PID || true
+          
+          echo "📁 booking-api OpenAPI 文档已生成"
+        continue-on-error: true
+      
+      - name: Generate OpenAPI for identity-server
+        run: |
+          echo "📄 生成 identity-server OpenAPI 文档..."
+          cd shinwa-app-identity
+          
+          # 启动应用并等待就绪
+          mvn -pl identity-server spring-boot:run -Dspring-boot.run.profiles=test &
+          APP_PID=$!
+          
+          # 等待应用启动
+          echo "⏳ 等待应用启动..."
+          for i in {1..60}; do
+            if curl -s http://localhost:8081/v3/api-docs > /dev/null 2>&1; then
+              echo "✅ 应用已启动"
+              break
+            fi
+            sleep 2
+          done
+          
+          # 获取 OpenAPI 文档
+          curl -s http://localhost:8081/v3/api-docs > identity-api/src/main/resources/openapi.json
+          
+          # 停止应用
+          kill $APP_PID || true
+          
+          echo "📁 identity-api OpenAPI 文档已生成"
+        continue-on-error: true
+      
+      - name: Check for OpenAPI changes
+        id: check-changes
+        run: |
+          if git diff --quiet **/openapi.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Upload OpenAPI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-specs
+          path: |
+            **/api/src/main/resources/openapi.json
+          retention-days: 30
+
+  # ========================================
+  # 前端类型生成（Phase 5.2-6）
+  # ========================================
+  generate-frontend-types:
+    name: Generate Frontend Types
+    runs-on: ubuntu-latest
+    needs: generate-openapi
+    if: needs.generate-openapi.outputs.openapi-changed == 'true' || github.event_name == 'workflow_dispatch'
+    
+    strategy:
+      matrix:
+        module:
+          - booking
+          - identity
+          - carousel
+          - contracts
+          - messenger
+          - partners
+          - products
+          - storage
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download OpenAPI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-specs
+          path: .
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      
+      - name: Install dependencies
+        working-directory: shinwa-app-${{ matrix.module }}
+        run: pnpm install --frozen-lockfile
+        continue-on-error: true
+      
+      - name: Generate API types with orval
+        working-directory: shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared
+        run: |
+          echo "🔧 生成 ${{ matrix.module }} 前端类型..."
+          pnpm run generate:api || echo "⚠️ orval 生成失败（可能 openapi.json 不存在）"
+        continue-on-error: true
+      
+      - name: Upload generated types
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-types-${{ matrix.module }}
+          path: |
+            shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared/src/generated/
+          retention-days: 30
+
+  # ========================================
+  # Generated Code Drift 检测（Phase 5.2-7）
+  # ========================================
+  drift-detection:
+    name: Check Generated Code Drift
+    runs-on: ubuntu-latest
+    needs: generate-frontend-types
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download all generated types
+        uses: actions/download-artifact@v4
+        with:
+          pattern: generated-types-*
+          path: ./generated-artifacts
+      
+      - name: Compare generated code with repository
+        id: drift-check
+        run: |
+          echo "🔍 检测 Generated Code Drift..."
+          
+          DRIFT_FOUND=false
+          DRIFT_REPORT=""
+          
+          for module in booking identity carousel contracts messenger partners products storage; do
+            ARTIFACT_PATH="./generated-artifacts/generated-types-${module}/"
+            REPO_PATH="./shinwa-app-${module}/${module}-shared/src/generated/"
+            
+            if [ -d "$ARTIFACT_PATH" ] && [ -d "$REPO_PATH" ]; then
+              if ! diff -rq "$ARTIFACT_PATH" "$REPO_PATH" > /dev/null 2>&1; then
+                DRIFT_FOUND=true
+                DRIFT_REPORT="${DRIFT_REPORT}\n⚠️ **${module}**: 生成代码与仓库代码不一致"
+              fi
+            fi
+          done
+          
+          if [ "$DRIFT_FOUND" = true ]; then
+            echo "drift=true" >> $GITHUB_OUTPUT
+            echo -e "$DRIFT_REPORT" >> $GITHUB_STEP_SUMMARY
+            echo ""
+            echo "## 🔄 需要重新生成代码" >> $GITHUB_STEP_SUMMARY
+            echo "请在本地运行以下命令后提交更新：" >> $GITHUB_STEP_SUMMARY
+            echo '```bash' >> $GITHUB_STEP_SUMMARY
+            echo 'pnpm run generate:api' >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "drift=false" >> $GITHUB_OUTPUT
+            echo "✅ Generated code is up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Add PR comment for drift
+        if: steps.drift-check.outputs.drift == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Generated Code Drift Detected**\n\n生成代码与仓库中的代码不一致。请在本地运行 `pnpm run generate:api` 后提交更新。\n\n详细信息请查看 [Actions Summary](' + context.payload.repository.html_url + '/actions/runs/' + context.runId + ').'
+            })
+
+  # ========================================
+  # Summary
+  # ========================================
+  summary:
+    name: Generate Summary
+    runs-on: ubuntu-latest
+    needs: [generate-openapi, generate-frontend-types]
+    if: always()
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## OpenAPI 文档生成完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 后端 OpenAPI 规范" >> $GITHUB_STEP_SUMMARY
+          echo "- booking-api/src/main/resources/openapi.json" >> $GITHUB_STEP_SUMMARY
+          echo "- identity-api/src/main/resources/openapi.json" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 前端类型生成" >> $GITHUB_STEP_SUMMARY
+          echo "- booking-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- identity-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- carousel-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- contracts-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- messenger-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- partners-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- products-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          echo "- storage-shared/src/generated/" >> $GITHUB_STEP_SUMMARY
+          done

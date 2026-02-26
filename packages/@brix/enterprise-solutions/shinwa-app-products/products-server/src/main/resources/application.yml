@@ -1,0 +1,48 @@
+# =====================================================
+# Products Module - Application Configuration
+# =====================================================
+# v3.0 产品套餐模块配置
+# 端口规划：8085 (server) / 3005 (web) / 4005 (mobile)
+# =====================================================
+
+spring:
+  application:
+    name: shinwa-products
+
+# =====================================================
+# 服务端口配置
+# =====================================================
+server:
+  port: 8085
+
+# =====================================================
+# JPA / Hibernate 配置
+# =====================================================
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+# =====================================================
+# 日志配置
+# =====================================================
+logging:
+  level:
+    com.shinwa.app.products: DEBUG
+    org.hibernate.SQL: DEBUG
+
+# =====================================================
+# Actuator 配置
+# =====================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

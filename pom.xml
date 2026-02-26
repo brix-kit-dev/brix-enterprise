@@ -1,0 +1,307 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2026 Brix Platform Authors
+  ~
+  ~ Brix Enterprise License - All Rights Reserved
+  ~
+  ~ PROPRIETARY AND CONFIDENTIAL
+  ~ Unauthorized copying or distribution of this file is strictly prohibited.
+  ~ Commercial use requires a valid Brix Enterprise license.
+  -->
+
+<!--
+============================================================================
+BRIX ENTERPRISE MONOREPO - ROOT AGGREGATOR POM
+
+This is the root Maven POM for the Brix Enterprise monorepo.
+It aggregates commercial/proprietary Java modules.
+
+CRITICAL DEPENDENCY RULE:
+- Enterprise modules depend on PUBLISHED Core artifacts
+- Use brix.core.version property to specify Core version
+- NEVER use SNAPSHOT versions of Core in production releases
+- Core artifacts are consumed from Maven Central (public) or internal Nexus
+
+Architecture Layer: Build Infrastructure
+License: Proprietary
+============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.brix.enterprise</groupId>
+    <artifactId>brix-enterprise-parent</artifactId>
+    <version>3.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Brix Enterprise Framework</name>
+    <description>
+        Brix Enterprise - Commercial Extensions.
+        Proprietary host assemblies, business solutions, and enterprise shell.
+    </description>
+
+    <licenses>
+        <license>
+            <name>Brix Enterprise License</name>
+            <url>https://brix.dev/enterprise-license</url>
+            <distribution>manual</distribution>
+            <comments>Commercial license required for use</comments>
+        </license>
+    </licenses>
+
+    <!--
+    ============================================================================
+    AGGREGATED MODULES
+    
+    Each module corresponds to a merged repository's Java content.
+    ============================================================================
+    -->
+    <modules>
+        <!-- Enterprise Host - Capability orchestration assemblies -->
+        <module>packages/@brix/enterprise-host</module>
+        
+        <!-- Enterprise Solutions - Business application plugins -->
+        <module>packages/@brix/enterprise-solutions</module>
+        
+        <!-- Enterprise Shell - Commercial UI shell (if Java components exist) -->
+        <!-- <module>packages/@brix/enterprise-shell</module> -->
+    </modules>
+
+    <properties>
+        <!-- Java Version -->
+        <java.version>17</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        
+        <!-- Encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        
+        <!--
+        ============================================================================
+        CORE DEPENDENCY VERSION
+        
+        CRITICAL: This property defines the version of Brix Core that Enterprise
+        depends on. Enterprise MUST use published releases of Core.
+        
+        For development: Use latest SNAPSHOT (e.g., 3.1.0-SNAPSHOT)
+        For release: Use stable release (e.g., 3.1.0)
+        ============================================================================
+        -->
+        <brix.core.version>3.1.0-SNAPSHOT</brix.core.version>
+        
+        <!-- Dependency Versions -->
+        <spring-boot.version>3.2.2</spring-boot.version>
+        <slf4j.version>2.0.9</slf4j.version>
+        <jackson.version>2.16.1</jackson.version>
+        <junit.version>5.10.1</junit.version>
+        <mockito.version>5.8.0</mockito.version>
+        
+        <!-- Plugin Versions -->
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
+        <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!--
+            ============================================================================
+            BRIX CORE DEPENDENCIES
+            
+            These are the open-source Core packages that Enterprise extends.
+            They are consumed as published Maven artifacts.
+            ============================================================================
+            -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-sdk-api</artifactId>
+                <version>${brix.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-manifest</artifactId>
+                <version>${brix.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-orchestrator</artifactId>
+                <version>${brix.core.version}</version>
+            </dependency>
+            
+            <!-- Spring Boot BOM -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- Testing BOM -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Compiler Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <release>${java.version}</release>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+
+                <!-- Surefire Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+
+                <!-- Enforcer Plugin - Validates dependency rules -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${maven-enforcer-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>enforce-versions</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <requireMavenVersion>
+                                        <version>[3.8.0,)</version>
+                                    </requireMavenVersion>
+                                    <requireJavaVersion>
+                                        <version>[17,)</version>
+                                    </requireJavaVersion>
+                                </rules>
+                            </configuration>
+                        </execution>
+                        <!--
+                        ============================================================================
+                        BANNED DEPENDENCIES RULE
+                        
+                        In release builds, Enterprise MUST NOT depend on Core SNAPSHOTs.
+                        This rule is enforced only when the 'release' profile is active.
+                        ============================================================================
+                        -->
+                        <execution>
+                            <id>ban-snapshots-in-release</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <!-- This rule is activated by the release profile -->
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--
+    ============================================================================
+    PROFILES
+    
+    - release: Enforces no-SNAPSHOT rule for Core dependencies
+    - ci: Optimized settings for CI/CD pipelines
+    ============================================================================
+    -->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>ban-core-snapshots</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <bannedDependencies>
+                                            <excludes>
+                                                <exclude>io.brix:*:*-SNAPSHOT</exclude>
+                                            </excludes>
+                                            <message>
+                                                Enterprise release builds MUST NOT depend on Core SNAPSHOT versions.
+                                                Update brix.core.version to a stable release.
+                                            </message>
+                                        </bannedDependencies>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <!--
+    ============================================================================
+    REPOSITORIES
+    
+    Enterprise may need access to GitLab private Maven registry.
+    Configure credentials in settings.xml.
+    ============================================================================
+    -->
+    <repositories>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>https://gitlab.example.com/api/v4/projects/PROJECT_ID/packages/maven</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>https://gitlab.example.com/api/v4/projects/PROJECT_ID/packages/maven</url>
+        </repository>
+        <snapshotRepository>
+            <id>gitlab-maven</id>
+            <url>https://gitlab.example.com/api/v4/projects/PROJECT_ID/packages/maven</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>

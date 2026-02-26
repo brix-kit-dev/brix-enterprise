@@ -1,0 +1,59 @@
+{
+  "name": "@shinwa/booking-ui-mobile",
+  "version": "3.0.0-SNAPSHOT",
+  "description": "预约模块 Mobile 前端 - v3.0 Runtime Shell 架构",
+  "author": "Brix Platform Authors",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./BookingList": {
+      "import": "./dist/pages/BookingList.mjs",
+      "require": "./dist/pages/BookingList.js"
+    },
+    "./BookingDetail": {
+      "import": "./dist/pages/BookingDetail.mjs",
+      "require": "./dist/pages/BookingDetail.js"
+    },
+    "./BookingCreate": {
+      "import": "./dist/pages/BookingCreate.mjs",
+      "require": "./dist/pages/BookingCreate.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.tsx src/pages/*.tsx --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.tsx src/pages/*.tsx --format cjs,esm --dts --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "clean": "rimraf dist"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.72.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "@types/react-native": "^0.72.8",
+    "react": "^18.2.0",
+    "react-native": "^0.73.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "shinwa",
+    "booking",
+    "mobile",
+    "react-native",
+    "v3.0"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@shinwa/host-standalone-web",
+  "version": "3.1.0",
+  "private": true,
+  "description": "Host Standalone Web - Frontend UI Host Layer (assembly only, no capability implementation). Architecture Guard",
+  "type": "module",
+  "scripts": {
+    "dev": "rspack serve --mode development",
+    "build": "rspack build --mode production",
+    "preview": "rspack serve --mode production",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "lint:arch": "eslint src --ext .ts,.tsx --config eslint.config.cjs"
+  },
+  "dependencies": {
+    "@brix/design-tokens": "workspace:*",
+    "@brix/infra-adapter-mf-web": "workspace:*",
+    "@brix/infra-adapter-ui-mui": "workspace:*",
+    "@brix/infra-adapter-ui-native": "workspace:*",
+    "@brix/platform-auth-web": "workspace:*",
+    "@brix/platform-eventbus-web": "workspace:*",
+    "@brix/platform-navigation-web": "workspace:*",
+    "@brix/platform-router-web": "workspace:*",
+    "@brix/runtime-orchestrator-web": "workspace:*",
+    "@brix/runtime-sdk-api-web": "workspace:*",
+    "@brix/runtime-sdk-react": "workspace:*",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.8",
+    "@mui/material": "^7.3.8",
+    "@shinwa/shinwa-platform-shell-web": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "@brix/eslint-config-architecture": "workspace:*",
+    "@module-federation/enhanced": "^0.0.17",
+    "@rspack/cli": "^0.5.0",
+    "@rspack/core": "^0.5.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.3.0"
+  }
+}

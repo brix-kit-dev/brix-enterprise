@@ -1,0 +1,83 @@
+# ============================================================
+# Shinwa Platform - 嵌入模式运行壳配置
+# ============================================================
+# 
+# host-shell-embedded：嵌入模式运行壳
+# 
+# 适用场景：
+#   - 嵌入到客户系统
+#   - 本地开发测试
+#   - 无 Kafka/Redis 依赖环境
+#   - 单插件或插件组合独立售卖
+#
+# ============================================================
+
+spring:
+  application:
+    name: shinwa-embedded
+  profiles:
+    active: embedded
+
+server:
+  port: 8082
+
+---
+# ============================================================
+# embedded profile - 轻量级嵌入模式
+# ============================================================
+spring:
+  config:
+    activate:
+      on-profile: embedded
+
+# ==================== 运行壳配置 ====================
+brix:
+  shell:
+    embedded:
+      enabled: true
+      
+      # 模块标识
+      module-id: ${BRIX_MODULE_ID:embedded-shell}
+      
+      # 租户标识
+      tenant-id: ${BRIX_TENANT_ID:default}
+      
+      # ========== Webhook 配置 ==========
+      webhook:
+        enabled: true
+        max-retries: 3
+        connect-timeout: PT5S
+        read-timeout: PT30S
+        endpoints: []
+        # 示例：
+        # endpoints:
+        #   - url: https://customer.com/webhook
+        #     secret: my-secret
+        #     event-types:
+        #       - order.created
+        #       - order.completed
+      
+      # ========== 状态存储配置 ==========
+      state-store:
+        max-entries: 10000
+        default-ttl: PT1H
+      
+      # ========== 定时任务配置 ==========
+      scheduling:
+        enabled: true
+        pool-size: 2
+      
+      # ========== 锁配置 ==========
+      lock:
+        enabled: true
+        fair: false
+
+# ==================== Actuator 配置 ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Shinwa App - Storage
+  文件存储模块 v3.0 - 基于 Runtime Shell 能力契约模型
+  
+  模块说明：
+  - storage-api: 接口定义（枚举、DTO、服务接口）
+  - storage-core: 核心实现（实体、仓储、服务实现、存储适配器）
+  - storage-server: REST API 和自动配置
+  
+  端口分配：
+  - HTTP: 8086
+  - Web UI: 3006
+  - Mobile UI: 4006
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.shinwa.solutions</groupId>
+        <artifactId>shinwa-solutions-parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>shinwa-app-storage</artifactId>
+    <packaging>pom</packaging>
+    <name>Shinwa App - Storage</name>
+    <description>文件存储模块 - 提供文件上传、下载、预览、访问审计等能力</description>
+
+    <modules>
+        <module>storage-api</module>
+        <module>storage-core</module>
+        <module>storage-server</module>
+    </modules>
+
+    <properties>
+        <!-- 模块特定属性 -->
+        <storage.server.port>8086</storage.server.port>
+    </properties>
+</project>

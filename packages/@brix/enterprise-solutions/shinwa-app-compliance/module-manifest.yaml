@@ -1,0 +1,149 @@
+# ===========================================================
+# shinwa-app-compliance Module Manifest
+# 
+# This file defines module metadata, capability requirements,
+# event declarations, and configuration for the Runtime Shell.
+# 
+# The Runtime Shell uses this manifest for:
+# - Capability injection
+# - Event routing
+# - Configuration binding
+# - Permission validation
+# - Lifecycle management (startup/shutdown ordering)
+# 
+# Architecture: v3.0.4 Runtime Shell Design Blueprint
+# Version: 3.0.0-SNAPSHOT
+# Date: 2026-02-24
+# ===========================================================
+
+# ===== Module Basic Information =====
+module:
+  # Unique module identifier (matches Maven artifactId)
+  id: shinwa-app-compliance
+  # Module version (semantic versioning)
+  version: 3.0.0-SNAPSHOT
+  # Display name for UI/admin console
+  name: Compliance Management
+  # Module vendor
+  vendor: Shinwa Solutions
+  # License type
+  license: Commercial
+  # Module description
+  description: |
+    Provides compliance management capabilities for regulated industries, including:
+    - Script template management (sales/service call scripts)
+    - Forbidden words and phrases detection
+    - Real-time compliance checking during conversations
+    - Compliance audit trail and reporting
+    - Multi-language support for compliance rules
+
+# ===== Lifecycle Configuration =====
+lifecycle:
+  # Startup priority (lower number starts first)
+  # 50: Infrastructure modules (gateway, identity)
+  # 100: Core business modules
+  # 150: Standard business modules
+  startup-order: 150
+  
+  # Dependencies on other modules (must start before this module)
+  dependencies: []
+
+# ===== Capability Requirements =====
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - EventBusCapability      # Event publishing for audit trail
+    - AuthContextCapability   # Authentication context for user info
+    - ObservabilityCapability # Logging, metrics, and tracing
+    - ConfigStoreCapability   # Module configuration retrieval
+
+  # Optional capabilities (module runs in degraded mode if missing)
+  optional:
+    - StateStoreCapability    # Caching for frequently used templates
+
+# ===== Event Declarations =====
+events:
+  # Events published by this module
+  publishes:
+    # Compliance check completed event
+    - eventType: compliance.check.completed
+      description: Published when a compliance check is completed
+      payload:
+        checkId: String         # Unique check ID
+        result: String          # PASS, WARN, FAIL
+        violations: List        # List of detected violations
+        scriptId: String        # Script template ID used
+        tenantId: String        # Tenant identifier
+        checkedAt: Instant      # Timestamp of check
+
+    # Forbidden word detected event
+    - eventType: compliance.forbidden.detected
+      description: Published when a forbidden word is detected
+      payload:
+        checkId: String
+        word: String
+        category: String        # Category of forbidden word
+        severity: String        # HIGH, MEDIUM, LOW
+        tenantId: String
+
+  # Events subscribed by this module
+  subscribes: []
+
+# ===== Permission Declarations =====
+permissions:
+  # Permissions defined by this module
+  - id: compliance:template:read
+    name: View Script Templates
+    description: Allows viewing script templates
+  - id: compliance:template:write
+    name: Manage Script Templates
+    description: Allows creating, updating, and deleting script templates
+  - id: compliance:check:execute
+    name: Execute Compliance Check
+    description: Allows executing compliance checks
+  - id: compliance:forbidden:read
+    name: View Forbidden Words
+    description: Allows viewing forbidden word list
+  - id: compliance:forbidden:write
+    name: Manage Forbidden Words
+    description: Allows managing forbidden word list
+  - id: compliance:audit:read
+    name: View Compliance Audit
+    description: Allows viewing compliance audit trail
+
+# ===== Configuration Items =====
+config:
+  # Module-level configuration (provided by Host)
+  - key: compliance.enabled
+    type: boolean
+    default: true
+    description: Enable or disable compliance module
+  - key: compliance.check.realtime
+    type: boolean
+    default: true
+    description: Enable real-time compliance checking
+  - key: compliance.check.severity.threshold
+    type: string
+    default: LOW
+    description: Minimum severity threshold for flagging violations (LOW, MEDIUM, HIGH)
+  - key: compliance.template.max-length
+    type: integer
+    default: 5000
+    description: Maximum character length for script templates
+
+# ===== Resilience Configuration =====
+resilience:
+  # Circuit breaker configuration
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50          # Failure rate threshold (%)
+    slow-call-rate-threshold: 100       # Slow call rate threshold (%)
+    slow-call-duration-threshold: "3s"  # Slow call duration threshold
+    wait-duration-in-open-state: "30s"  # Circuit breaker open wait duration
+  
+  # Rate limiter configuration
+  rate-limiter:
+    enabled: false
+    limit-for-period: 100
+    limit-refresh-period: "1s"
+    timeout-duration: "5s"

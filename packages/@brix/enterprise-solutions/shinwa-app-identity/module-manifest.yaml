@@ -1,0 +1,207 @@
+# ===========================================================
+# shinwa-app-identity 模块声明文件
+# 
+# 本文件定义模块的元信息、能力需求、事件声明、配置项等。
+# Runtime Shell 通过此文件了解模块的能力契约，完成：
+# - 能力注入
+# - 事件路由
+# - 配置绑定
+# - 权限校验
+# 
+# 迁移自: plugin-user
+# 版本: 3.0.0
+# 日期: 2026-01-28
+# ===========================================================
+
+# ===== 模块基本信息 =====
+module:
+  # 模块唯一标识（与 Maven artifactId 一致）
+  id: shinwa-app-identity
+  # 模块版本（遵循语义化版本）
+  version: 3.0.0-SNAPSHOT
+  # 模块显示名称
+  name: 用户身份管理
+  # 模块提供商（必填）
+  vendor: Shinwa Solutions
+  # 许可证类型
+  license: Commercial
+  # 模块描述
+  description: |
+    提供用户身份管理的完整业务能力，包括：
+    - 用户注册、登录、注销
+    - 用户信息管理（基本信息、头像、密码）
+    - 用户状态管理（启用、禁用、锁定）
+    - 角色与权限管理
+    - 用户认证与授权支持
+
+# ===== 生命周期配置 =====
+lifecycle:
+  # 启动优先级（数字越小越先启动）
+  # 用户身份模块是基础模块，优先级较高
+  startup-order: 50
+  
+  # 本模块无依赖其他业务模块
+  dependencies: []
+
+# ===== 能力需求声明 =====
+capabilities:
+  # 必需能力（缺失则启动失败）
+  required:
+    - EventBusCapability      # 事件发布（用于发布用户状态变更事件）
+    - StateStoreCapability    # 状态存储（用于缓存用户信息、会话数据）
+    - AuthContextCapability   # 认证上下文（用于获取当前用户/租户）
+    - ObservabilityCapability # 可观测性（日志/指标/追踪）
+    - ConfigStoreCapability   # 配置存储（读取模块配置）
+
+  # 可选能力（缺失则降级运行）
+  optional:
+    - LockCapability          # 分布式锁（用于防止并发注册）
+    # ResilienceCapability 已移除：当前未实际使用，待外部服务调用场景实现后再添加
+
+# ===== 事件声明 =====
+events:
+  # 本模块发布的集成事件
+  publishes:
+    # 用户创建事件
+    - eventType: identity.user.created
+      description: 用户注册成功后发布
+      payload:
+        userId: String          # 用户ID
+        username: String        # 用户名
+        email: String           # 邮箱（可选）
+        phone: String           # 手机号（可选）
+        tenantId: String        # 租户ID
+        createdAt: LocalDateTime # 创建时间
+
+    # 用户信息更新事件
+    - eventType: identity.user.updated
+      description: 用户信息更新后发布
+      payload:
+        userId: String
+        updatedFields: List<String>  # 更新的字段列表
+        updatedAt: LocalDateTime
+
+    # 用户状态变更事件
+    - eventType: identity.user.status-changed
+      description: 用户状态变更后发布（启用/禁用/锁定）
+      payload:
+        userId: String
+        oldStatus: String
+        newStatus: String
+        reason: String
+        changedAt: LocalDateTime
+        changedBy: String
+
+    # 用户禁用事件
+    - eventType: identity.user.disabled
+      description: 用户账号被禁用后发布
+      payload:
+        userId: String
+        tenantId: String
+        reason: String
+        disabledAt: LocalDateTime
+        disabledBy: String
+
+    # 用户删除事件
+    - eventType: identity.user.deleted
+      description: 用户被删除后发布（软删除）
+      payload:
+        userId: String
+        tenantId: String
+        deletedAt: LocalDateTime
+        deletedBy: String
+
+    # 用户登录事件
+    - eventType: identity.user.logged-in
+      description: 用户登录成功后发布
+      payload:
+        userId: String
+        loginAt: LocalDateTime
+        loginIp: String
+        userAgent: String
+
+    # 用户登出事件
+    - eventType: identity.user.logged-out
+      description: 用户登出后发布
+      payload:
+        userId: String
+        logoutAt: LocalDateTime
+
+  # 本模块订阅的集成事件
+  subscribes: []
+
+# ===== 权限声明 =====
+permissions:
+  - id: "identity:user:read"
+    name: "查看用户"
+    description: "查看用户列表和详情"
+    
+  - id: "identity:user:create"
+    name: "创建用户"
+    description: "创建新用户"
+    
+  - id: "identity:user:update"
+    name: "更新用户"
+    description: "更新用户信息"
+    
+  - id: "identity:user:delete"
+    name: "删除用户"
+    description: "删除用户（软删除）"
+    
+  - id: "identity:user:status"
+    name: "管理用户状态"
+    description: "启用、禁用、锁定用户"
+
+# ===== 配置项声明 =====
+config:
+  - key: "identity.password.min-length"
+    type: int
+    default: 8
+    description: "密码最小长度"
+    
+  - key: "identity.password.require-special-char"
+    type: boolean
+    default: true
+    description: "密码是否需要特殊字符"
+    
+  - key: "identity.session.timeout-minutes"
+    type: int
+    default: 30
+    description: "会话超时时间（分钟）"
+    
+  - key: "identity.login.max-attempts"
+    type: int
+    default: 5
+    description: "最大登录尝试次数"
+    
+  - key: "identity.login.lockout-minutes"
+    type: int
+    default: 30
+    description: "登录锁定时间（分钟）"
+
+# ===== 容错配置 =====
+resilience:
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50
+    wait-duration-in-open-state: 30000
+    
+  rate-limiter:
+    enabled: true
+    limit-for-period: 100
+    limit-refresh-period: 1000
+    
+  # 重试与死信队列配置
+  retry:
+    max-attempts: 3
+    backoff-multiplier: 2.0
+    initial-interval: 1000
+    dlq:
+      enabled: true
+      topic: "identity.events.dlq"
+      retention-days: 7
+
+# ===== 健康检查 =====
+health:
+  enabled: true
+  include-details: true

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  host-shell-standalone - 产品模式运行壳
+  
+  职责：
+  - 组装完整运行时能力（Kafka EventBus, Redis StateStore, OTel）
+  - 集成所有业务模块 (shinwa-app-*)
+  - 提供 Spring Boot 可执行入口
+  - 支持 Docker 容器化部署
+  
+  版本: 3.0.4-SNAPSHOT (产品模式完整功能)
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.host</groupId>
+        <artifactId>host-assembly</artifactId>
+        <version>3.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>host-shell-standalone</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Brix Host Shell - Standalone</name>
+    <description>
+        产品模式运行壳（Standalone Mode Runtime Shell）
+        
+        ═══════════════════════════════════════════════════════════════════════
+        【定位】完整功能的可运行运行壳，包含能力组装 + 业务模块 + Spring Boot 入口
+        ═══════════════════════════════════════════════════════════════════════
+        
+        提供完整的能力组装：
+        - Kafka EventBus（生产级别消息）
+        - Redis StateStore（分布式状态）
+        - Redis Lock（分布式锁）
+        - OpenTelemetry Observability（可观测性）
+        - Full Scheduling（定时任务）
+        
+        适用场景：
+        - Shinwa Platform 标准产品部署
+        - 需要完整功能的生产环境
+        - 需要所有基础设施能力的场景
+        
+        启动命令：
+        java -jar host-shell-standalone.jar --spring.profiles.active=standalone
+        
+        Docker 启动：
+        docker run -p 8081:8081 brix/host-shell-standalone:3.0.0-SNAPSHOT
+    </description>
+
+    <properties>
+        <start-class>io.host.shell.standalone.ShellApplication</start-class>
+    </properties>
+
+    <dependencies>
+        <!-- ========== Platform Commons（公共基类）========== -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-common-starter</artifactId>
+        </dependency>
+
+        <!-- ========== Runtime SDK API（包含契约接口）========== -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-manifest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-orchestrator</artifactId>
+        </dependency>
+
+        <!-- ========== Infrastructure Adapters - 完整组装 ========== -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-kafka-core</artifactId>
+        </dependency>
+        <!-- Kafka Outbox 模式增强（事务性事件发布） -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-kafka-outbox</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-otel</artifactId>
+        </dependency>
+        <!-- ✅ 架构修复：Fallback 能力适配器，提供默认实现 -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-fallback</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- ✅ 红线 R1 修复：数据库能力适配器（PostgreSQL + HikariCP） -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-database</artifactId>
+        </dependency>
+        <!-- ✅ 红线 R1 修复：文件存储能力适配器（MinIO） -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-minio</artifactId>
+        </dependency>
+
+        <!-- ========== Platform Auth（认证能力）========== -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth</artifactId>
+            <version>3.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- ========== 业务模块（按需引入）========== -->
+        <!-- 用户身份 -->
+        <dependency>
+            <groupId>com.shinwa.solutions</groupId>
+            <artifactId>identity-server</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- ========== 业务模块 - 产品模式完整功能 ========== -->
+        <!-- 预约管理 -->
+        <dependency>
+            <groupId>com.shinwa.solutions</groupId>
+            <artifactId>booking-server</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 产品套餐管理 -->
+        <dependency>
+            <groupId>com.shinwa.solutions</groupId>
+            <artifactId>products-server</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 合作伙伴管理 -->
+        <dependency>
+            <groupId>com.shinwa.solutions</groupId>
+            <artifactId>partners-server</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 消息通知 -->
+        <dependency>
+            <groupId>com.shinwa.solutions</groupId>
+            <artifactId>messenger-server</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 轮播Banner管理 -->
+        <dependency>
+            <groupId>com.shinwa.solutions</groupId>
+            <artifactId>carousel-server</artifactId>
+            <version>3.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- ========== Spring Boot Starter ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ========== 数据库（PostgreSQL）========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ========== Logging ========== -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- ========== Testing ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>architecture-guard</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>${start-class}</mainClass>
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

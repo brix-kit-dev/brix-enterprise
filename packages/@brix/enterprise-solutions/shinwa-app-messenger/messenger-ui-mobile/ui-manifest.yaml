@@ -1,0 +1,96 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 消息通知模块 Mobile UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-31
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "messenger"
+  name: "消息通知"
+  version: "3.0.0"
+  description: "消息通知模块移动端界面"
+  vendor: "Shinwa Solutions"
+  platform: "mobile"
+
+# ============================================================================
+# 导出配置
+# ============================================================================
+exports:
+  # 导出的屏幕组件
+  screens:
+    - name: "InboxScreen"
+      path: "./src/screens/InboxScreen"
+      description: "收件箱屏幕"
+    - name: "MessageDetailScreen"
+      path: "./src/screens/MessageDetailScreen"
+      description: "消息详情屏幕"
+    - name: "ComposeScreen"
+      path: "./src/screens/ComposeScreen"
+      description: "发送消息屏幕"
+
+  # 导出的导航器
+  navigators:
+    - name: "MessengerNavigator"
+      path: "./src/navigation"
+      description: "消息模块导航器"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】使用 PageId 而非 screen name，与 Web 统一
+# ============================================================================
+pages:
+  # -------------------- 收件箱 --------------------
+  - pageId: "messenger:inbox"
+    component: "./screens/InboxScreen"
+    title: "收件箱"
+    titleKey: "messenger.page.inbox.title"
+    icon: "inbox"
+    permission: "message:read"
+
+  # -------------------- 消息详情 --------------------
+  - pageId: "messenger:detail"
+    component: "./screens/MessageDetailScreen"
+    title: "消息详情"
+    titleKey: "messenger.page.detail.title"
+    permission: "message:read"
+    params:
+      - name: "messageId"
+        type: "string"
+        required: true
+
+  # -------------------- 发送消息 --------------------
+  - pageId: "messenger:compose"
+    component: "./screens/ComposeScreen"
+    title: "发送消息"
+    titleKey: "messenger.page.compose.title"
+    permission: "message:send"
+    presentation: "modal"
+
+# ============================================================================
+# 依赖声明
+# ============================================================================
+dependencies:
+  runtime:
+    - "@brix/runtime-sdk-api-web"
+  shared:
+    - react
+    - react-native
+    - "@react-navigation/native"
+    - "@react-navigation/native-stack"
+    - react-native-paper
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 4002
+  host: "localhost"

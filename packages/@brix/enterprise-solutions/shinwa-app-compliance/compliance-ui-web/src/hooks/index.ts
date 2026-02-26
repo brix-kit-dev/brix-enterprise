@@ -1,0 +1,50 @@
+/**
+ * ViewModel hooks layer barrel exports for the Compliance UI Web module.
+ * Provides centralized access to all ViewModel hooks.
+ * @module compliance-ui-web/hooks
+ */
+
+// Script Template Hooks
+export {
+  useScriptTemplateList,
+  useScriptTemplateDetail,
+  useScriptTemplateForm,
+} from './useScriptTemplate';
+export type {
+  ScriptTemplateListState,
+  ScriptTemplateFilters,
+  ScriptTemplateDetailState,
+  ScriptTemplateFormState,
+} from './useScriptTemplate';
+
+// Forbidden Word Hooks
+export {
+  useForbiddenWordList,
+  useForbiddenWordDetail,
+  useForbiddenWordForm,
+  useForbiddenWordBulkImport,
+  useForbiddenWordExport,
+} from './useForbiddenWord';
+export type {
+  ForbiddenWordListState,
+  ForbiddenWordFilters,
+  ForbiddenWordDetailState,
+  ForbiddenWordFormState,
+  BulkImportState,
+} from './useForbiddenWord';
+
+// Compliance Check Hooks
+export {
+  useComplianceCheck,
+  useRealTimeComplianceCheck,
+  useComplianceAuditList,
+  useComplianceStatistics,
+  useAuditExport,
+} from './useComplianceCheck';
+export type {
+  ComplianceCheckState,
+  RealTimeCheckConfig,
+  RealTimeCheckState,
+  AuditListState,
+  AuditFilters,
+} from './useComplianceCheck';

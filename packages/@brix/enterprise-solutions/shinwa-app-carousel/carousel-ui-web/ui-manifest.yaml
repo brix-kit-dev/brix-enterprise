@@ -1,0 +1,181 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 轮播 Banner 管理模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-31
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "carousel"
+  name: "轮播管理"
+  version: "3.0.0"
+  description: "轮播 Banner 管理，支持轮播位和 Banner 的创建编辑"
+  vendor: "Shinwa Solutions"
+  icon: "ViewCarousel"
+  category: "content"
+
+# ============================================================================
+# Module Federation 配置
+# ============================================================================
+federation:
+  name: "carousel"
+  filename: "remoteEntry.js"
+  exposes:
+    "./pages/CarouselList": "./src/pages/CarouselListPage/index.tsx"
+    "./pages/CarouselDetail": "./src/pages/CarouselDetailPage/index.tsx"
+    "./pages/BannerList": "./src/pages/BannerListPage/index.tsx"
+    # 可嵌入组件（供其他插件使用）
+    "./components/CarouselView": "./src/components/CarouselView/index.tsx"
+  shared:
+    react:
+      singleton: true
+      requiredVersion: "^18.3.0"
+    react-dom:
+      singleton: true
+      requiredVersion: "^18.3.0"
+    "@mui/material":
+      singleton: true
+      requiredVersion: "^5.16.0"
+    "@emotion/react":
+      singleton: true
+    "@emotion/styled":
+      singleton: true
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 轮播位列表 --------------------
+  - pageId: "carousel:list"
+    component: "./pages/CarouselList"
+    title: "轮播位管理"
+    titleKey: "carousel.page.list.title"
+    permission: "carousel:view"
+    platforms:
+      web:
+        suggestedPath: "/carousels"
+      mobile:
+        suggestedScreen: "CarouselListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "轮播管理"
+
+  # -------------------- 新建轮播位 --------------------
+  - pageId: "carousel:create"
+    component: "./pages/CarouselDetail"
+    title: "新建轮播位"
+    titleKey: "carousel.page.create.title"
+    permission: "carousel:create"
+    platforms:
+      web:
+        suggestedPath: "/carousels/create"
+      mobile:
+        suggestedScreen: "CarouselCreateScreen"
+
+  # -------------------- 编辑轮播位 --------------------
+  - pageId: "carousel:edit"
+    component: "./pages/CarouselDetail"
+    title: "编辑轮播位"
+    titleKey: "carousel.page.edit.title"
+    permission: "carousel:update"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/carousels/:id/edit"
+      mobile:
+        suggestedScreen: "CarouselEditScreen"
+
+  # -------------------- Banner 管理 --------------------
+  - pageId: "carousel:banners"
+    component: "./pages/BannerList"
+    title: "Banner管理"
+    titleKey: "carousel.page.banners.title"
+    permission: "banner:manage"
+    params:
+      - name: "carouselId"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/carousels/:carouselId/banners"
+      mobile:
+        suggestedScreen: "BannerListScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "轮播管理"
+          pageId: "carousel:list"
+        - label: "Banner管理"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+# ============================================================================
+menus:
+  - id: "carousel"
+    title: "轮播管理"
+    icon: "view_carousel"
+    order: 30
+    permission: "carousel:view"
+    children:
+      - id: "carousel:list"
+        title: "轮播位列表"
+        icon: "list"
+        pageId: "carousel:list"
+        order: 1
+      - id: "carousel:create"
+        title: "新建轮播位"
+        icon: "add"
+        pageId: "carousel:create"
+        order: 2
+        permission: "carousel:create"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "carousel:view"
+    name: "查看轮播位"
+    description: "允许查看轮播位列表"
+  - code: "carousel:create"
+    name: "创建轮播位"
+    description: "允许创建轮播位"
+  - code: "carousel:update"
+    name: "编辑轮播位"
+    description: "允许编辑轮播位"
+  - code: "carousel:delete"
+    name: "删除轮播位"
+    description: "允许删除轮播位"
+  - code: "banner:manage"
+    name: "管理Banner"
+    description: "允许管理轮播位下的 Banner"
+
+# ============================================================================
+# 依赖配置
+# ============================================================================
+dependencies:
+  api: "carousel-server"
+  port: 8083
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3003
+  proxy:
+    /api: "http://localhost:8083"

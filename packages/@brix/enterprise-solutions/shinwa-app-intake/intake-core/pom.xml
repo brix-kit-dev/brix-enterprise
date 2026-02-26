@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  intake-core Module
+  
+  Business Logic Module containing:
+  - Domain entities
+  - Domain services
+  - Repository interfaces
+  - Application services
+  
+  【v3.0 Architecture Constraints】
+  - Depends only on runtime-sdk-api (Capability Contract)
+  - No direct dependencies on infrastructure (Kafka/Redis/HTTP)
+  - Business logic is infrastructure-agnostic
+  
+  @author Shinwa Team
+  @date 2026-02-24
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.shinwa.app</groupId>
+        <artifactId>shinwa-app-intake</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>intake-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Intake Module - Core</name>
+    <description>Intake Module Business Logic (Domain, Service, Repository)</description>
+
+    <dependencies>
+        <!-- Internal: API module -->
+        <dependency>
+            <groupId>com.shinwa.app</groupId>
+            <artifactId>intake-api</artifactId>
+        </dependency>
+
+        <!--
+            【Architecture Red Line】Plugin core module MUST only depend on runtime-sdk-api
+            - runtime-sdk-api: Contract interfaces (Capabilities, Events, RuntimeContext)
+            - runtime-sdk: Implementation classes (PROHIBITED for plugin core)
+            
+            This constraint ensures:
+            1. Plugin decoupled from infrastructure implementation
+            2. Testability through mock/stub implementations
+            3. Clean dependency graph without transitive infrastructure deps
+            
+            @see v3.0 Architecture Blueprint §2.2 Layer Dependency Rules
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- Spring Boot (core only, no web) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- JPA for repository interfaces -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- MapStruct for DTO mapping -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Architecture Guard -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>architecture-guard</artifactId>
+            <version>3.1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>1.5.5.Final</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>0.2.0</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

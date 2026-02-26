@@ -1,0 +1,162 @@
+# Compliance UI Web Module Manifest
+# Defines routes, menus, and permissions for the compliance module
+# Following v3.0.4 Runtime Shell Architecture Blueprint
+
+module:
+  id: compliance-ui-web
+  name: Compliance Management
+  description: Script templates and forbidden words management for sales compliance
+  version: 1.0.0-SNAPSHOT
+  federation:
+    name: compliance_ui_web
+    entry: http://localhost:3052/remoteEntry.js
+
+# Route definitions for the host shell
+routes:
+  # Script Template Management
+  - path: /compliance/scripts
+    name: ScriptTemplateListPage
+    component: ./ScriptTemplateListPage
+    meta:
+      title: 话术模板列表
+      icon: message-square
+      permission: compliance:script:view
+      
+  - path: /compliance/scripts/create
+    name: ScriptTemplateCreatePage
+    component: ./ScriptTemplateCreatePage
+    meta:
+      title: 创建话术模板
+      permission: compliance:script:create
+      
+  - path: /compliance/scripts/:id
+    name: ScriptTemplateDetailPage
+    component: ./ScriptTemplateDetailPage
+    meta:
+      title: 话术模板详情
+      permission: compliance:script:view
+      
+  - path: /compliance/scripts/:id/edit
+    name: ScriptTemplateEditPage
+    component: ./ScriptTemplateCreatePage
+    meta:
+      title: 编辑话术模板
+      permission: compliance:script:update
+      
+  # Forbidden Word Management
+  - path: /compliance/forbidden-words
+    name: ForbiddenWordListPage
+    component: ./ForbiddenWordListPage
+    meta:
+      title: 禁用词列表
+      icon: alert-triangle
+      permission: compliance:forbidden:view
+      
+  - path: /compliance/forbidden-words/create
+    name: ForbiddenWordCreatePage
+    component: ./ForbiddenWordCreatePage
+    meta:
+      title: 添加禁用词
+      permission: compliance:forbidden:create
+      
+  - path: /compliance/forbidden-words/:id/edit
+    name: ForbiddenWordEditPage
+    component: ./ForbiddenWordCreatePage
+    meta:
+      title: 编辑禁用词
+      permission: compliance:forbidden:update
+      
+  # Compliance Check Tool
+  - path: /compliance/check
+    name: ComplianceCheckPage
+    component: ./ComplianceCheckPage
+    meta:
+      title: 合规检查
+      icon: shield-check
+      permission: compliance:check:execute
+
+# Menu structure for the navigation
+menus:
+  - id: compliance-root
+    title: 合规管理
+    icon: shield
+    order: 60
+    children:
+      - id: compliance-scripts
+        title: 话术管理
+        icon: message-square
+        route: /compliance/scripts
+        order: 1
+        
+      - id: compliance-forbidden
+        title: 禁用词管理
+        icon: alert-triangle
+        route: /compliance/forbidden-words
+        order: 2
+        
+      - id: compliance-check
+        title: 合规检查工具
+        icon: shield-check
+        route: /compliance/check
+        order: 3
+
+# Permission definitions
+permissions:
+  # Script Template permissions
+  - id: compliance:script:view
+    name: 查看话术模板
+    description: View script templates list and details
+    
+  - id: compliance:script:create
+    name: 创建话术模板
+    description: Create new script templates
+    
+  - id: compliance:script:update
+    name: 编辑话术模板
+    description: Update existing script templates
+    
+  - id: compliance:script:delete
+    name: 删除话术模板
+    description: Delete script templates
+    
+  - id: compliance:script:publish
+    name: 发布话术模板
+    description: Publish script templates for use
+    
+  # Forbidden Word permissions
+  - id: compliance:forbidden:view
+    name: 查看禁用词
+    description: View forbidden words list
+    
+  - id: compliance:forbidden:create
+    name: 添加禁用词
+    description: Add new forbidden words
+    
+  - id: compliance:forbidden:update
+    name: 编辑禁用词
+    description: Update forbidden word settings
+    
+  - id: compliance:forbidden:delete
+    name: 删除禁用词
+    description: Remove forbidden words
+    
+  # Compliance Check permissions
+  - id: compliance:check:execute
+    name: 执行合规检查
+    description: Run compliance checks on text content
+    
+  - id: compliance:audit:view
+    name: 查看合规审计
+    description: View compliance audit history
+
+# Feature flags for conditional functionality
+features:
+  - id: compliance-real-time-check
+    name: Real-time Compliance Check
+    description: Enable real-time checking as user types
+    defaultEnabled: true
+    
+  - id: compliance-ai-suggestion
+    name: AI Compliance Suggestions
+    description: AI-powered suggestions for compliant alternatives
+    defaultEnabled: false

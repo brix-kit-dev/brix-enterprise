@@ -1,0 +1,13 @@
+{
+  "name": "@shinwa/contracts-app",
+  "version": "3.0.0-SNAPSHOT",
+  "private": true,
+  "description": "合同管理应用 - v3.0 Manifest-Driven 架构",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "build:shared": "pnpm --filter @shinwa/contracts-shared build",
+    "generate:api": "pnpm --filter @shinwa/contracts-shared generate:api",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean"
+  }
+}

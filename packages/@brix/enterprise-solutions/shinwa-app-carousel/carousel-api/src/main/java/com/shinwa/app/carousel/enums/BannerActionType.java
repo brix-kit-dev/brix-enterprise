@@ -1,0 +1,40 @@
+/**
+ * Banner动作类型枚举
+ * 
+ * <p>定义Banner被点击时的行为类型
+ * 
+ * @author Shinwa Team
+ * @since 3.0.0
+ */
+package com.shinwa.app.carousel.enums;
+
+/**
+ * Banner动作类型枚举
+ */
+public enum BannerActionType {
+    
+    /** 无动作 */
+    NONE("无动作"),
+    
+    /** 跳转URL */
+    LINK("跳转URL"),
+    
+    /** 应用内路由 */
+    ROUTE("应用内路由"),
+    
+    /** 弹窗 */
+    POPUP("弹窗"),
+    
+    /** 深度链接 */
+    DEEP_LINK("深度链接");
+    
+    private final String displayName;
+    
+    BannerActionType(String displayName) {
+        this.displayName = displayName;
+    }
+    
+    public String getDisplayName() {
+        return displayName;
+    }
+}
