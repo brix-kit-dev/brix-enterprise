@@ -1,0 +1,11 @@
+import zipfile, struct
+z = zipfile.ZipFile('/home/deploy/host-shell-standalone/target/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar')
+inner = z.read('BOOT-INF/lib/platform-common-starter-3.2.0.jar')
+open('/tmp/p.jar', 'wb').write(inner)
+z2 = zipfile.ZipFile('/tmp/p.jar')
+data = z2.read('io/brix/platform/starter/web/GlobalExceptionHandler.class')
+hi = struct.pack('>i', -2147483648)
+lo = struct.pack('>i', 2147483647)
+print('contains HIGHEST(-2147483648):', hi in data)
+print('contains LOWEST ( 2147483647):', lo in data)
+print('size:', len(data))
