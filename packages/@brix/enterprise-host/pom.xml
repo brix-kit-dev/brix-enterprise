@@ -69,7 +69,7 @@
         <spring-boot.version>3.2.2</spring-boot.version>
 
         <!-- Flyway 版本（与 platform-commons 对齐，覆盖 Spring Boot BOM 的 9.x） -->
-        <flyway.version>11.8.0</flyway.version>
+        <flyway.version>12.6.1</flyway.version>
 
         <!-- Brix 组件版本 -->
         <runtime-sdk.version>3.2.0</runtime-sdk.version>
