@@ -65,7 +65,7 @@
         <!-- pnpm 版本 -->
         <pnpm.version>8.14.0</pnpm.version>
         <!-- frontend-maven-plugin 版本 -->
-        <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
+        <frontend-maven-plugin.version>2.0.0</frontend-maven-plugin.version>
     </properties>
 
     <build>
