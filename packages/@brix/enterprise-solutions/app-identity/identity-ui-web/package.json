@@ -20,7 +20,7 @@
   "devDependencies": {
     "@rspack/cli": "^1.6.8",
     "@rspack/core": "^1.6.8",
-    "@types/node": "^22.10.1",
+    "@types/node": "^25.8.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^14.1.0",
     "@testing-library/user-event": "^14.5.0",
