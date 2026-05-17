@@ -29,7 +29,7 @@
     "@brix-sdk/runtime-sdk-api-web": "link:../../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web",
     "@brix-sdk/runtime-sdk-react": "link:../../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-react",
     "eslint": "^9.0.0",
-    "jsdom": "^24.0.0",
+    "jsdom": "^29.1.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "typescript": "^5.7.2",
