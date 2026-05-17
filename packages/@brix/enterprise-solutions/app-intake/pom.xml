@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  v3.0 Medical Intake Module Parent POM
+  
+  Module Structure:
+  - intake-api:    API module (DTO, Event, Request)
+  - intake-core:   Business logic module
+  - intake-server: REST Controller module
+  - intake-shared: Frontend/Backend shared types (TypeScript)
+  - intake-ui-web: Web UI module (React + MUI)
+  - intake-ui-mobile: Mobile UI module (React Native)
+  
+  Adhering to v3.0.4 Runtime Shell Architecture Blueprint:
+  - Only depends on io.runtime:runtime-sdk (Capability Contract)
+  - No direct dependencies on Kafka/Redis/HTTP infrastructure
+  - Full frontend-backend separation
+  
+  @author Brix Team
+  @date 2026-02-24
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Parent POM: Inherit from enterprise-solutions-parent for unified management -->
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>brix-enterprise-solutions-parent</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>io.brix.enterprise.app</groupId>
+    <artifactId>app-intake</artifactId>
+    <version>3.2.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Intake Module</name>
+    <description>
+        Medical Intake Module - Document Collection and Review Management
+        
+        Features:
+        - Intake task management (create, assign, track)
+        - Document checklist definition
+        - Customer submission interface
+        - Staff review interface
+        - Integration with Case module
+        
+        Architecture: v3.0.4 Runtime Shell with Full Frontend-Backend Separation
+    </description>
+
+    <!-- Sub-modules -->
+    <modules>
+        <module>intake-api</module>
+        <module>intake-core</module>
+        <module>intake-server</module>
+        <module>intake-app</module>
+    </modules>
+
+    <properties>
+        <!-- Version management — spring-boot.version inherited from parent (3.2.2) -->
+        <!--
+          Brix Runtime SDK version. Aligned with the published io.brix:runtime-sdk-* artifacts
+          (groupId migrated from legacy io.runtime → io.brix in v3.1.0).
+        -->
+        <runtime-sdk.version>3.2.0</runtime-sdk.version>
+        
+        <!-- Compilation configuration -->
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- Dependency management -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- v3.1 Runtime SDK contract layer (capability + event contracts) -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-sdk-api</artifactId>
+                <version>${runtime-sdk.version}</version>
+            </dependency>
+            <!-- v3.1 Runtime Orchestrator (lifecycle, registry, event dispatcher, manifest loader) -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>runtime-orchestrator</artifactId>
+                <version>${runtime-sdk.version}</version>
+            </dependency>
+            
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>io.brix.enterprise.app</groupId>
+                <artifactId>intake-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix.enterprise.app</groupId>
+                <artifactId>intake-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <!-- Cross-module dependencies -->
+            <dependency>
+                <groupId>io.brix.enterprise.app</groupId>
+                <artifactId>case-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix.enterprise.app</groupId>
+                <artifactId>storage-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <!-- Spring Boot BOM -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.12.1</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>1.18.30</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.3</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

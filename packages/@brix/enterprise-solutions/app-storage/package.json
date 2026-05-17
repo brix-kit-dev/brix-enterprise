@@ -1,0 +1,13 @@
+{
+  "name": "@brix-sdk/enterprise-storage-app",
+  "version": "3.2.0",
+  "private": true,
+  "description": "文件存储应用 - v3.0 Manifest-Driven 架构",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "build:shared": "pnpm --filter @brix-sdk/enterprise-storage-shared build",
+    "generate:api": "pnpm --filter @brix-sdk/enterprise-storage-shared generate:api",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean"
+  }
+}

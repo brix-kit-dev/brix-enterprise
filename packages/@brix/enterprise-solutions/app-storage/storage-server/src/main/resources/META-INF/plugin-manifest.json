@@ -1,0 +1,79 @@
+{
+  "name": "storage",
+  "pluginId": "brix-app-storage",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "文件存储",
+  "description": "Brix Enterprise File Storage - provides file upload, download, and management capabilities with MinIO S3-compatible backend.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/storage/ui-manifest.json",
+      "scope": "storage",
+      "routes": [
+        {
+          "path": "/files",
+          "component": "./pages/FileList",
+          "exact": true,
+          "menu": {
+            "title": "文件列表",
+            "icon": "list",
+            "order": 1,
+            "parentId": "storage"
+          }
+        },
+        {
+          "path": "/files/upload",
+          "component": "./pages/FileUpload",
+          "menu": {
+            "title": "文件上传",
+            "icon": "upload",
+            "order": 2,
+            "parentId": "storage"
+          }
+        },
+        {
+          "path": "/files/:id",
+          "component": "./pages/FileDetail",
+          "menu": {
+            "hidden": true
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "storage",
+          "title": "文件中心",
+          "icon": "folder",
+          "order": 500
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "storage://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability", "FileStorageCapability"],
+    "optional": ["ImageProcessingCapability", "VideoProcessing"]
+  },
+  
+  "events": {
+    "publish": [
+      "FileUploaded",
+      "FileDeleted",
+      "FileShared",
+      "StorageQuotaExceeded"
+    ],
+    "subscribe": []
+  },
+
+  "metadata": {
+    "category": "platform",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

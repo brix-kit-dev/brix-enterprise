@@ -77,18 +77,18 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
       
       - name: Install dependencies
-        working-directory: shinwa-app-${{ matrix.module }}
+        working-directory: app-${{ matrix.module }}
         run: pnpm install
       
       - name: Run Consumer Pact tests
-        working-directory: shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared
+        working-directory: app-${{ matrix.module }}/${{ matrix.module }}-shared
         run: pnpm test:pact
       
       - name: Upload Pact contracts
         uses: actions/upload-artifact@v4
         with:
           name: pact-contracts-${{ matrix.module }}
-          path: shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared/pacts/
+          path: app-${{ matrix.module }}/${{ matrix.module }}-shared/pacts/
           retention-days: 7
 
   # ========================================
@@ -128,7 +128,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: pact-contracts-${{ matrix.module }}
-          path: shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared/pacts/
+          path: app-${{ matrix.module }}/${{ matrix.module }}-shared/pacts/
       
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -141,7 +141,7 @@ jobs:
         run: mvn clean install -DskipTests -B
       
       - name: Run Provider Pact verification
-        working-directory: shinwa-app-${{ matrix.module }}
+        working-directory: app-${{ matrix.module }}
         run: |
           echo "🔍 验证 ${{ matrix.module }}-server Provider 契约..."
           mvn -pl ${{ matrix.module }}-server test -Dtest=*PactProviderTest -B
@@ -152,7 +152,7 @@ jobs:
         with:
           name: pact-verification-${{ matrix.module }}
           path: |
-            shinwa-app-${{ matrix.module }}/${{ matrix.module }}-server/target/pact-reports/
+            app-${{ matrix.module }}/${{ matrix.module }}-server/target/pact-reports/
           retention-days: 7
 
   # ========================================

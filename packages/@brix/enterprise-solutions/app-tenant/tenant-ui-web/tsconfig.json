@@ -1,0 +1,30 @@
+{
+  "//": "tenant-ui-web TypeScript configuration. Created in Phase 3 / C-5 to enable vitest type-check and IDE support. Mirrors identity-ui-web settings for consistency. Build itself is driven by rspack (swc-loader) and does not require this file, but vitest + tsc fall back to it.",
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "//noUnusedLocals": "Disabled to mirror identity-ui-web — linked source files frequently produce false positives.",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "declaration": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@brix-sdk/tenant-shared": ["../tenant-shared/src/index.ts"],
+      "@brix-sdk/tenant-shared/*": ["../tenant-shared/src/*"]
+    },
+    "types": ["vitest/globals", "node"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

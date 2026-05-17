@@ -1,0 +1,136 @@
+# ===========================================================================================
+# Messaging Center Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Messaging Center plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-messenger"
+
+  # Display name
+  name: "Messaging Center"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (platform-level functionality)
+  type: "plugin"
+
+  # Module category
+  category: "platform"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Messaging Center Plugin
+
+    Core responsibilities:
+    - In-app notifications: deliver real-time notifications to users
+    - Message inbox: manage user message inbox and history
+    - Communication: support inter-user and system-to-user messaging
+    - Message lifecycle: handle read status, archival, and retention
+
+    Provides in-app notifications, message inbox, and communication
+    capabilities for the platform.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 50
+
+  # Required modules (must be ready before this module starts)
+  depends-on:
+    - "brix-app-identity"
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/messenger"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - push-notification
+    - web-socket
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.messenger.event.MessageSent"
+      description: "Published when a message is sent"
+
+    - type: "io.brix.plugin.messenger.event.MessageRead"
+      description: "Published when a message is marked as read"
+
+    - type: "io.brix.plugin.messenger.event.MessageArchived"
+      description: "Published when a message is archived"
+
+  # Subscribed events
+  subscribes:
+    - type: "io.brix.plugin.identity.event.UserCreated"
+      description: "When a new user is created, initialize message inbox"
+
+    - type: "io.brix.plugin.booking.event.BookingCreated"
+      description: "When a booking is created, send notification to relevant users"
+
+    - type: "io.brix.plugin.booking.event.BookingUpdated"
+      description: "When a booking is updated, notify affected users"
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "messenger:manage"
+    name: "Manage Messaging"
+    description: "Full management access to the messaging system"
+
+  - id: "messenger:read"
+    name: "View Messages"
+    description: "Read-only access to messages"
+
+  - id: "messenger:send"
+    name: "Send Messages"
+    description: "Permission to send messages"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "messenger.max-message-size"
+    type: "string"
+    default: "10KB"
+    description: "Maximum size of a single message"
+
+  - key: "messenger.retention-days"
+    type: "int"
+    default: "365"
+    description: "Number of days to retain messages before automatic cleanup"
+
+# ===========================================================================================

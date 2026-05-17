@@ -4,15 +4,15 @@
  * @version 3.1.0
  * 
  * 【架构分层】
- * - 通用红线规则：从 @brix/eslint-config-architecture 继承
+ * - 通用红线规则：从 @brix-sdk/eslint-config-architecture 继承
  * - 极薄Host规则：从共享包导入，在本地应用到 hooks/ 目录
  * 
- * @see @brix/eslint-config-architecture 共享规则
+ * @see @brix-sdk/eslint-config-architecture 共享规则
  * @see v3.0.4-运行壳架构设计蓝图.md 第9章
  */
 
-const architectureRules = require('@brix/eslint-config-architecture');
-const { ultraThinHostRules } = require('@brix/eslint-config-architecture');
+const architectureRules = require('@brix-sdk/eslint-config-architecture');
+const { ultraThinHostRules } = require('@brix-sdk/eslint-config-architecture');
 const tsParser = require('@typescript-eslint/parser');
 
 /** @type {import('eslint').Linter.FlatConfig[]} */

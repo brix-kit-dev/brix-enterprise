@@ -1,0 +1,61 @@
+# OpenAPI Compatibility Check (R9.6)
+#
+# Detects breaking API changes on pull requests by comparing the
+# OpenAPI specification generated from the current branch against
+# the base branch.  Fails the build when incompatible changes are
+# found (e.g., removed endpoints, changed required parameters).
+#
+# Architecture: This workflow runs in CI only — no runtime impact.
+# Blueprint reference: v3.0.9 §9 Architecture Red Lines, R9.6.
+
+name: API Compatibility Check
+
+on:
+  pull_request:
+    paths:
+      - '**/api/**'
+      - '**/dto/**'
+      - '**/controller/**'
+      - '**/shared/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  openapi-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Generate OpenAPI spec (current)
+        run: |
+          mvn verify -pl host-shell-standalone -Popenapi-generate -DskipTests -q
+          cp target/openapi.json target/openapi-current.json
+
+      - name: Generate OpenAPI spec (base)
+        run: |
+          git stash --include-untracked || true
+          git checkout ${{ github.event.pull_request.base.sha }}
+          mvn verify -pl host-shell-standalone -Popenapi-generate -DskipTests -q
+          cp target/openapi.json target/openapi-base.json
+          git checkout -
+
+      - name: Run OpenAPI diff
+        uses: openapitools/openapi-diff-action@v1
+        with:
+          old-spec: target/openapi-base.json
+          new-spec: target/openapi-current.json
+          fail-on-breaking: true

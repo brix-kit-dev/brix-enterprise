@@ -1,0 +1,158 @@
+# ===========================================================================================
+# Identity Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Identity Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-identity"
+
+  # Display name
+  name: "Identity Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (platform-level functionality)
+  type: "plugin"
+
+  # Module category
+  category: "platform"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Identity Management Plugin
+
+    Core responsibilities:
+    - Authentication: user login, logout, and session management
+    - Authorization: permission and access control enforcement
+    - Organization structure: manage organizational hierarchy
+    - Role-based access control: define and assign roles and permissions
+    - User management: create, update, and manage user accounts
+
+    Provides user authentication, authorization, organization structure, and
+    role-based access control for the platform.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  # Platform-level module, early start required
+  startup-order: 20
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/identity"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - notification
+    - audit-log
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.identity.event.UserCreated"
+      description: "Published when a new user account is created"
+
+    - type: "io.brix.plugin.identity.event.UserUpdated"
+      description: "Published when a user account is updated"
+
+    - type: "io.brix.plugin.identity.event.UserDeleted"
+      description: "Published when a user account is deleted"
+
+    - type: "io.brix.plugin.identity.event.UserActivated"
+      description: "Published when a user account is activated"
+
+    - type: "io.brix.plugin.identity.event.UserDeactivated"
+      description: "Published when a user account is deactivated"
+
+    - type: "io.brix.plugin.identity.event.RoleAssigned"
+      description: "Published when a role is assigned to a user"
+
+    - type: "io.brix.plugin.identity.event.OrganizationCreated"
+      description: "Published when a new organization is created"
+
+  # Subscribed events
+  subscribes: []
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "identity:manage"
+    name: "Manage Identity"
+    description: "Full management access to identity system"
+
+  - id: "identity:user:read"
+    name: "View Users"
+    description: "Read-only access to user information"
+
+  - id: "identity:user:create"
+    name: "Create Users"
+    description: "Permission to create new user accounts"
+
+  - id: "identity:user:delete"
+    name: "Delete Users"
+    description: "Permission to delete user accounts"
+
+  - id: "identity:role:manage"
+    name: "Manage Roles"
+    description: "Permission to create, update, and assign roles"
+
+  - id: "identity:org:manage"
+    name: "Manage Organizations"
+    description: "Permission to manage organizational structure"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "identity.password-min-length"
+    type: "int"
+    default: "8"
+    description: "Minimum password length for user accounts"
+
+  - key: "identity.session-timeout"
+    type: "duration"
+    default: "30m"
+    description: "User session timeout duration"
+
+  - key: "identity.max-login-attempts"
+    type: "int"
+    default: "5"
+    description: "Maximum consecutive failed login attempts before account lockout"
+
+# ===========================================================================================

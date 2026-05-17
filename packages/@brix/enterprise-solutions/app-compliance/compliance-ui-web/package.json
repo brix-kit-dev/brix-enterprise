@@ -1,0 +1,40 @@
+{
+  "name": "@brix-sdk/enterprise-compliance-ui-web",
+  "version": "3.2.0",
+  "private": true,
+  "description": "Compliance management UI module for script templates and forbidden words detection",
+  "scripts": {
+    "dev": "rspack serve --mode=development",
+    "build": "rspack build --mode=production",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@brix-sdk/enterprise-compliance-shared": "workspace:*",
+    "dompurify": "^3.3.3"
+  },
+  "devDependencies": {
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
+    "@rspack/cli": "^1.1.0",
+    "@rspack/core": "^1.1.0",
+    "@types/dompurify": "^3.2.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^9.0.0",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@brix-sdk/shared-runtime-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-api-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-react": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./pages": "./src/pages/index.ts",
+    "./components": "./src/components/index.ts",
+    "./hooks": "./src/hooks/index.ts"
+  }
+}

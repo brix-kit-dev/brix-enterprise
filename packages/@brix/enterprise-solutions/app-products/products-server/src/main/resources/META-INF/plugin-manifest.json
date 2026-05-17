@@ -1,0 +1,44 @@
+{
+  "name": "products",
+  "pluginId": "brix-app-products",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "产品管理",
+  "description": "Brix Enterprise Product Management - provides product catalog, package configuration, and pricing management for medical tourism service offerings.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/products/ui-manifest.json",
+      "scope": "products"
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "products://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["FileStorageCapability", "NotificationService"]
+  },
+  
+  "events": {
+    "publish": [
+      "ProductCreated",
+      "ProductUpdated",
+      "ProductDeleted",
+      "ProductPublished",
+      "ProductPriceChanged"
+    ],
+    "subscribe": [
+      "PartnerStatusChanged"
+    ]
+  },
+
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

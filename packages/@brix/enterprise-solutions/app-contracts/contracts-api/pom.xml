@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  合同管理模块 - API层
+  
+  职责:
+  - 定义DTO（数据传输对象）
+  - 定义枚举类型
+  - 定义服务接口
+  - 供其他模块依赖调用
+  
+  @author Brix Platform Team
+  @since 3.0.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-contracts</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>contracts-api</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Contracts Module - API</name>
+    <description>合同管理模块API层 - DTO定义、枚举类型、服务接口</description>
+
+    <dependencies>
+        <!-- ========== Runtime SDK（开源核心层）========== -->
+        <!--
+            【核心依赖】运行壳能力契约（runtime-sdk-api）
+            API 层需要引用 SDK 中的事件基类和契约定义：
+            - DomainEvent / IntegrationEvent 事件基类
+            - 能力契约接口引用
+            蓝图 §4 Plugin 模型要求：插件 API 层仅依赖 runtime-sdk-api
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- Jakarta Validation API -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Jackson Annotations -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- OpenAPI Swagger Annotations -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

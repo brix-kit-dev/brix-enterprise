@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  合同管理模块 - 服务启动层
+  
+  职责:
+  - REST控制器
+  - 自动配置
+  - 应用启动入口
+  
+  @author Brix Platform Team
+  @since 3.0.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-contracts</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>contracts-server</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Contracts Server</name>
+    <description>合同管理服务启动层 - 控制器、配置、启动入口</description>
+
+    <dependencies>
+        <!-- 本模块Core -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>contracts-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Spring Boot Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            [D-10 修复] 已移除 spring-boot-starter-actuator。
+            蓝图要求：监控/健康检查是 Host 层（Layer 3）的职责，
+            插件层（Layer 1）不应包含 Actuator 依赖。
+            插件通过 LifecycleCapability.healthCheck() 提供健康状态。
+        -->
+
+        <!-- [RED-LINE R1 修复] 已移除 postgresql 直接依赖。
+             数据库驱动由 infra-adapter-database 适配器在 Host 组装层提供。-->
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- OpenAPI Swagger Annotations -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+
+        <!-- 测试 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

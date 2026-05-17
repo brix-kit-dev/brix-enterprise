@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Shinwa Platform v3.0 Runtime Shell Architecture Compliance Check Script.
+    Brix Platform v3.0 Runtime Shell Architecture Compliance Check Script.
 
 .DESCRIPTION
     This script checks code repositories for compliance with the 8 architecture red lines
@@ -45,7 +45,7 @@
 
 .NOTES
     Version: 3.1.0
-    Author: Shinwa Architecture Team / Brix Architecture Team
+    Author: Brix Architecture Team / Brix Architecture Team
     Date: 2026-02-14
 #>
 
@@ -191,7 +191,7 @@ $Script:ViolationPatterns = @{
 
     # Red Line 4: Cross-module direct call (NEW)
     "CrossModule_DirectImport" = @{
-        Pattern     = "import\s+com\.shinwa\.app\.(?!(?:common|shared))[a-z]+\."
+        Pattern     = "import\s+io\.brix\.enterprise\.app\.(?!(?:common|shared))[a-z]+\."
         RedLine     = 4
         Severity    = "Critical"
         Description = "Direct import from another business module forbidden"
@@ -295,7 +295,7 @@ $Script:ViolationPatterns = @{
         FileType    = "Java"
     }
     "Logger_InDomain_Package" = @{
-        Pattern     = "package\s+com\.shinwa\.app\.[a-z]+\.(?:domain|entity|model);"
+        Pattern     = "package\s+io\.brix\.enterprise\.app\.[a-z]+\.(?:domain|entity|model);"
         RedLine     = 7
         Severity    = "Info"
         Description = "Domain package detected - will check for Logger usage"
@@ -571,7 +571,7 @@ function Write-ConsoleReport {
     
     Write-Host ""
     Write-ColorText "========================================" "Cyan"
-    Write-ColorText "  Shinwa Platform v3.0 Architecture" "Cyan"
+    Write-ColorText "  Brix Platform v3.0 Architecture" "Cyan"
     Write-ColorText "  Compliance Check Report" "Cyan"
     Write-ColorText "========================================" "Cyan"
     Write-Host ""
@@ -724,7 +724,7 @@ function Write-MarkdownReport {
     $tsViolations = ($Violations | Where-Object { $_.FileType -eq "TypeScript" }).Count
     
     $md = @"
-# Shinwa Platform v3.0 Architecture Compliance Report
+# Brix Platform v3.0 Architecture Compliance Report
 
 ## Basic Information
 

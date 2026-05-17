@@ -1,0 +1,67 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 合作伙伴管理模块 Mobile UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-31
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "partners"
+  name: "合作伙伴管理"
+  version: "3.0.0"
+  description: "移动端合作伙伴信息展示"
+  vendor: "Brix Platform"
+  platform: "mobile"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】使用 PageId 而非 screen name，与 Web 统一
+# ============================================================================
+pages:
+  # -------------------- 合作伙伴列表 --------------------
+  - pageId: "partners:list"
+    component: "./screens/PartnerListScreen"
+    title: "合作伙伴"
+    titleKey: "partners.page.list.title"
+    icon: "account-group"
+    permission: "partner:read"
+    config:
+      headerShown: true
+
+  # -------------------- 合作伙伴详情 --------------------
+  - pageId: "partners:detail"
+    component: "./screens/PartnerDetailScreen"
+    title: "合作伙伴详情"
+    titleKey: "partners.page.detail.title"
+    permission: "partner:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    config:
+      headerShown: true
+
+# ============================================================================
+# 导航配置
+# ============================================================================
+navigation:
+  - menuId: "partners"
+    title: "合作伙伴"
+    icon: "account-group"
+    pageId: "partners:list"
+    order: 40
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 4004
+  apiProxy: "http://localhost:8084"

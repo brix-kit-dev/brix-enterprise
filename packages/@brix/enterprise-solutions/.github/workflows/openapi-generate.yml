@@ -92,7 +92,7 @@ jobs:
       - name: Generate OpenAPI for booking-server
         run: |
           echo "📄 生成 booking-server OpenAPI 文档..."
-          cd shinwa-app-booking
+          cd app-booking
           
           # 启动应用并等待就绪
           mvn -pl booking-server spring-boot:run -Dspring-boot.run.profiles=test &
@@ -120,7 +120,7 @@ jobs:
       - name: Generate OpenAPI for identity-server
         run: |
           echo "📄 生成 identity-server OpenAPI 文档..."
-          cd shinwa-app-identity
+          cd app-identity
           
           # 启动应用并等待就绪
           mvn -pl identity-server spring-boot:run -Dspring-boot.run.profiles=test &
@@ -204,12 +204,12 @@ jobs:
           version: 9
       
       - name: Install dependencies
-        working-directory: shinwa-app-${{ matrix.module }}
+        working-directory: app-${{ matrix.module }}
         run: pnpm install --frozen-lockfile
         continue-on-error: true
       
       - name: Generate API types with orval
-        working-directory: shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared
+        working-directory: app-${{ matrix.module }}/${{ matrix.module }}-shared
         run: |
           echo "🔧 生成 ${{ matrix.module }} 前端类型..."
           pnpm run generate:api || echo "⚠️ orval 生成失败（可能 openapi.json 不存在）"
@@ -220,7 +220,7 @@ jobs:
         with:
           name: generated-types-${{ matrix.module }}
           path: |
-            shinwa-app-${{ matrix.module }}/${{ matrix.module }}-shared/src/generated/
+            app-${{ matrix.module }}/${{ matrix.module }}-shared/src/generated/
           retention-days: 30
 
   # ========================================
@@ -252,7 +252,7 @@ jobs:
           
           for module in booking identity carousel contracts messenger partners products storage; do
             ARTIFACT_PATH="./generated-artifacts/generated-types-${module}/"
-            REPO_PATH="./shinwa-app-${module}/${module}-shared/src/generated/"
+            REPO_PATH="./app-${module}/${module}-shared/src/generated/"
             
             if [ -d "$ARTIFACT_PATH" ] && [ -d "$REPO_PATH" ]; then
               if ! diff -rq "$ARTIFACT_PATH" "$REPO_PATH" > /dev/null 2>&1; then

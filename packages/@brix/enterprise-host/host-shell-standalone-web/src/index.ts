@@ -1,3 +1,16 @@
+﻿/**
+ * Copyright 2026 Brix Platform Authors
+ *
+ * PROPRIETARY AND CONFIDENTIAL
+ *
+ * This software is proprietary to Brix Platform and is protected by
+ * copyright laws and international treaty provisions. Unauthorized
+ * reproduction or distribution of this software, or any portion of it,
+ * may result in severe civil and criminal penalties.
+ *
+ * Commercial use requires a valid Brix Enterprise license.
+ * See LICENSE-ENTERPRISE for terms and conditions.
+ */
 /**
  * @file Host module entry exports
  * @description Unified export of Host config and utils
@@ -6,9 +19,8 @@
  */
 
 // Config exports
-export { hostConfig } from './config/host.config';
+export { hostConfig, routesConfig } from './config/host.config';
 export { governanceConfig } from './config/governance.config';
-export { routesConfig } from './config/routes.config';
 
 // Type exports
 export type * from './types';

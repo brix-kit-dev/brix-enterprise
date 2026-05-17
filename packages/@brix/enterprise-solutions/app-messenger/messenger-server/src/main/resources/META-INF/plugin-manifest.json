@@ -1,0 +1,68 @@
+{
+  "name": "messenger",
+  "pluginId": "brix-app-messenger",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "消息中心",
+  "description": "Brix Enterprise Messaging Center - provides in-app notifications, message inbox, and communication capabilities for the platform.",
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/messenger/ui-manifest.json",
+      "scope": "messenger",
+      "routes": [
+        {
+          "path": "/messenger/inbox",
+          "component": "./pages/Inbox",
+          "exact": true,
+          "menu": {
+            "title": "收件箱",
+            "icon": "inbox",
+            "order": 1,
+            "parentId": "messenger"
+          }
+        },
+        {
+          "path": "/messenger/messages/:messageId",
+          "component": "./pages/MessageDetail",
+          "menu": { "hidden": true }
+        },
+        {
+          "path": "/messenger/compose",
+          "component": "./pages/Compose",
+          "menu": {
+            "title": "发送消息",
+            "icon": "send",
+            "order": 2,
+            "parentId": "messenger"
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "messenger",
+          "title": "消息中心",
+          "icon": "notifications",
+          "order": 5
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "messenger://manifest"
+    }
+  },
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["PushNotification", "WebSocket"]
+  },
+  "events": {
+    "publish": ["MessageSent", "MessageRead", "MessageArchived"],
+    "subscribe": ["UserCreated", "BookingCreated", "BookingUpdated"]
+  },
+  "metadata": {
+    "category": "platform",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

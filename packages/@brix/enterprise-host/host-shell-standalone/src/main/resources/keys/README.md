@@ -34,23 +34,46 @@ openssl req -new -x509 -key private.pem -out cert.pem -days 365 \
 ## Generate Java KeyStore (PKCS#12)
 
 ```bash
+# IMPORTANT: Use a strong, unique password — never use default passwords like 'changeit'.
+# Store the password in an environment variable:
+export JWT_KEYSTORE_PASSWORD=$(openssl rand -base64 32)
+
 # Create PKCS#12 keystore from key pair
 openssl pkcs12 -export -in cert.pem -inkey private.pem \
-  -out jwt-keystore.p12 -name jwt-key \
-  -password pass:changeit
+  -out jwt-keystore.p12 -name brix-jwt \
+  -password pass:${JWT_KEYSTORE_PASSWORD}
+
+echo "Keystore password: ${JWT_KEYSTORE_PASSWORD}"
+echo "Save this password securely — it is required for key export operations."
 ```
 
 ## Configuration
 
-Set the following environment variables or application properties:
+**All sensitive values MUST be provided via environment variables.**
+Never use default or fallback passwords in production.
 
 ```yaml
 # application.yml
-brix:
+identity:
   jwt:
-    keystore-path: classpath:keys/jwt-keystore.p12
-    keystore-password: ${JWT_KEYSTORE_PASSWORD:changeit}
-    key-alias: jwt-key
+    private-key-path: ${JWT_PRIVATE_KEY_PATH:classpath:keys/private.pem}
+    issuer: ${JWT_ISSUER:brix-auth-center}
+    audience: ${JWT_AUDIENCE:brix-platform-api}
+    expiration: ${JWT_EXPIRATION:3600}
+```
+
+## Key Export Utility
+
+To export keys from the PKCS#12 keystore to PEM format, use the dedicated
+key-export-tool provided in `brix/packages/@brix/platform-devtools/key-export-tool/`.
+
+```bash
+# Set the keystore password environment variable
+export JWT_KEYSTORE_PASSWORD=<your-keystore-password>
+
+# Run the key-export-tool (from the brix repository root)
+cd packages/@brix/platform-devtools/key-export-tool
+mvn exec:java -Dexec.args="jwt-keystore.p12 ."
 ```
 
 ## Production Deployment
@@ -59,4 +82,6 @@ In production:
 1. Generate keys using a secure key ceremony
 2. Store keys in a secrets manager (AWS Secrets Manager, HashiCorp Vault, etc.)
 3. Mount keys as environment variables or files at runtime
-4. Never include keys in container images or deployment artifacts
+4. Set required environment variables: `JWT_KEYSTORE_PASSWORD`, `JWT_PRIVATE_KEY_PATH`
+5. Never include keys in container images or deployment artifacts
+6. Rotate keys periodically according to your security policy

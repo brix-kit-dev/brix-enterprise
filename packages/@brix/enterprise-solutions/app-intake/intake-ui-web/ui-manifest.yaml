@@ -1,0 +1,208 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 资料收集模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0.9 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明 WHAT，Host 适配器决定 HOW（R5.5）
+# 
+# 【与代码的关系】
+# - pages[].component 对应 rspack.config 中的 exposes
+# - events.published 对应 intake-shared/events 中的事件类型
+# - permissions 对应 intake-shared/constants 中的权限代码
+# 
+# @version 3.0.0
+# @date 2026-06-10
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "intake"
+  name: "资料收集"
+  version: "3.0.0-SNAPSHOT"
+  description: "Brix Enterprise 资料收集模块，支持文档提交、审核、跟踪的完整业务流程"
+  vendor: "Brix Platform"
+  icon: "Assignment"
+  category: "business"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 任务列表 --------------------
+  - pageId: "intake:task-list"
+    component: "./pages/IntakeTaskList"
+    title: "收集任务列表"
+    titleKey: "intake.page.taskList.title"
+    permission: "intake:task:read"
+    platforms:
+      web:
+        suggestedPath: "/intake/tasks"
+      mobile:
+        suggestedScreen: "IntakeTaskListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "资料收集"
+
+  # -------------------- 任务详情 --------------------
+  - pageId: "intake:task-detail"
+    component: "./pages/IntakeTaskDetail"
+    title: "任务详情"
+    titleKey: "intake.page.taskDetail.title"
+    permission: "intake:task:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+        description: "收集任务 ID"
+    platforms:
+      web:
+        suggestedPath: "/intake/tasks/:id"
+      mobile:
+        suggestedScreen: "IntakeTaskDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "资料收集"
+          pageId: "intake:task-list"
+        - label: "任务详情"
+
+  # -------------------- 提交资料 --------------------
+  - pageId: "intake:submit"
+    component: "./pages/IntakeSubmit"
+    title: "提交资料"
+    titleKey: "intake.page.submit.title"
+    permission: "intake:document:submit"
+    params:
+      - name: "taskId"
+        type: "string"
+        required: true
+        description: "关联的收集任务 ID"
+    platforms:
+      web:
+        suggestedPath: "/intake/tasks/:taskId/submit"
+      mobile:
+        suggestedScreen: "IntakeSubmitScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "资料收集"
+          pageId: "intake:task-list"
+        - label: "提交资料"
+
+  # -------------------- 审核资料 --------------------
+  - pageId: "intake:review"
+    component: "./pages/IntakeReview"
+    title: "审核资料"
+    titleKey: "intake.page.review.title"
+    permission: "intake:document:review"
+    params:
+      - name: "taskId"
+        type: "string"
+        required: true
+        description: "待审核的收集任务 ID"
+    platforms:
+      web:
+        suggestedPath: "/intake/tasks/:taskId/review"
+      mobile:
+        suggestedScreen: "IntakeReviewScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "资料收集"
+          pageId: "intake:task-list"
+        - label: "审核资料"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+# 【关键】关联 PageId 而非 path
+# ============================================================================
+menus:
+  - id: "intake"
+    title: "资料收集"
+    icon: "assignment"
+    order: 70
+    permission: "intake:task:read"
+    children:
+      - id: "intake:task-list"
+        title: "收集任务"
+        pageId: "intake:task-list"
+        icon: "list"
+        order: 1
+      - id: "intake:review"
+        title: "待审核"
+        pageId: "intake:task-list"
+        icon: "fact_check"
+        order: 2
+        permission: "intake:document:review"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "intake:task:read"
+    name: "查看收集任务"
+    description: "允许查看收集任务列表和任务详情"
+  - code: "intake:task:create"
+    name: "创建收集任务"
+    description: "允许创建新的收集任务"
+  - code: "intake:task:update"
+    name: "编辑收集任务"
+    description: "允许编辑收集任务配置"
+  - code: "intake:task:cancel"
+    name: "取消收集任务"
+    description: "允许取消收集任务"
+  - code: "intake:document:submit"
+    name: "提交资料"
+    description: "允许向收集任务提交文档资料"
+  - code: "intake:document:review"
+    name: "审核资料"
+    description: "允许审核已提交的文档资料"
+
+# ============================================================================
+# 事件声明（通过 EventBusCapability 发布）
+# ============================================================================
+events:
+  published:
+    - topic: "intake.task.created"
+      description: "收集任务创建完成"
+    - topic: "intake.task.activated"
+      description: "收集任务激活（开始收集）"
+    - topic: "intake.task.completed"
+      description: "收集任务完成（所有资料审核通过）"
+    - topic: "intake.task.cancelled"
+      description: "收集任务取消"
+    - topic: "intake.document.submitted"
+      description: "文档资料已提交"
+    - topic: "intake.document.reviewed"
+      description: "文档资料审核完成"
+
+# ============================================================================
+# 能力依赖（运行时注入）
+# ============================================================================
+capabilities:
+  required:
+    - http
+    - auth
+    - navigation
+  optional:
+    - theme
+    - i18n
+    - notification
+    - eventBus
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3054
+  host: "localhost"

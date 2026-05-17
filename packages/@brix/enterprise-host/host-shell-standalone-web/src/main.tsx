@@ -1,3 +1,16 @@
+﻿/**
+ * Copyright 2026 Brix Platform Authors
+ *
+ * PROPRIETARY AND CONFIDENTIAL
+ *
+ * This software is proprietary to Brix Platform and is protected by
+ * copyright laws and international treaty provisions. Unauthorized
+ * reproduction or distribution of this software, or any portion of it,
+ * may result in severe civil and criminal penalties.
+ *
+ * Commercial use requires a valid Brix Enterprise license.
+ * See LICENSE-ENTERPRISE for terms and conditions.
+ */
 /**
  * @file Main entry point
  * @description Host Standalone Web application entry
@@ -7,11 +20,18 @@
  * Architecture: Uses async bootstrap pattern for Module Federation initialization.
  */
 
-// Async load bootstrap module
-import('./bootstrap').then(({ bootstrap }) => {
+async function initializeDefaultShareScope(): Promise<void> {
+  if (typeof __webpack_init_sharing__ === 'function') {
+    await __webpack_init_sharing__('default');
+  }
+}
+
+// Initialize MF shared scope before loading bootstrap. The bootstrap chunk
+// imports React and other shared modules; loading it before share-scope setup
+// can fail with "factory is undefined" on a cold browser cache.
+initializeDefaultShareScope().then(() => import('./bootstrap')).then(({ bootstrap }) => {
   bootstrap();
 }).catch((error) => {
-  console.error('[Host] Startup failed:', error);
 
   const root = document.getElementById('root');
   if (root) {

@@ -1,0 +1,159 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 合作伙伴管理模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-31
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "partners"
+  name: "合作伙伴管理"
+  version: "3.0.0"
+  description: "管理医院、酒店、交通、翻译等合作伙伴信息"
+  vendor: "Brix Platform"
+  icon: "Business"
+  category: "business"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 合作伙伴列表 --------------------
+  - pageId: "partners:list"
+    component: "./pages/PartnerListPageV2"
+    title: "合作伙伴列表"
+    titleKey: "partners.page.list.title"
+    permission: "partner:read"
+    platforms:
+      web:
+        suggestedPath: "/partners"
+      mobile:
+        suggestedScreen: "PartnerListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合作伙伴管理"
+
+  # -------------------- 合作伙伴详情 --------------------
+  - pageId: "partners:detail"
+    component: "./pages/PartnerDetailPage"
+    title: "合作伙伴详情"
+    titleKey: "partners.page.detail.title"
+    permission: "partner:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/partners/:id"
+      mobile:
+        suggestedScreen: "PartnerDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合作伙伴管理"
+          pageId: "partners:list"
+        - label: "合作伙伴详情"
+
+  # -------------------- 新建合作伙伴 --------------------
+  - pageId: "partners:create"
+    component: "./pages/PartnerCreatePage"
+    title: "新建合作伙伴"
+    titleKey: "partners.page.create.title"
+    permission: "partner:create"
+    platforms:
+      web:
+        suggestedPath: "/partners/create"
+      mobile:
+        suggestedScreen: "PartnerCreateScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合作伙伴管理"
+          pageId: "partners:list"
+        - label: "新建合作伙伴"
+
+  # -------------------- 编辑合作伙伴 --------------------
+  - pageId: "partners:edit"
+    component: "./pages/PartnerEditPage"
+    title: "编辑合作伙伴"
+    titleKey: "partners.page.edit.title"
+    permission: "partner:update"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/partners/:id/edit"
+      mobile:
+        suggestedScreen: "PartnerEditScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合作伙伴管理"
+          pageId: "partners:list"
+        - label: "编辑合作伙伴"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+#
+# 【菜单合并说明 · 2026-04-30】
+# PartnerListPageV2 已统一承载「目录浏览 / 列表 / 新建入口」三类交互
+# （搜索 + 类型 Pill + 卡片网格 + AddPartnerDialog），原先并列的子菜单
+# （list / create）会让用户认为两处功能不同，与实际交互不符。
+# 因此保留单一入口「合作伙伴管理」→ pageId: partners:list，
+# 由页面内部的「新增合作方」按钮触发创建对话框。
+# 详情/编辑页通过卡片点击或 URL 直达，不在主菜单暴露。
+# 与 products 菜单形态保持一致，遵循 Manifest-Driven 声明真实交互的原则。
+# ============================================================================
+menus:
+  - id: "partners"
+    title: "合作伙伴管理"
+    icon: "business"
+    pageId: "partners:list"
+    order: 50
+    permission: "partner:read"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "partner:read"
+    name: "查看合作伙伴"
+    description: "允许查看合作伙伴列表和详情"
+  - code: "partner:create"
+    name: "创建合作伙伴"
+    description: "允许创建新的合作伙伴"
+  - code: "partner:update"
+    name: "更新合作伙伴"
+    description: "允许更新合作伙伴信息"
+  - code: "partner:delete"
+    name: "删除合作伙伴"
+    description: "允许删除合作伙伴"
+  - code: "partner:status"
+    name: "变更合作伙伴状态"
+    description: "允许激活、暂停、终止合作伙伴"
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3004
+  proxy:
+    /api: "http://localhost:8084"

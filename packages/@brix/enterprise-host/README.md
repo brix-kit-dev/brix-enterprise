@@ -1,4 +1,4 @@
-# Shinwa Host Assembly
+# Brix Enterprise Host
 
 > **版本**: 3.0.0-SNAPSHOT  
 > **许可**: Apache License 2.0
@@ -27,7 +27,7 @@ Layer 2: 能力契约层              ← 引用（runtime-sdk-api）
 |------|------|
 | ❌ **禁止包含任何 Capability 实现代码** | Host 只做组装，不做实现 |
 | ❌ 禁止包含 `implements XxxCapability` | 所有实现应在 infra-adapters 或 platform-commons |
-| ❌ 禁止包含业务逻辑 | 业务逻辑在 shinwa-solutions |
+| ❌ 禁止包含业务逻辑 | 业务逻辑在 enterprise-solutions |
 | ✅ 只做依赖注入和能力编排 | Spring 配置、条件装配 |
 | ✅ 引用 infra-adapters | 选择具体的适配器实现 |
 | ✅ 引用 platform-commons | 选择平台能力实现 |
@@ -37,7 +37,7 @@ Layer 2: 能力契约层              ← 引用（runtime-sdk-api）
 ## 📦 模块结构
 
 ```
-shinwa-host-assembly/
+enterprise-host/
 ├── pom.xml                      # 父 POM（依赖管理）
 ├── host-shell-standalone/       # 产品模式运行壳
 │   ├── pom.xml
@@ -84,7 +84,7 @@ brix:
         required:
           - io.runtime.sdk.capability.EventBusCapability
           - io.runtime.sdk.capability.StateStoreCapability
-          - io.runtime.sdk.capability.AuthContextCapability
+          - io.runtime.sdk.capability.AuthCapability
         auto-discovery: true
         validate-on-startup: true
 ```
@@ -112,7 +112,7 @@ brix:
     
     <!-- 平台能力 -->
     <dependency>
-        <groupId>shinwa.platform</groupId>
+        <groupId>io.brix.platform</groupId>
         <artifactId>platform-common-starter</artifactId>
     </dependency>
 </dependencies>
@@ -137,10 +137,10 @@ mvn spring-boot:run
 
 ```bash
 # 构建镜像
-docker build -t shinwa-host-standalone:latest ./host-shell-standalone
+docker build -t brix-host-standalone:latest ./host-shell-standalone
 
 # 运行容器
-docker run -p 8080:8080 shinwa-host-standalone:latest
+docker run -p 8080:8080 brix-host-standalone:latest
 ```
 
 ---

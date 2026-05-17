@@ -1,0 +1,91 @@
+{
+  "name": "case",
+  "pluginId": "brix-app-case",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "Case管理",
+  "description": "Brix Enterprise Case Management - provides customer case tracking, workflow management, service coordination, timeline recording, and schedule management capabilities following v2.1 medical intermediary architecture.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/case/ui-manifest.json",
+      "scope": "case",
+      "routes": [
+        {
+          "path": "/case",
+          "component": "./pages/CaseListPageV2",
+          "exact": true,
+          "menu": {
+            "title": "Case列表",
+            "icon": "folder",
+            "order": 1,
+            "parentId": "case"
+          }
+        },
+        {
+          "path": "/case/create",
+          "component": "./pages/CaseCreate",
+          "menu": {
+            "title": "创建Case",
+            "icon": "add",
+            "order": 2,
+            "parentId": "case"
+          }
+        },
+        {
+          "path": "/case/:id",
+          "component": "./pages/CaseDetailPageV2",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/case/:id/edit",
+          "component": "./pages/CaseEdit",
+          "menu": {
+            "hidden": true
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "case",
+          "title": "Case管理",
+          "icon": "folder",
+          "order": 100
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "case://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["Workflow", "NotificationService", "FileStorageCapability"]
+  },
+  
+  "events": {
+    "publish": [
+      "CaseCreated",
+      "CaseUpdated",
+      "CaseStatusChanged",
+      "CaseAssigned",
+      "CaseClosed"
+    ],
+    "subscribe": [
+      "BookingCreated",
+      "BookingConfirmed",
+      "PaymentCompleted"
+    ]
+  },
+
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

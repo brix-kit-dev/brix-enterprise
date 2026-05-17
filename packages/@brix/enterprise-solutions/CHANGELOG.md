@@ -1,6 +1,6 @@
 # Changelog
 
-本文件记录 Shinwa Solutions 的所有重要变更。
+本文件记录 Brix Enterprise Solutions 的所有重要变更。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
@@ -51,21 +51,21 @@
 ### 新增
 
 #### 业务插件
-- **shinwa-app-identity** - 身份认证
+- **app-identity** - 身份认证
   - 用户管理、角色权限、JWT 认证
-- **shinwa-app-booking** - 预约管理
+- **app-booking** - 预约管理
   - 资源预约、时间槽管理
-- **shinwa-app-messenger** - 消息通知
+- **app-messenger** - 消息通知
   - 站内信、邮件、SMS 通知
-- **shinwa-app-partners** - 合作伙伴
+- **app-partners** - 合作伙伴
   - 供应商管理、合同管理
-- **shinwa-app-products** - 产品管理
+- **app-products** - 产品管理
   - 产品目录、SKU 管理
-- **shinwa-app-storage** - 文件存储
+- **app-storage** - 文件存储
   - 文件上传、OSS 集成
-- **shinwa-app-carousel** - 轮播图
+- **app-carousel** - 轮播图
   - 首页轮播、内容管理
-- **shinwa-app-contracts** - 合同管理
+- **app-contracts** - 合同管理
   - 合同模板、电子签章
 
 ### 变更
@@ -92,6 +92,6 @@
 
 ---
 
-[3.2.0]: https://github.com/shinwa/shinwa-solutions/compare/v3.1.0...v3.2.0
-[3.1.0]: https://github.com/shinwa/shinwa-solutions/compare/v3.0.0...v3.1.0
-[3.0.0]: https://github.com/shinwa/shinwa-solutions/releases/tag/v3.0.0
+[3.2.0]: https://github.com/brix-platform/brix-enterprise/compare/v3.1.0...v3.2.0
+[3.1.0]: https://github.com/brix-platform/brix-enterprise/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/brix-platform/brix-enterprise/releases/tag/v3.0.0

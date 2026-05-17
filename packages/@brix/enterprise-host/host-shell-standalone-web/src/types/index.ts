@@ -1,15 +1,29 @@
 /**
+ * Copyright 2026 Brix Platform Authors
+ *
+ * PROPRIETARY AND CONFIDENTIAL
+ *
+ * This software is proprietary to Brix Platform and is protected by
+ * copyright laws and international treaty provisions. Unauthorized
+ * reproduction or distribution of this software, or any portion of it,
+ * may result in severe civil and criminal penalties.
+ *
+ * Commercial use requires a valid Brix Enterprise license.
+ * See LICENSE-ENTERPRISE for terms and conditions.
+ */
+/**
  * @file Type definitions
  * @description Host-level type definitions
  * @module host-standalone-web/types
  * @version 3.0.0
  */
 
-import type { SocialProvider, LoginFormBranding } from '@brix/platform-auth-web';
-import type { ThemeConfig, BrandingConfig, RegionalSocialProviders } from '@shinwa/shinwa-platform-shell-web';
+import type { SocialProvider, LoginFormBranding } from '@brix-sdk/platform-auth-web';
+import type { ThemeConfig, BrandingConfig } from '@brix-sdk/platform-frame-web';
+import type { RegionalSocialProviders } from '@brix-sdk/platform-auth-service-web';
 
 export type { ThemeConfig, BrandingConfig, RegionalSocialProviders };
-export type { SocialProvider } from '@brix/platform-auth-web';
+export type { SocialProvider } from '@brix-sdk/platform-auth-web';
 
 export interface HostConfig {
   appName: string;

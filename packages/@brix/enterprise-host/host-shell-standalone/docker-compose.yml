@@ -1,5 +1,5 @@
-# ============================================================
-# Shinwa Platform - 产品模式 Docker Compose
+﻿# ============================================================
+# Brix Enterprise - 产品模式 Docker Compose
 # ============================================================
 # 
 # 用途：完整产品模式部署，包含所有基础设施依赖
@@ -29,14 +29,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: shinwa-host-shell-standalone
+    container_name: brix-host-shell-standalone
     ports:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=standalone
       - DEBUG=false
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/shinwa
-      - SPRING_DATASOURCE_USERNAME=shinwa
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/brix
+      - SPRING_DATASOURCE_USERNAME=brix
       # 🔴 安全警告：密码通过 .env 文件或 secrets 管理
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
@@ -44,17 +44,56 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - REDIS_HOST=redis
       - DB_HOST=postgres
-      - DB_NAME=shinwa
+      - DB_NAME=brix
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       # Brix Kafka EventBus 配置（brix.infra.kafka.bootstrap-servers）
       - BRIX_INFRA_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      # MinIO 文件存储能力 (Layer 2C Adapter — provides FileStorageCapability contract,
+      # required by brix-app-storage plugin per its plugin-manifest.json)
+      - BRIX_INFRA_MINIO_ENABLED=true
+      - BRIX_INFRA_MINIO_ENDPOINT=http://minio:9000
+      - BRIX_INFRA_MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - BRIX_INFRA_MINIO_SECRET_KEY=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+      - BRIX_INFRA_MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-brix-storage}
+      # Fallback Auth (dev-only stand-in until production OAuth Adapter is wired —
+      # required by Capability Contract; gated to !production profile by Adapter)
+      - BRIX_FALLBACK_AUTH_ENABLED=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=host-shell-standalone
-      # Google OAuth2 配置（key 转换规则: identity.oauth2.google.client-id → IDENTITY_OAUTH2_GOOGLE_CLIENT_ID）
-      - IDENTITY_OAUTH2_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-1072922092148-0fqe1j87ktsdb8b4oqtf2ormhu8o5mqt.apps.googleusercontent.com}
-      - IDENTITY_OAUTH2_GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-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}
+      # =====================================================
+      # Google OAuth2 Configuration
+      # =====================================================
+      # SECURITY: OAuth credentials must be provided via .env file.
+      # No default values are allowed to prevent credential exposure.
+      # Create a .env file with GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.
+      # =====================================================
+      - IDENTITY_OAUTH2_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required. Create .env file with this value.}
+      - IDENTITY_OAUTH2_GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required. Create .env file with this value.}
+      # =====================================================
+      # Token Encryption Key (AES-256-GCM)
+      # =====================================================
+      # SECURITY: Used by app-identity TokenEncryptionConverter to encrypt OAuth2
+      # access/refresh/id tokens at rest in the social_connections table.
+      # The Converter hashes the value with SHA-256 to derive a 256-bit AES key,
+      # so any non-blank secret is accepted; use a >= 32-byte random value.
+      # No default is permitted (security red line); fail-fast if missing.
+      # Architecture: surfaced via ConfigStoreCapability (Layer 2C), Host stays thin.
+      # =====================================================
+      - TOKEN_ENCRYPTION_KEY=${TOKEN_ENCRYPTION_KEY:?TOKEN_ENCRYPTION_KEY is required. Create .env file with a 32+ byte random value (e.g. base64-encoded 32 bytes).}
       # Fallback Auth 配置（standalone 模式下启用 fallback 认证能力）
       - BRIX_FALLBACK_AUTH_ENABLED=true
+      # =====================================================
+      # SUPER_ADMIN Bootstrap (Layer 2C — one-shot, idempotent)
+      # =====================================================
+      # SECURITY: Credentials must be provided via .env file.
+      # Bootstrap is silently skipped once ≥1 active SUPER_ADMIN exists.
+      # Operator MUST rotate the seeded password and enroll MFA on first login.
+      # =====================================================
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_ENABLED=${BRIX_BOOTSTRAP_SUPER_ADMIN_ENABLED:-true}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL=${BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL:?BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL is required. Create .env file with this value.}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD=${BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD:?BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD is required. Create .env file with this value.}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME=${BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME:-Super Admin}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_REQUIRE_MFA=${BRIX_BOOTSTRAP_SUPER_ADMIN_REQUIRE_MFA:-false}
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,8 +101,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
-      - shinwa-network
+      - brix-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
       interval: 30s
@@ -76,20 +117,20 @@ services:
   # ============================================================
   postgres:
     image: postgres:15-alpine
-    container_name: shinwa-postgres
+    container_name: brix-postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
-      - POSTGRES_DB=shinwa
-      - POSTGRES_USER=shinwa
+      - POSTGRES_DB=brix
+      - POSTGRES_USER=brix
       # 🔴 安全警告：密码通过 .env 文件或 secrets 管理
       - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - shinwa-network
+      - brix-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shinwa -d shinwa"]
+      test: ["CMD-SHELL", "pg_isready -U brix -d brix"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -99,9 +140,9 @@ services:
   # ============================================================
   kafka:
     image: confluentinc/cp-kafka:7.7.0
-    container_name: shinwa-kafka
+    container_name: brix-kafka
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     environment:
       # KRaft 模式配置（无需 ZooKeeper）
       KAFKA_NODE_ID: 1
@@ -121,27 +162,60 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
-      - shinwa-network
+      - brix-network
     healthcheck:
       test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
-      timeout: 10s
+      timeout: 15s
       retries: 5
+      start_period: 30s
 
   # ============================================================
   # Redis（状态存储 & 缓存）
   # ============================================================
   redis:
     image: redis:7-alpine
-    container_name: shinwa-redis
+    container_name: brix-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - shinwa-network
+      - brix-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # MinIO（对象存储 - 提供 FileStorageCapability 契约的实现）
+  # ------------------------------------------------------------
+  # Architecture rationale (Blueprint v3.0.x §3 Capability Contract):
+  #   - brix-app-storage 插件在 plugin-manifest.json 中声明 required:
+  #     FileStorageCapability — 这是 vendor-neutral 的契约。
+  #   - 唯一生产级实现在 infra-adapter-minio.MinioFileStorageCapability
+  #     (Layer 2C Adapter)，由 MinioAutoConfiguration 在
+  #     brix.infra.minio.enabled=true 时注册到 CapabilityRegistry。
+  #   - 因此最小合规部署必须提供 MinIO 服务（或 S3 兼容对象存储），
+  #     插件才能通过 PluginCapabilityVerifier 启动校验。
+  # ============================================================
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    container_name: brix-minio
+    ports:
+      - "127.0.0.1:9000:9000"   # S3 API
+      - "127.0.0.1:9001:9001"   # Console UI
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - brix-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -153,17 +227,17 @@ services:
   otel-collector:
     profiles: ["full"]
     image: otel/opentelemetry-collector-contrib:0.88.0
-    container_name: shinwa-otel-collector
+    container_name: brix-otel-collector
     ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-      - "8888:8888"   # Prometheus metrics (collector)
-      - "8889:8889"   # Prometheus exporter
+      - "127.0.0.1:4317:4317"   # OTLP gRPC
+      - "127.0.0.1:4318:4318"   # OTLP HTTP
+      - "127.0.0.1:8888:8888"   # Prometheus metrics (collector)
+      - "127.0.0.1:8889:8889"   # Prometheus exporter
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
     command: ["--config=/etc/otelcol-contrib/config.yaml"]
     networks:
-      - shinwa-network
+      - brix-network
 
   # ============================================================
   # Jaeger（分布式追踪）
@@ -172,14 +246,14 @@ services:
   jaeger:
     profiles: ["full"]
     image: jaegertracing/all-in-one:1.51
-    container_name: shinwa-jaeger
+    container_name: brix-jaeger
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "14250:14250"  # gRPC
+      - "127.0.0.1:16686:16686"  # Jaeger UI
+      - "127.0.0.1:14250:14250"  # gRPC
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     networks:
-      - shinwa-network
+      - brix-network
 
   # ============================================================
   # Prometheus（指标采集）
@@ -188,9 +262,9 @@ services:
   prometheus:
     profiles: ["full"]
     image: prom/prometheus:v2.47.0
-    container_name: shinwa-prometheus
+    container_name: brix-prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -198,7 +272,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     networks:
-      - shinwa-network
+      - brix-network
 
   # ============================================================
   # Grafana（可视化仪表盘）
@@ -207,9 +281,9 @@ services:
   grafana:
     profiles: ["full"]
     image: grafana/grafana:10.2.0
-    container_name: shinwa-grafana
+    container_name: brix-grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       # 🔴 安全警告：密码通过 .env 文件或 secrets 管理
@@ -221,15 +295,16 @@ services:
     depends_on:
       - prometheus
     networks:
-      - shinwa-network
+      - brix-network
 
 networks:
-  shinwa-network:
+  brix-network:
     driver: bridge
 
 volumes:
   postgres_data:
   redis_data:
   kafka_data:
+  minio_data:
   prometheus_data:
   grafana_data:

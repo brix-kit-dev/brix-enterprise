@@ -1,0 +1,134 @@
+# ===========================================================================================
+# Tenant Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Tenant Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-tenant"
+
+  # Display name
+  name: "Tenant Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (platform-level functionality)
+  type: "plugin"
+
+  # Module category
+  category: "platform"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Tenant Management Plugin
+
+    Core responsibilities:
+    - Tenant creation: provision and configure new tenants
+    - Tenant configuration: manage tenant-specific settings and preferences
+    - Lifecycle management: handle tenant activation, suspension, and termination
+    - Quota management: enforce resource quotas per tenant
+
+    Provides multi-tenant management capabilities including tenant creation,
+    configuration, and lifecycle management.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  # Platform-level module, very early start required
+  startup-order: 15
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/tenant"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - http
+    - auth-context
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - event-bus
+    - state-store
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.tenant.event.TenantCreated"
+      description: "Published when a new tenant is provisioned"
+
+    - type: "io.brix.plugin.tenant.event.TenantUpdated"
+      description: "Published when tenant configuration is updated"
+
+    - type: "io.brix.plugin.tenant.event.TenantSuspended"
+      description: "Published when a tenant is suspended"
+
+    - type: "io.brix.plugin.tenant.event.TenantTerminated"
+      description: "Published when a tenant is permanently terminated"
+
+  # Subscribed events
+  subscribes: []
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "tenant:manage"
+    name: "Manage Tenants"
+    description: "Full management access to tenant operations"
+
+  - id: "tenant:read"
+    name: "View Tenants"
+    description: "Read-only access to tenant information"
+
+  - id: "tenant:create"
+    name: "Create Tenants"
+    description: "Permission to provision new tenants"
+
+  - id: "tenant:suspend"
+    name: "Suspend Tenants"
+    description: "Permission to suspend and reactivate tenants"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "tenant.max-tenants"
+    type: "int"
+    default: "1000"
+    description: "Maximum number of tenants allowed in the system"
+
+  - key: "tenant.default-quota-users"
+    type: "int"
+    default: "100"
+    description: "Default maximum number of users per tenant"
+
+# ===========================================================================================

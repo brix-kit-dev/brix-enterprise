@@ -1,0 +1,105 @@
+{
+  "name": "booking",
+  "pluginId": "brix-app-booking",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "预约管理",
+  "description": "Brix Enterprise Booking Management - provides comprehensive reservation, resource allocation, and calendar scheduling capabilities for medical tourism business operations.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/booking/ui-manifest.json",
+      "scope": "booking",
+      "routes": [
+        {
+          "path": "/booking",
+          "component": "./pages/BookingList",
+          "exact": true,
+          "menu": {
+            "title": "预约列表",
+            "icon": "list",
+            "order": 1,
+            "parentId": "booking"
+          }
+        },
+        {
+          "path": "/booking/:id",
+          "component": "./pages/BookingDetail",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/booking/create",
+          "component": "./pages/BookingCreate",
+          "menu": {
+            "title": "创建预约",
+            "icon": "add",
+            "order": 3,
+            "parentId": "booking"
+          }
+        },
+        {
+          "path": "/booking/calendar",
+          "component": "./pages/BookingCalendar",
+          "menu": {
+            "title": "日历视图",
+            "icon": "calendar_month",
+            "order": 2,
+            "parentId": "booking"
+          }
+        },
+        {
+          "path": "/booking/resources",
+          "component": "./pages/ResourceManagement",
+          "menu": {
+            "title": "资源管理",
+            "icon": "inventory",
+            "order": 4,
+            "parentId": "booking"
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "booking",
+          "title": "预约管理",
+          "icon": "calendar",
+          "order": 100
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "booking://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "AuthCapability", "HttpCapability"],
+    "optional": ["Scheduling", "Lock", "NotificationService"]
+  },
+  
+  "events": {
+    "publish": [
+      "BookingCreated",
+      "BookingUpdated",
+      "BookingCancelled",
+      "BookingConfirmed",
+      "ResourceAllocated"
+    ],
+    "subscribe": [
+      "UserCreated",
+      "UserDisabled",
+      "PaymentCompleted",
+      "PartnerStatusChanged"
+    ]
+  },
+
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "name": "intake",
+  "pluginId": "brix-app-intake",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "进件管理",
+  "description": "Brix Enterprise Intake Management - provides application intake, review workflow, and document processing capabilities for medical tourism business operations.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/intake/ui-manifest.json",
+      "scope": "intake",
+      "routes": [
+        {
+          "path": "/intake/tasks",
+          "component": "./pages/IntakeTaskListPage",
+          "exact": true,
+          "menu": {
+            "title": "任务列表",
+            "icon": "list",
+            "order": 1,
+            "parentId": "intake"
+          }
+        },
+        {
+          "path": "/intake/tasks/:id",
+          "component": "./pages/IntakeTaskDetailPage",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/intake/submit",
+          "component": "./pages/IntakeSubmitPage",
+          "menu": {
+            "title": "提交进件",
+            "icon": "add",
+            "order": 2,
+            "parentId": "intake"
+          }
+        },
+        {
+          "path": "/intake/review",
+          "component": "./pages/IntakeReviewPage",
+          "menu": {
+            "title": "审核管理",
+            "icon": "fact_check",
+            "order": 3,
+            "parentId": "intake"
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "intake",
+          "title": "进件管理",
+          "icon": "assignment",
+          "order": 200
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "intake://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "AuthCapability", "HttpCapability"],
+    "optional": ["FileStorageCapability", "NotificationService"]
+  },
+  
+  "events": {
+    "publish": [
+      "IntakeSubmitted",
+      "IntakeApproved",
+      "IntakeRejected",
+      "IntakeDocumentUploaded"
+    ],
+    "subscribe": [
+      "UserCreated",
+      "DocumentVerified"
+    ]
+  },
+
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

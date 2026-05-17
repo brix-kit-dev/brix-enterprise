@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  e2e-tests — Multi-tenant B2B2C End-to-End Integration Tests
+
+  Phase 5 (Tasks #34 & #35) from v1.2 Multi-tenant Design Document.
+
+  Test Coverage:
+  - Actor login / tenant switch / token refresh
+  - Subject admission / login / tenant switch
+  - Dual-identity (same person as both Actor and Subject)
+  - Cross-tenant security fuzzing
+  - Actor→Subject permission escalation (403)
+  - Subject→Admin API access (403)
+
+  Architecture:
+  - Uses @SpringBootTest with real application context
+  - H2 in-memory database for test isolation
+  - MockMvc for REST API testing
+  - No mocks for business logic — real service layer
+
+  Version: 3.2.0-SNAPSHOT
+  Date: 2026-07-15
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>brix-enterprise-solutions-parent</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>e2e-tests</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Brix Enterprise — E2E Integration Tests</name>
+    <description>
+        Multi-tenant B2B2C end-to-end integration tests.
+        Validates Actor/Subject dual-track authentication,
+        tenant switching, cross-tenant isolation, and security boundaries.
+    </description>
+
+    <!-- ==================== Dependencies ==================== -->
+    <dependencies>
+        <!-- Spring Boot Test Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Boot Web (for MockMvc) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Security Test -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Boot Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- H2 Database for Test Isolation -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Tenant Module Dependencies -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>tenant-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>tenant-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>tenant-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JSON Processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JWT for Token Generation in Tests -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.5</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- AssertJ for Fluent Assertions -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Platform Auth — required for G4 PlatformAdminLoginE2ETest:
+             JwtValidator (@MockBean), AuthenticatedUser, PlatformPermissions -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Platform Auth Servlet — SecurityContextFilter, AuthorizationExceptionAdvice -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth-servlet</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Platform Auth Web — AuthController (/api/auth/login) -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth-web</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

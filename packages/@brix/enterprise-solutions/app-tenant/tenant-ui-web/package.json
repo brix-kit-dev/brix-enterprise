@@ -1,0 +1,46 @@
+{
+  "name": "@brix-sdk/tenant-ui-web",
+  "version": "3.2.0",
+  "private": true,
+  "description": "Tenant Management UI for Web",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rspack build",
+    "dev": "rspack serve",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@brix-sdk/tenant-shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "@brix-sdk/shared-runtime-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-api-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-react": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
+    "@rspack/cli": "^1.0.0",
+    "@rspack/core": "^1.0.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.1.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "jsdom": "^24.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}

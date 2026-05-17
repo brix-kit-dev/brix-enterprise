@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM Shinwa Platform - 嵌入模式启动脚本 (Windows)
+REM Brix Platform - 嵌入模式启动脚本 (Windows)
 REM ============================================================
 REM 
 REM 用途：构建并启动嵌入模式运行壳（轻量级部署）
@@ -13,7 +13,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo ============================================================
-echo   Shinwa Platform - 嵌入模式启动
+echo   Brix Platform - 嵌入模式启动
 echo ============================================================
 echo.
 

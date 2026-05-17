@@ -1,0 +1,44 @@
+# ==============================================================================
+# E2E Test Configuration — Multi-tenant B2B2C Integration Tests
+# ==============================================================================
+# Phase 5, Tasks #34 & #35 from v1.2 Multi-tenant Design Document
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:e2e_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+# JWT Configuration for Test Token Generation
+brix:
+  security:
+    jwt:
+      issuer: brix-e2e-tests
+      # RSA key pair is generated at test runtime
+      algorithm: RS256
+      access-token-ttl: 3600
+      refresh-token-ttl: 86400
+
+  tenant:
+    isolation:
+      enabled: true
+      strategy: DISCRIMINATOR
+
+logging:
+  level:
+    io.brix.enterprise: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO

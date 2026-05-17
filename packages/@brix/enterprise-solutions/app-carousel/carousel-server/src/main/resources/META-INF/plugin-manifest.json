@@ -1,0 +1,74 @@
+{
+  "name": "carousel",
+  "pluginId": "brix-app-carousel",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "轮播管理",
+  "description": "Brix Enterprise Carousel Banner Management - provides carousel position and banner content management for marketing and promotional displays.",
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/carousel/ui-manifest.json",
+      "scope": "carousel",
+      "routes": [
+        {
+          "path": "/carousels",
+          "component": "./pages/CarouselList",
+          "exact": true,
+          "menu": {
+            "title": "轮播位列表",
+            "icon": "list",
+            "order": 1,
+            "parentId": "carousel"
+          }
+        },
+        {
+          "path": "/carousels/create",
+          "component": "./pages/CarouselDetail",
+          "menu": {
+            "title": "新建轮播位",
+            "icon": "add",
+            "order": 2,
+            "parentId": "carousel"
+          }
+        },
+        {
+          "path": "/carousels/:id/edit",
+          "component": "./pages/CarouselDetail",
+          "menu": { "hidden": true }
+        },
+        {
+          "path": "/carousels/:carouselId/banners",
+          "component": "./pages/BannerList",
+          "menu": { "hidden": true }
+        }
+      ],
+      "menus": [
+        {
+          "id": "carousel",
+          "title": "轮播管理",
+          "icon": "view_carousel",
+          "order": 30
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "carousel://manifest"
+    }
+  },
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["FileStorageCapability", "ImageProcessingCapability"]
+  },
+  "events": {
+    "publish": ["CarouselCreated", "CarouselUpdated", "BannerPublished", "BannerScheduled"],
+    "subscribe": []
+  },
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}
+

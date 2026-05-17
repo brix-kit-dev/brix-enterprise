@@ -1,0 +1,151 @@
+# ===========================================================================================
+# Booking Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Booking Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-booking"
+
+  # Display name
+  name: "Booking Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (business functionality)
+  type: "plugin"
+
+  # Module category
+  category: "business"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Booking Management Plugin
+
+    Core responsibilities:
+    - Reservation management: create, update, cancel, and confirm bookings
+    - Resource allocation: assign and manage resources for bookings
+    - Calendar scheduling: manage time slots and availability
+    - Booking lifecycle: full workflow from creation to completion
+
+    Provides comprehensive reservation, resource allocation, and calendar
+    scheduling capabilities for medical tourism business operations.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 100
+
+  # Required modules (must be ready before this module starts)
+  depends-on:
+    - "brix-app-identity"
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/booking"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - auth-context
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - scheduling
+    - lock
+    - notification
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.booking.event.BookingCreated"
+      description: "Published when a new booking is created"
+
+    - type: "io.brix.plugin.booking.event.BookingUpdated"
+      description: "Published when a booking is updated"
+
+    - type: "io.brix.plugin.booking.event.BookingCancelled"
+      description: "Published when a booking is cancelled"
+
+    - type: "io.brix.plugin.booking.event.BookingConfirmed"
+      description: "Published when a booking is confirmed"
+
+    - type: "io.brix.plugin.booking.event.ResourceAllocated"
+      description: "Published when a resource is allocated to a booking"
+
+  # Subscribed events
+  subscribes:
+    - type: "io.brix.plugin.identity.event.UserCreated"
+      description: "When a new user is created, initialize booking preferences"
+
+    - type: "io.brix.plugin.identity.event.UserDisabled"
+      description: "When a user is disabled, handle active bookings"
+
+    - type: "io.brix.plugin.booking.event.PaymentCompleted"
+      description: "When payment is completed, confirm the booking"
+
+    - type: "io.brix.plugin.partners.event.PartnerStatusChanged"
+      description: "When a partner status changes, update related bookings"
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "booking:manage"
+    name: "Manage Bookings"
+    description: "Full management access to bookings"
+
+  - id: "booking:read"
+    name: "View Bookings"
+    description: "Read-only access to booking information"
+
+  - id: "booking:create"
+    name: "Create Bookings"
+    description: "Permission to create new bookings"
+
+  - id: "booking:cancel"
+    name: "Cancel Bookings"
+    description: "Permission to cancel existing bookings"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "booking.default-slot-duration"
+    type: "duration"
+    default: "30m"
+    description: "Default time slot duration for bookings"
+
+  - key: "booking.max-advance-days"
+    type: "int"
+    default: "90"
+    description: "Maximum number of days in advance a booking can be made"
+
+# ===========================================================================================

@@ -1,0 +1,104 @@
+{
+  "name": "contracts",
+  "pluginId": "brix-app-contracts",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "合同管理",
+  "description": "Brix Enterprise Contract Management - provides contract template management, contract generation, and digital signature workflows.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/contracts/ui-manifest.json",
+      "scope": "contracts",
+      "routes": [
+        {
+          "path": "/contracts",
+          "component": "./pages/ContractList",
+          "exact": true,
+          "menu": {
+            "title": "合同列表",
+            "icon": "list",
+            "order": 1,
+            "parentId": "contracts"
+          }
+        },
+        {
+          "path": "/contracts/create",
+          "component": "./pages/ContractCreate",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/contracts/:id",
+          "component": "./pages/ContractDetail",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/contracts/templates",
+          "component": "./pages/ContractTemplateList",
+          "menu": {
+            "title": "合同模板",
+            "icon": "description",
+            "order": 2,
+            "parentId": "contracts"
+          }
+        },
+        {
+          "path": "/contracts/templates/create",
+          "component": "./pages/ContractTemplateCreate",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/contracts/templates/:id",
+          "component": "./pages/ContractTemplateDetail",
+          "menu": {
+            "hidden": true
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "contracts",
+          "title": "合同管理",
+          "icon": "assignment",
+          "order": 200
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "contracts://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["FileStorageCapability", "DigitalSignature", "PDFGeneration"]
+  },
+  
+  "events": {
+    "publish": [
+      "ContractCreated",
+      "ContractSigned",
+      "ContractApproved",
+      "ContractExpired",
+      "TemplatePublished"
+    ],
+    "subscribe": [
+      "BookingConfirmed",
+      "CaseCreated"
+    ]
+  },
+
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

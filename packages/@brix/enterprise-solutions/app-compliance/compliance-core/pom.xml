@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  compliance-core — Compliance Module Core Layer
+  
+  Responsibilities:
+  - JPA entities (ScriptTemplate, ForbiddenWord, ComplianceCheckResult)
+  - Spring Data JPA repository interfaces
+  - Business logic services
+  - Event handlers for cross-plugin integration events
+  
+  Architecture constraints:
+  - Depends on compliance-api for DTOs and event definitions
+  - Depends on runtime-sdk-api for capability contracts
+  - Uses RuntimeContext for EventBus, StateStore, etc.
+  - Retains spring-data-jpa for persistence (explicitly allowed)
+  - [FORBIDDEN] No direct Kafka, Redis, or infra-adapter dependencies
+  
+  @version 3.2.0-SNAPSHOT
+  @since 3.2.0
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-compliance</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>compliance-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Compliance Core</name>
+    <description>Compliance module core layer — entities, repositories, services, event handlers</description>
+
+    <dependencies>
+        <!-- Intra-module: compliance-api -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>compliance-api</artifactId>
+        </dependency>
+
+        <!-- Runtime SDK (capability contracts) -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- JPA persistence contract allowed by v3.0.9 R1.1 (not an infra adapter). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ========== Test Dependencies ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>architecture-guard</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

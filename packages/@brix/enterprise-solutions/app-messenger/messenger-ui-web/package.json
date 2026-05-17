@@ -1,0 +1,33 @@
+{
+  "name": "@brix-sdk/enterprise-messenger-ui-web",
+  "version": "3.2.0",
+  "description": "消息通知模块 - Web 界面",
+  "private": true,
+  "scripts": {
+    "dev": "rspack serve",
+    "build": "rspack build",
+    "lint": "eslint --config eslint.config.cjs src/",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@rspack/cli": "^1.6.8",
+    "@rspack/core": "^1.6.8",
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.14",
+    "@types/react-dom": "^18.3.2",
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
+    "eslint": "^9.0.0",
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "@brix-sdk/shared-runtime-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-api-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-react": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

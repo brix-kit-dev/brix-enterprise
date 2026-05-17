@@ -4,7 +4,9 @@ node_modules/
 
 # Build outputs
 dist/
+dist-test/
 target/
+bin/
 *.jar
 *.class
 
@@ -28,8 +30,11 @@ pnpm-debug.log*
 .env.*.local
 *.pem
 *.p12
+*.jks
 *.key
 *.keystore
+*.pfx
+*.crt
 client_secret*.json
 
 # Test

@@ -1,0 +1,149 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 文件存储模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0.6 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 4. 声明 WHAT（菜单、页面、权限），不声明 HOW（加载技术）
+# 
+# @version 3.0.0
+# @date 2026-02-28
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "storage"
+  name: "文件中心"
+  version: "3.0.0-SNAPSHOT"
+  description: "文件上传、下载与管理，支持 MinIO S3 兼容存储后端"
+  vendor: "Brix Platform"
+  icon: "Folder"
+  category: "platform"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 文件列表 --------------------
+  - pageId: "storage:file-list"
+    component: "./pages/FileList"
+    title: "文件列表"
+    titleKey: "storage.page.fileList.title"
+    permission: "storage:file:read"
+    platforms:
+      web:
+        suggestedPath: "/files"
+      mobile:
+        suggestedScreen: "FileListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "文件中心"
+
+  # -------------------- 文件详情 --------------------
+  - pageId: "storage:file-detail"
+    component: "./pages/FileDetail"
+    title: "文件详情"
+    titleKey: "storage.page.fileDetail.title"
+    permission: "storage:file:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/files/:id"
+      mobile:
+        suggestedScreen: "FileDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "文件中心"
+          pageId: "storage:file-list"
+        - label: "文件详情"
+
+  # -------------------- 文件上传 --------------------
+  - pageId: "storage:file-upload"
+    component: "./pages/FileUpload"
+    title: "文件上传"
+    titleKey: "storage.page.fileUpload.title"
+    permission: "storage:file:write"
+    platforms:
+      web:
+        suggestedPath: "/files/upload"
+      mobile:
+        suggestedScreen: "FileUploadScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "文件中心"
+          pageId: "storage:file-list"
+        - label: "文件上传"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+# 【关键】关联 PageId 而非 path
+# ============================================================================
+menus:
+  - id: "storage"
+    title: "文件中心"
+    icon: "folder"
+    order: 500
+    permission: "storage:file:read"
+    children:
+      - id: "storage:file-list"
+        title: "文件列表"
+        pageId: "storage:file-list"
+        icon: "list"
+        order: 1
+      - id: "storage:file-upload"
+        title: "文件上传"
+        pageId: "storage:file-upload"
+        icon: "upload"
+        order: 2
+        permission: "storage:file:write"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "storage:file:read"
+    name: "查看文件"
+    description: "允许查看文件列表和下载文件"
+  - code: "storage:file:write"
+    name: "上传文件"
+    description: "允许上传新文件"
+  - code: "storage:file:delete"
+    name: "删除文件"
+    description: "允许删除文件"
+  - code: "storage:admin"
+    name: "存储管理"
+    description: "允许管理存储配置和配额"
+
+# ============================================================================
+# 能力依赖（运行时注入）
+# ============================================================================
+capabilities:
+  required:
+    - http
+    - auth
+    - navigation
+  optional:
+    - theme
+    - i18n
+    - notification
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3053
+  host: "localhost"

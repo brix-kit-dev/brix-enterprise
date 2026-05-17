@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  identity-api - 用户身份模块 API 层
+  
+  职责：
+  - DTO（数据传输对象）
+  - Request/Response 对象
+  - 事件定义（IntegrationEvent）
+  - 服务接口声明
+  
+  设计原则：
+  - 本模块为纯 API 定义，供其他模块依赖
+  - 只依赖 runtime-sdk-api（用于事件基类）
+  - 不包含任何业务实现逻辑
+  
+  迁移来源：plugin-user-api
+  版本: 3.2.0-SNAPSHOT
+  日期: 2026-01-28
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-identity</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>identity-api</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Identity API</name>
+    <description>用户身份模块 API 层 - DTO、Request、Response、事件定义</description>
+
+    <dependencies>
+        <!--
+            【核心依赖】Runtime SDK API
+            用于事件基类（IntegrationEvent）的继承
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!--
+            【共享事件契约】Shared Events
+            跨插件集成事件的规范定义位置。
+            identity-api 中的 UserDisabledEvent 已废弃，
+            规范版本在 shared-events 模块中。
+            @since 3.2.0 (R8.1 fix)
+        -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>shared-events</artifactId>
+        </dependency>
+
+        <!-- Jakarta Validation API（用于参数校验注解） -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Jackson Annotations（用于 JSON 序列化注解） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <!--
+            【OpenAPI 注解】Swagger v3 注解
+            用于 DTO 的 @Schema 注解，生成 OpenAPI 文档
+        -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+    </dependencies>
+</project>

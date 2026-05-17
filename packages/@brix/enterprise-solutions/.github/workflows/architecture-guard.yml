@@ -3,7 +3,7 @@
 # ============================================================================
 #
 # This CI pipeline enforces architectural rules from the Architecture Review
-# Checklist (附录C). Applicable checks for shinwa-solutions are implemented here.
+# Checklist (附录C). Applicable checks for enterprise-solutions are implemented here.
 #
 # ============================================================================
 # 附录C 可 CI 化检查项对照表
@@ -131,7 +131,7 @@ jobs:
         run: |
           echo "🔍 检查业务模块分层架构..."
           
-          for app in shinwa-app-*; do
+          for app in app-*; do
             if [ -d "$app" ]; then
               app_name=$(basename "$app")
               echo "📦 检查 $app_name..."
@@ -177,7 +177,7 @@ jobs:
           
           found_violations=false
           
-          for app in shinwa-app-*; do
+          for app in app-*; do
             if [ -d "$app" ]; then
               for pattern in "${forbidden_patterns[@]}"; do
                 matches=$(grep -r -l "$pattern" "$app" --include="*.java" 2>/dev/null || true)
@@ -206,13 +206,13 @@ jobs:
           
           found_violations=false
           
-          for app in shinwa-app-*; do
+          for app in app-*; do
             if [ -d "$app" ]; then
-              app_name=$(basename "$app" | sed 's/shinwa-app-//')
+              app_name=$(basename "$app" | sed 's/app-//')
               
               # 检查是否依赖其他业务模块的 Core/Server 层
-              for other_app in shinwa-app-*; do
-                other_name=$(basename "$other_app" | sed 's/shinwa-app-//')
+              for other_app in app-*; do
+                other_name=$(basename "$other_app" | sed 's/app-//')
                 
                 if [ "$app_name" != "$other_name" ]; then
                   # 检查是否依赖其他模块的 core 或 server

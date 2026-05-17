@@ -1,0 +1,10 @@
+# Auth state captured by Playwright fixtures
+.auth/
+
+# Playwright artefacts
+playwright-report/
+test-results/
+node_modules/
+
+# tsc cache
+*.tsbuildinfo

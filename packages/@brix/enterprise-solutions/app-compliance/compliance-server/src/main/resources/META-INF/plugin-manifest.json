@@ -1,0 +1,101 @@
+{
+  "name": "compliance",
+  "pluginId": "brix-app-compliance",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "风控合规",
+  "description": "Brix Enterprise Compliance Management - provides script template management, forbidden word detection, and compliance checking capabilities for regulated business operations.",
+
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/compliance/ui-manifest.json",
+      "scope": "compliance",
+      "routes": [
+        {
+          "path": "/compliance/script-templates",
+          "component": "./pages/ScriptTemplateList",
+          "exact": true,
+          "menu": {
+            "title": "话术模板",
+            "icon": "description",
+            "order": 1,
+            "parentId": "compliance"
+          }
+        },
+        {
+          "path": "/compliance/script-templates/create",
+          "component": "./pages/ScriptTemplateCreate",
+          "menu": { "hidden": true }
+        },
+        {
+          "path": "/compliance/script-templates/:id",
+          "component": "./pages/ScriptTemplateDetail",
+          "menu": { "hidden": true }
+        },
+        {
+          "path": "/compliance/script-templates/:id/edit",
+          "component": "./pages/ScriptTemplateEdit",
+          "menu": { "hidden": true }
+        },
+        {
+          "path": "/compliance/forbidden-words",
+          "component": "./pages/ForbiddenWordList",
+          "exact": true,
+          "menu": {
+            "title": "禁用词库",
+            "icon": "block",
+            "order": 2,
+            "parentId": "compliance"
+          }
+        },
+        {
+          "path": "/compliance/checks",
+          "component": "./pages/ComplianceCheckPage",
+          "exact": true,
+          "menu": {
+            "title": "合规检查",
+            "icon": "verified_user",
+            "order": 3,
+            "parentId": "compliance"
+          }
+        },
+        {
+          "path": "/compliance/checks/:id",
+          "component": "./pages/ComplianceCheckResult",
+          "menu": { "hidden": true }
+        }
+      ],
+      "menus": [
+        {
+          "id": "compliance",
+          "title": "风控合规",
+          "icon": "security",
+          "order": 110
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": false
+    }
+  },
+
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "AuthCapability", "HttpCapability"],
+    "optional": ["NotificationService"]
+  },
+
+  "events": {
+    "publish": [
+      "ScriptTemplatePublished",
+      "ComplianceCheckCompleted"
+    ],
+    "subscribe": []
+  },
+
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

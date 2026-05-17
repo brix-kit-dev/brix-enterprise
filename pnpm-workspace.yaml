@@ -1,10 +1,10 @@
-﻿# Brix Enterprise Monorepo Workspace Configuration
+# Brix Enterprise Monorepo Workspace Configuration
 #
 # PROPRIETARY AND CONFIDENTIAL
 # This file defines the workspace packages for the enterprise monorepo.
 #
 # CRITICAL DEPENDENCY RULE:
-# - Enterprise packages use version numbers (e.g., @brix/runtime-core@3.1.0)
+# - Enterprise packages use version numbers (e.g., @brix-sdk/runtime-core@3.1.0)
 #   to depend on Core packages
 # - NEVER use workspace:* for cross-repo dependencies
 # - workspace:* is ONLY for internal enterprise package references
@@ -23,13 +23,15 @@ packages:
   # Enterprise Solutions - Business application plugins
   - 'packages/@brix/enterprise-solutions'
   - 'packages/@brix/enterprise-solutions/*'
-  
-  # Enterprise Shell - Commercial UI components
-  - 'packages/@brix/enterprise-shell'
-  - 'packages/@brix/enterprise-shell/*'
-  
+  - 'packages/@brix/enterprise-solutions/*/*'  # Include nested packages like app-booking/booking-ui-web
+
   # ==================== Examples ====================
   - 'examples/*'
+
+  # ==================== End-to-End Tests (Phase 3 / C-5) ====================
+  # Super-admin Playwright suite — runs against a real backend stack
+  # (Postgres + Redis + Spring Boot host) on main / nightly only.
+  - 'e2e-tests/*'
 
 # ============================================================================
 # Catalog (pnpm 8.6+) - Shared dependency versions

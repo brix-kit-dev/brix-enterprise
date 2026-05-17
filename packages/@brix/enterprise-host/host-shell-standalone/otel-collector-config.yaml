@@ -29,7 +29,7 @@ processors:
   resource:
     attributes:
       - key: service.namespace
-        value: shinwa-platform
+        value: enterprise-shell
         action: upsert
       - key: deployment.environment
         value: production
@@ -45,9 +45,9 @@ exporters:
   # Prometheus 指标
   prometheus:
     endpoint: 0.0.0.0:8889
-    namespace: shinwa
+    namespace: brix
     const_labels:
-      platform: shinwa
+      platform: brix
 
   # 日志输出（调试用）
   logging:

@@ -21,7 +21,7 @@
 
     <groupId>io.brix.host</groupId>
     <artifactId>host-assembly</artifactId>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>3.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Brix Host Assembly</name>
@@ -53,6 +53,8 @@
         <module>host-shell-embedded</module>
         <!-- 前端运行壳 -->
         <module>host-shell-standalone-web</module>
+        <!-- Contract tests (R4.2 compliance) -->
+        <module>host-contract-tests</module>
     </modules>
 
     <properties>
@@ -63,14 +65,17 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- Spring Boot 版本 -->
-        <spring-boot.version>3.2.1</spring-boot.version>
+        <!-- Spring Boot version — aligned with enterprise root POM -->
+        <spring-boot.version>3.2.2</spring-boot.version>
+
+        <!-- Flyway 版本（与 platform-commons 对齐，覆盖 Spring Boot BOM 的 9.x） -->
+        <flyway.version>11.8.0</flyway.version>
 
         <!-- Brix 组件版本 -->
-        <runtime-sdk.version>3.1.0-SNAPSHOT</runtime-sdk.version>
-        <infra-adapters.version>3.1.0-SNAPSHOT</infra-adapters.version>
-        <!-- 【4.5 修复】platform-common/platform-common-starter 版本从 1.0.0-SNAPSHOT 升至 3.0.0-SNAPSHOT，与全平台统一 -->
-        <platform-commons.version>3.0.0-SNAPSHOT</platform-commons.version>
+        <runtime-sdk.version>3.2.0</runtime-sdk.version>
+        <infra-adapters.version>3.2.0</infra-adapters.version>
+        <!-- 【4.5 修复】platform-common/platform-common-starter 版本统一为 3.2.0-SNAPSHOT -->
+        <platform-commons.version>3.2.0</platform-commons.version>
 
         <!-- 日志版本 -->
         <slf4j.version>2.0.9</slf4j.version>
@@ -89,6 +94,18 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Flyway 版本覆盖（必须在 Spring Boot BOM 之前声明） -->
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-core</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-database-postgresql</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+
             <!-- Spring Boot BOM -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -212,7 +229,7 @@
             <dependency>
                 <groupId>io.brix</groupId>
                 <artifactId>architecture-guard</artifactId>
-                <version>3.1.0-SNAPSHOT</version>
+                <version>3.2.0</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

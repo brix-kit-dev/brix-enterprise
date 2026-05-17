@@ -1,11 +1,11 @@
 # ============================================================
-# Shinwa Platform - 产品模式运行壳配置
+# Brix Enterprise - 产品模式运行壳配置
 # ============================================================
 # 
 # host-shell-standalone：产品模式运行壳
 # 
 # 适用场景：
-#   - Shinwa Platform 标准产品部署
+#   - Brix Enterprise 标准产品部署
 #   - 完整功能需求场景
 #   - 具备完整基础设施（Kafka/Redis/OTel）的环境
 #
@@ -13,7 +13,7 @@
 
 spring:
   application:
-    name: shinwa-platform
+    name: enterprise-shell
   profiles:
     active: standalone
     
@@ -32,8 +32,8 @@ spring:
   # ==================== 数据库配置 ====================
   # 🔴 安全警告：密码必须通过环境变量提供，禁止使用默认值
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:shinwa_platform}
-    username: ${DB_USERNAME:shinwa}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:brix_platform}
+    username: ${DB_USERNAME:brix}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
@@ -43,6 +43,18 @@ spring:
 
   jpa:
     hibernate:
+      # Schema ownership (transitional, blueprint-aligned):
+      #   1. Flyway runs FIRST (per-module migrations in infra-adapter-database)
+      #      and is the source of truth for all explicitly modelled tables
+      #      (platform-auth, platform-tenant, app-* with V100+ scripts).
+      #   2. Hibernate runs AFTER Flyway (enforced by
+      #      EntityManagerFactoryDependsOnPostProcessor in
+      #      FlywayModuleMigrationAutoConfiguration). In `update` mode it only
+      #      ADDS missing columns/tables for legacy JPA entities that have not
+      #      yet been migrated to Flyway DDL (e.g. contract_party,
+      #      contract_sign_record, template_version). Hibernate never drops or
+      #      mutates Flyway-owned columns.
+      # The long-term target is `validate` once every entity has a Flyway script.
       ddl-auto: update
     show-sql: false
     properties:
@@ -51,13 +63,10 @@ spring:
         format_sql: true
 
   # ==================== Flyway 数据库迁移 ====================
+  # Multi-module migration is now managed by infra-adapter-database (Layer 2C).
+  # Module list is configured via brix.infra.database.migration.modules below.
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: '0'
-    validate-on-migrate: true
-    out-of-order: false
+    enabled: false  # Disable default Flyway — per-module migration handled by infra-adapter-database
 
   # ==================== Kafka 配置 ====================
   kafka:
@@ -68,7 +77,7 @@ spring:
       acks: all
       retries: 3
     consumer:
-      group-id: shinwa-platform
+      group-id: enterprise-shell
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -91,19 +100,74 @@ spring:
 
 # ==================== 运行壳配置 ====================
 brix:
-  # MinIO 在测试环境下禁用（无 MinIO 服务）
+  # Fallback Adapter — provides dev/test stand-ins for required capabilities that
+  # have no production-grade Adapter wired yet (auth, observability, etc.).
+  # Triple-gated by infra-adapter-fallback (Profile != production AND explicit
+  # opt-in AND @ConditionalOnMissingBean), so enabling here is safe for dev only.
+  # Production deployments MUST replace these with real Adapters
+  # (e.g. infra-adapter-simple DelegatedAuthContextCapability backed by an OAuth
+  # introspection endpoint) per Blueprint v3.0.x §3 Capability Contract.
+  fallback:
+    auth:
+      enabled: ${BRIX_FALLBACK_AUTH_ENABLED:true}
+  # MinIO Adapter — provides FileStorageCapability (required by brix-app-storage plugin
+  # per its plugin-manifest.json). Connection params are environment-driven so the same
+  # JAR runs locally / Docker / production without code change. Set BRIX_INFRA_MINIO_ENABLED=false
+  # only when intentionally disabling the storage plugin in a slimmed deployment.
   infra:
     minio:
-      enabled: false
+      enabled: ${BRIX_INFRA_MINIO_ENABLED:true}
+      endpoint: ${BRIX_INFRA_MINIO_ENDPOINT:http://localhost:9000}
+      access-key: ${BRIX_INFRA_MINIO_ACCESS_KEY:minioadmin}
+      secret-key: ${BRIX_INFRA_MINIO_SECRET_KEY:}
+      bucket-name: ${BRIX_INFRA_MINIO_BUCKET_NAME:brix-storage}
     # OpenTelemetry 在 Docker 环境下禁用（使用 Fallback ObservabilityCapability）
     otel:
       enabled: false
+    # ==================== Multi-module Flyway Migration (Layer 2C) ====================
+    # Configured here in YAML — no Java code in Host layer. The migration engine resides
+    # in infra-adapter-database, respecting the Ultra-Thin Host principle (Constraint 6).
+    database:
+      migration:
+        enabled: true
+        modules:
+          # Platform foundation (must run first — referenced by app-* migrations)
+          - platform-auth        # creates auth_user / auth_role / auth_permission (referenced by app-identity V100)
+          - platform-tenant      # creates sys_tenant / sys_identity / sys_tenant_member etc.
+          # Application modules
+          - app-identity
+          - app-booking
+          - app-products
+          - app-partners
+          - app-messenger
+          - app-carousel
+          - app-case
+          - app-contracts
+          - app-storage
+          - app-intake
+          - app-compliance
+  # ==================== Super-Admin Bootstrap (Layer 2C) ====================
+  # One-shot, idempotent bootstrap for the first SUPER_ADMIN account.
+  # Runs at startup via SuperAdminBootstrapRunner; silently skipped when ≥1
+  # active SUPER_ADMIN already exists (idempotency guarantee).
+  # Credentials MUST be sourced from a secret-store (env vars / Vault / mounted secrets).
+  # The operator MUST rotate the seeded password and enroll MFA on first login.
+  # NOTE: require-mfa defaults to false — A1 MFA is a stub (throws MFA_REQUIRED).
+  #       Flip to true once the MFA enrollment flow is production-ready.
+  platform:
+    bootstrap:
+      super-admin:
+        enabled: ${BRIX_BOOTSTRAP_SUPER_ADMIN_ENABLED:true}
+        email: ${BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL:}
+        password: ${BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD:}
+        username: ${BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME:Super Admin}
+        require-mfa: ${BRIX_BOOTSTRAP_SUPER_ADMIN_REQUIRE_MFA:false}
   shell:
     standalone:
       enabled: true
       
       # 模块标识
-      module-id: ${BRIX_MODULE_ID:shinwa-platform}
+      module-id: ${BRIX_MODULE_ID:enterprise-shell}
       
       # 租户标识
       tenant-id: ${BRIX_TENANT_ID:default}
@@ -114,7 +178,7 @@ brix:
         required:
           - io.runtime.sdk.capability.EventBusCapability
           - io.runtime.sdk.capability.StateStoreCapability
-          - io.runtime.sdk.capability.AuthContextCapability
+          - io.runtime.sdk.capability.AuthCapability
           - io.runtime.sdk.capability.ObservabilityCapability
           - io.runtime.sdk.capability.ConfigStoreCapability
           - io.runtime.sdk.capability.LifecycleCapability
@@ -138,7 +202,7 @@ brix:
       # ========== 状态存储配置 ==========
       state-store:
         type: redis
-        key-prefix: "shinwa:"
+        key-prefix: "brix:"
       
       # ========== 定时任务配置 ==========
       scheduling:
@@ -153,18 +217,45 @@ brix:
       # ========== 可观测性配置 ==========
       observability:
         type: otel
-        service-name: shinwa-platform
+        service-name: enterprise-shell
         sampling-ratio: 1.0
 
 # ==================== Actuator 配置 ====================
 
-# ==================== Identity JWT 配置 ====================
+# ==================== Identity JWT Configuration ====================
 identity:
   jwt:
     private-key-path: classpath:keys/private.pem
-    issuer: shinwa-auth-center
-    audience: shinwa-platform-api
+    issuer: brix-auth-center
+    audience: enterprise-shell-api
     expiration: ${JWT_EXPIRATION:3600}
+  # ========== Phase 0.3 — Login security configuration ==========
+  security:
+    # Account lockout: lock account after N consecutive failed login attempts
+    max-failed-attempts: ${IDENTITY_MAX_FAILED_ATTEMPTS:5}
+    lockout-minutes: ${IDENTITY_LOCKOUT_MINUTES:15}
+    # IP-based rate limiting: max login requests per IP per time window
+    rate-limit:
+      max-attempts: ${IDENTITY_RATE_LIMIT_MAX:10}
+      window-seconds: ${IDENTITY_RATE_LIMIT_WINDOW:60}
+
+# ==================== Platform Security (D2/D3 — capability-driven) ====================
+# 取代 identity.jwt.* 与 oauth2.google.*，由 platform-auth + platform-auth-web 消费。
+# 旧配置 (identity.jwt.*, oauth2.google.*) 在 D4 阶段移除。
+platform:
+  security:
+    jwt:
+      enabled: true
+      private-key-path: ${PLATFORM_JWT_PRIVATE_KEY_PATH:classpath:keys/private.pem}
+      issuer: ${PLATFORM_JWT_ISSUER:brix-auth-center}
+      audience: ${PLATFORM_JWT_AUDIENCE:enterprise-shell-api}
+      access-token-expiration-seconds: ${PLATFORM_JWT_ACCESS_TTL:3600}
+      identity-token-expiration-seconds: ${PLATFORM_JWT_IDENTITY_TTL:300}
+      token-version: ${PLATFORM_JWT_TOKEN_VERSION:2}
+    oauth2:
+      google:
+        # 留空时 OAuth2FederationCapability 不注册（host 可选启用）
+        client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
 
 # ==================== Actuator 配置 ====================
 management:
@@ -175,6 +266,7 @@ management:
   endpoint:
     health:
       show-details: always
+      show-components: always
       probes:
         enabled: true
   health:
@@ -183,12 +275,48 @@ management:
     db:
       enabled: true
 
+# ==================== Observability — Composite Health ====================
+# Phase 5.1: Composite plugin health aggregator (Netflix Eureka pattern).
+# All plugins implementing PluginHealthIndicator are auto-aggregated
+# under /actuator/health/plugins — zero Host code required (Constraint 6).
+observability:
+  health:
+    composite:
+      enabled: true
+    redis:
+      enabled: true
+
 # ==================== OpenTelemetry 配置 ====================
 otel:
   exporter:
     otlp:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
   service:
-    name: shinwa-platform
+    name: enterprise-shell
   traces:
     exporter: otlp
+
+---
+# ============================================================
+# dev profile — Development-only Configuration
+# ============================================================
+# Phase 5.4: Slow query logging via datasource-proxy.
+# Activated ONLY when spring.profiles.active includes "dev".
+# Zero overhead in production — the auto-configuration is
+# gated behind @Profile("dev").
+# ============================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+brix:
+  datasource:
+    slow-query:
+      enabled: true
+      threshold-millis: 500
+      log-all-queries: false
+
+logging:
+  level:
+    io.brix.platform.slowquery: WARN

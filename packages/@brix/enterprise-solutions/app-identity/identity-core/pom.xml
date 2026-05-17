@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+    identity-core - identity module core layer
+  
+    Responsibilities:
+    - Domain entities
+    - Repository interfaces
+    - Business services
+    - Application event handlers
+  
+    Architecture constraints:
+    - Depend on identity-api for DTO and event contracts
+    - Depend on runtime-sdk-api for capability contracts
+    - Use RuntimeContext for capabilities such as EventBus and StateStore
+    - JPA is allowed as a persistence contract by v3.0.9 R1.1
+    - Direct Kafka, Redis, MinIO, HTTP client, and non-JPA data-store dependencies are forbidden
+  
+  迁移来源：plugin-user-core
+  版本: 3.2.0-SNAPSHOT
+  日期: 2026-01-28
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-identity</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>identity-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Identity Core</name>
+    <description>用户身份模块核心层 - 领域模型、业务逻辑、事件处理器</description>
+
+    <dependencies>
+        <!-- ========== 模块内部依赖 ========== -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>identity-api</artifactId>
+        </dependency>
+
+        <!-- ========== Runtime SDK（开源核心层）========== -->
+        <!--
+            【核心依赖】运行壳能力契约
+            通过 RuntimeContext 获取：
+            - EventBusCapability: 事件发布
+            - StateStoreCapability: 状态存储
+            - AuthContextCapability: 认证上下文
+            - ObservabilityCapability: 日志/指标/追踪
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- ========== JPA persistence contract allowed by v3.0.9 R1.1 (not an infra adapter). ========== -->
+        <!--
+            【设计说明】
+            JPA is a persistence contract in plugin-core, not an infrastructure adapter.
+            具体的数据源配置由 Host 层提供。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ========== JSON 处理（OAuth2 需要）========== -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- ========== 数据库迁移（Flyway）========== -->
+        <!--
+            【设计说明】
+            使用 Flyway 管理 DDL 变更而非 ddl-auto: update。
+            迁移脚本位于: src/main/resources/db/migration/
+            Flyway 10+ 需要 flyway-database-postgresql 作为独立模块
+        -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- ========== 工具类 ========== -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ========== 测试依赖 ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

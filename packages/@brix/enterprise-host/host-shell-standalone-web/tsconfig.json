@@ -20,16 +20,18 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Paths - 配置 link 依赖的类型解析 */
+    /* Paths — resolve link: dependencies for IDE type checking */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@shinwa/shinwa-platform-shell-web": ["../../shinwa-platform/shinwa-platform-shell-web/dist/index.d.ts"],
-      "@brix/platform-auth-web": ["../../platform-commons/packages/client/platform-auth-web/dist/index.d.ts"],
-      "@brix/platform-router-web": ["../../platform-commons/packages/client/platform-router-web/dist/index.d.ts"],
-      "@brix/platform-navigation-web": ["../../platform-commons/packages/client/platform-navigation-web/dist/index.d.ts"],
-      "@brix/platform-eventbus-web": ["../../platform-commons/packages/client/platform-eventbus-web/dist/index.d.ts"],
-      "@brix/runtime-sdk-api-web": ["../../runtime-sdk/runtime-sdk-api-web/dist/index.d.ts"]
+      "@brix-sdk/platform-frame-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/dist/index.d.ts"],
+      "@brix-sdk/platform-auth-service-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-service-web/dist/index.d.ts"],
+      "@brix-sdk/platform-auth-web": ["../../platform-commons/packages/client/platform-auth-web/dist/index.d.ts"],
+      "@brix-sdk/platform-router-web": ["../../platform-commons/packages/client/platform-router-web/dist/index.d.ts"],
+      "@brix-sdk/platform-navigation-web": ["../../platform-commons/packages/client/platform-navigation-web/dist/index.d.ts"],
+      "@brix-sdk/platform-eventbus-web": ["../../platform-commons/packages/client/platform-eventbus-web/dist/index.d.ts"],
+      "@brix-sdk/runtime-sdk-api-web": ["../../runtime-sdk/runtime-sdk-api-web/dist/index.d.ts"],
+      "@brix-sdk/runtime-sdk-react": ["../../runtime-sdk/runtime-sdk-react/dist/index.d.ts"]
     }
   },
   "include": ["src"],

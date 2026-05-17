@@ -1,4 +1,4 @@
-# Shinwa Solutions
+# Brix Enterprise Solutions
 
 > **版本**: 3.0.0  
 > **日期**: 2026-01-27
@@ -35,20 +35,20 @@ Layer 1: 插件能力层 ★ 本仓库 ★    ← 业务实现
 
 ## 概述
 
-Shinwa Solutions 是基于 Runtime Shell 架构的商业业务模块集合。所有模块仅依赖 `runtime-sdk-api` 能力契约，不直接依赖任何基础设施（Kafka/Redis/等）。
+Brix Enterprise Solutions 是基于 Runtime Shell 架构的商业业务模块集合。所有模块仅依赖 `runtime-sdk-api` 能力契约，不直接依赖任何基础设施（Kafka/Redis/等）。
 
 ## 模块列表
 
 | 模块 | 说明 | 优先级 | 状态 |
 |------|------|:------:|:----:|
-| shinwa-app-booking | 预约管理 | P0 | ✅ 已迁移 |
-| shinwa-app-identity | 用户身份 | P1 | ✅ 已迁移 |
-| shinwa-app-messenger | 消息通知 | P1 | ✅ 已迁移 |
-| shinwa-app-carousel | 轮播组件 | P2 | ✅ 已迁移 |
-| shinwa-app-partners | 合作方目录 | P2 | ✅ 已迁移 |
-| shinwa-app-products | 产品目录 | P2 | ✅ 已迁移 |
-| shinwa-app-storage | 存储服务 | P3 | ✅ 已迁移 |
-| shinwa-app-contracts | 合同管理 | P3 | ✅ 已迁移 |
+| app-booking | 预约管理 | P0 | ✅ 已迁移 |
+| app-identity | 用户身份 | P1 | ✅ 已迁移 |
+| app-messenger | 消息通知 | P1 | ✅ 已迁移 |
+| app-carousel | 轮播组件 | P2 | ✅ 已迁移 |
+| app-partners | 合作方目录 | P2 | ✅ 已迁移 |
+| app-products | 产品目录 | P2 | ✅ 已迁移 |
+| app-storage | 存储服务 | P3 | ✅ 已迁移 |
+| app-contracts | 合同管理 | P3 | ✅ 已迁移 |
 
 ## 架构原则
 
@@ -69,7 +69,7 @@ Shinwa Solutions 是基于 Runtime Shell 架构的商业业务模块集合。所
 │  • org.springframework.data:spring-data-redis               │
 │  • io.brix:infra-adapter-* (基础设施适配器)                 │
 │  • io.brix:host-* (Host 实现)                               │
-│  • 任何其他 shinwa-app-* 模块的内部类                       │
+│  • 任何其他 app-* 模块的内部类                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -78,18 +78,18 @@ Shinwa Solutions 是基于 Runtime Shell 架构的商业业务模块集合。所
 每个业务模块遵循统一的目录结构：
 
 ```text
-shinwa-app-xxx/
+app-xxx/
 ├── pom.xml                     # 模块 POM
 ├── module-manifest.yaml        # 模块声明文件
 ├── xxx-api/                    # API 层
 │   └── src/main/java/
-│       └── com/shinwa/app/xxx/api/
+│       └── io/brix/enterprise/app/xxx/api/
 │           ├── dto/            # 数据传输对象
 │           ├── event/          # 事件定义
 │           └── request/        # 请求对象
 ├── xxx-core/                   # 核心层
 │   └── src/main/java/
-│       └── com/shinwa/app/xxx/
+│       └── io/brix/enterprise/app/xxx/
 │           ├── controller/     # REST 控制器
 │           ├── service/        # 业务服务
 │           ├── domain/         # 领域模型
@@ -156,7 +156,7 @@ docker compose -f scripts/docker-compose-dev.yml up -d
 mvn clean install
 
 # 编译单个模块
-mvn clean install -pl shinwa-app-booking -am
+mvn clean install -pl app-booking -am
 
 # 跳过测试
 mvn clean install -DskipTests
@@ -177,4 +177,4 @@ mvn test -Dtest=ArchitectureTest
 
 ## 许可证
 
-商业许可证 - Shinwa Platform
+商业许可证 - Brix Enterprise

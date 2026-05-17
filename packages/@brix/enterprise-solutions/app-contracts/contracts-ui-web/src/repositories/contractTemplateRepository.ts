@@ -1,0 +1,216 @@
+/**
+ * Copyright 2026 Brix Platform Authors
+ *
+ * PROPRIETARY AND CONFIDENTIAL
+ *
+ * This software is proprietary to Brix Platform and is protected by
+ * copyright laws and international treaty provisions. Unauthorized
+ * reproduction or distribution of this software, or any portion of it,
+ * may result in severe civil and criminal penalties.
+ *
+ * Commercial use requires a valid Brix Enterprise license.
+ * See LICENSE-ENTERPRISE for terms and conditions.
+ */
+/**
+ * @file Contract Template Repository Implementation
+ * @description Data access layer for contract template-related API calls
+ * @module @brix-sdk/enterprise-contracts-ui-web
+ * @version 3.0.0
+ *
+ * Design Notes:
+ * Repository layer encapsulates all data access logic following v3.0.4 architecture:
+ * 1. Calls HttpCapability to make HTTP requests
+ * 2. Data format conversion
+ * 3. Standardized error handling
+ *
+ * Architecture Compliance (Red Line R3):
+ * - All HTTP requests go through HttpCapability
+ * - Direct use of fetch/axios is forbidden
+ * - HttpCapability is injected via factory function
+ *
+ * @see HttpCapability defined in @brix-sdk/runtime-sdk-api-web
+ * @author Brix Team
+ * @date 2026-02-23
+ */
+
+import type { HttpCapability } from '@brix-sdk/runtime-sdk-api-web';
+import type {
+  ContractTemplate,
+  ContractTemplateSummary,
+  ContractTemplateQueryParams,
+  CreateContractTemplateRequest,
+  UpdateContractTemplateRequest,
+  PagedResponse,
+} from '@brix-sdk/enterprise-contracts-shared';
+import { CONTRACTS_API } from '@brix-sdk/enterprise-contracts-shared';
+
+// ============================================================================
+// Repository Interface
+// ============================================================================
+
+/**
+ * Contract Template Repository Interface
+ * 
+ * Defines the contract for template data access operations.
+ * All methods return Promises for async operation.
+ */
+export interface ContractTemplateRepository {
+  /**
+   * Get paginated list of contract templates
+   * 
+   * @param params - Query parameters for filtering and pagination
+   * @returns Paginated response containing template summaries
+   */
+  list(params?: ContractTemplateQueryParams): Promise<PagedResponse<ContractTemplateSummary>>;
+
+  /**
+   * Get contract template details by ID
+   * 
+   * @param id - Template ID
+   * @returns Full template DTO with variable definitions
+   */
+  getById(id: number): Promise<ContractTemplate>;
+
+  /**
+   * Create a new contract template
+   * 
+   * @param request - Template creation parameters
+   * @returns Created template DTO
+   */
+  create(request: CreateContractTemplateRequest): Promise<ContractTemplate>;
+
+  /**
+   * Update an existing contract template
+   * 
+   * @param id - Template ID
+   * @param request - Update parameters
+   * @returns Updated template DTO
+   */
+  update(id: number, request: UpdateContractTemplateRequest): Promise<ContractTemplate>;
+
+  /**
+   * Activate a contract template (make it available for use)
+   * 
+   * @param id - Template ID
+   * @returns Updated template DTO
+   */
+  activate(id: number): Promise<ContractTemplate>;
+
+  /**
+   * Archive a contract template (make it unavailable)
+   * 
+   * @param id - Template ID
+   * @returns Updated template DTO
+   */
+  archive(id: number): Promise<ContractTemplate>;
+
+  /**
+   * Delete a contract template (only for DRAFT status)
+   * 
+   * @param id - Template ID
+   */
+  delete(id: number): Promise<void>;
+}
+
+// ============================================================================
+// Repository Factory
+// ============================================================================
+
+/**
+ * Create a Contract Template Repository instance
+ * 
+ * Factory function that creates a repository instance with the provided
+ * HttpCapability. This follows the Dependency Injection pattern required
+ * by v3.0.4 architecture - repositories don't directly depend on HTTP
+ * implementations, but receive them through factory injection.
+ * 
+ * @param http - HttpCapability instance from RuntimeContext
+ * @returns ContractTemplateRepository implementation
+ * 
+ * @example
+ * ```typescript
+ * // In a React Hook (ViewModel layer)
+ * const http = useHttp();
+ * const repo = createContractTemplateRepository(http);
+ * const templates = await repo.list({ page: 0, size: 20 });
+ * ```
+ */
+export function createContractTemplateRepository(http: HttpCapability): ContractTemplateRepository {
+  return {
+    /**
+     * List contract templates with pagination and filtering
+     */
+    async list(params?: ContractTemplateQueryParams): Promise<PagedResponse<ContractTemplateSummary>> {
+      const queryParams: Record<string, string> = {};
+      
+      if (params) {
+        if (params.page !== undefined) queryParams.page = String(params.page);
+        if (params.size !== undefined) queryParams.size = String(params.size);
+        if (params.keyword) queryParams.keyword = params.keyword;
+        if (params.status) queryParams.status = params.status;
+        if (params.category) queryParams.category = params.category;
+        if (params.sortBy) queryParams.sortBy = params.sortBy;
+        if (params.sortOrder) queryParams.sortOrder = params.sortOrder;
+      }
+
+      return http.get<PagedResponse<ContractTemplateSummary>>(
+        CONTRACTS_API.TEMPLATES,
+        queryParams as Record<string, unknown>
+      );
+    },
+
+    /**
+     * Get template by ID with full details
+     */
+    async getById(id: number): Promise<ContractTemplate> {
+      return http.get<ContractTemplate>(
+        CONTRACTS_API.TEMPLATE_BY_ID(id)
+      );
+    },
+
+    /**
+     * Create a new contract template
+     */
+    async create(request: CreateContractTemplateRequest): Promise<ContractTemplate> {
+      return http.post<ContractTemplate>(
+        CONTRACTS_API.TEMPLATES,
+        request
+      );
+    },
+
+    /**
+     * Update an existing contract template
+     */
+    async update(id: number, request: UpdateContractTemplateRequest): Promise<ContractTemplate> {
+      return http.put<ContractTemplate>(
+        CONTRACTS_API.TEMPLATE_BY_ID(id),
+        request
+      );
+    },
+
+    /**
+     * Activate a contract template
+     */
+    async activate(id: number): Promise<ContractTemplate> {
+      return http.post<ContractTemplate>(
+        CONTRACTS_API.TEMPLATE_ACTIVATE(id)
+      );
+    },
+
+    /**
+     * Archive a contract template
+     */
+    async archive(id: number): Promise<ContractTemplate> {
+      return http.post<ContractTemplate>(
+        CONTRACTS_API.TEMPLATE_ARCHIVE(id)
+      );
+    },
+
+    /**
+     * Delete a contract template
+     */
+    async delete(id: number): Promise<void> {
+      await http.delete(CONTRACTS_API.TEMPLATE_BY_ID(id));
+    },
+  };
+}

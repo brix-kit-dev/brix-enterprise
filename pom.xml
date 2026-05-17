@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Copyright 2026 Brix Platform Authors
   ~
@@ -33,7 +33,7 @@ License: Proprietary
 
     <groupId>io.brix.enterprise</groupId>
     <artifactId>brix-enterprise-parent</artifactId>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>3.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Brix Enterprise Framework</name>
@@ -85,11 +85,11 @@ License: Proprietary
         CRITICAL: This property defines the version of Brix Core that Enterprise
         depends on. Enterprise MUST use published releases of Core.
         
-        For development: Use latest SNAPSHOT (e.g., 3.1.0-SNAPSHOT)
+        For development: Use latest SNAPSHOT (e.g., 3.2.0-SNAPSHOT)
         For release: Use stable release (e.g., 3.1.0)
         ============================================================================
         -->
-        <brix.core.version>3.1.0-SNAPSHOT</brix.core.version>
+        <brix.core.version>3.2.0</brix.core.version>
         
         <!-- Dependency Versions -->
         <spring-boot.version>3.2.2</spring-boot.version>
@@ -102,6 +102,7 @@ License: Proprietary
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
         <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -194,25 +195,6 @@ License: Proprietary
                                 </rules>
                             </configuration>
                         </execution>
-                        <!--
-                        ============================================================================
-                        BANNED DEPENDENCIES RULE
-                        
-                        In release builds, Enterprise MUST NOT depend on Core SNAPSHOTs.
-                        This rule is enforced only when the 'release' profile is active.
-                        ============================================================================
-                        -->
-                        <execution>
-                            <id>ban-snapshots-in-release</id>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <!-- This rule is activated by the release profile -->
-                                </rules>
-                            </configuration>
-                        </execution>
                     </executions>
                 </plugin>
             </plugins>
@@ -269,6 +251,83 @@ License: Proprietary
                                         </bannedDependencies>
                                     </rules>
                                     <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+        ================================================================
+        Coverage Profile (Phase 5.3)
+        
+        Activates JaCoCo agent and enforces minimum coverage thresholds.
+        
+        Usage:
+          mvn verify -Pcoverage
+        
+        CI Integration:
+          The code-coverage.yml workflow activates this profile and
+          fails the build if line coverage < 80% or branch coverage < 70%.
+        ================================================================
+        -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>check</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <rule>
+                                            <element>BUNDLE</element>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.80</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.70</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                    </rules>
+                                    <excludes>
+                                        <exclude>**/*AutoConfiguration.*</exclude>
+                                        <exclude>**/*AutoConfig.*</exclude>
+                                        <exclude>**/*Properties.*</exclude>
+                                        <exclude>**/*Application.*</exclude>
+                                        <exclude>**/dto/**</exclude>
+                                        <exclude>**/config/**</exclude>
+                                        <exclude>**/package-info.*</exclude>
+                                    </excludes>
                                 </configuration>
                             </execution>
                         </executions>

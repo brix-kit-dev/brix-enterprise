@@ -1,0 +1,185 @@
+# ============================================================================
+# E2E — Super-admin Playwright Suite
+# ============================================================================
+#
+# Phase 3 / C-5 — runs the super-admin journey against a real backend stack
+# (Postgres + Redis + Spring Boot host) on every push to main and on a
+# nightly schedule.
+#
+# IMPORTANT: per Phase 3 §5.2 this workflow is intentionally NOT triggered
+# on pull requests — the Java host warm-up is too slow to gate every PR.
+# Selector failures are reported as artefacts on main pushes, while nightly
+# scheduled runs are blocking now that the UI has migrated to the
+# `data-testid` convention.
+#
+# @see docs-dev/前端稳定性改造计划-v1.0.md §5.2
+# ============================================================================
+
+name: E2E (Super-admin)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/@brix/enterprise-host/**'
+      - 'packages/@brix/enterprise-solutions/app-tenant/**'
+      - 'packages/@brix/enterprise-solutions/app-identity/**'
+      - 'e2e-tests/super-admin/**'
+      - '.github/workflows/e2e.yml'
+  schedule:
+    # Nightly at 02:00 UTC.
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: e2e-super-admin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  super-admin:
+    name: Playwright (Super-admin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      # ------------------------------------------------------------------
+      # Postgres — mirrors docker-compose.yml in the suite, but uses the
+      # standard 5432 port because GitHub services do not expose port maps
+      # the same way.  Backend env vars below point at this hostname.
+      # ------------------------------------------------------------------
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: brix_platform
+          POSTGRES_USER: brix
+          POSTGRES_PASSWORD: brix_local_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U brix -d brix_platform"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+
+    env:
+      # Backend connection.
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_NAME: brix_platform
+      DB_USERNAME: brix
+      DB_PASSWORD: brix_local_e2e
+      REDIS_HOST: localhost
+      REDIS_PORT: '6379'
+      SPRING_PROFILES_ACTIVE: standalone
+      # Bootstrap super-admin — secret in CI, must NOT be hard-coded.
+      BRIX_BOOTSTRAP_PASSWORD: ${{ secrets.BRIX_BOOTSTRAP_PASSWORD || 'CIBootstrap!ChangeMe123' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ----- JDK + Maven -----
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      # ----- Node + pnpm -----
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @brix/super-admin-e2e exec playwright install --with-deps chromium
+
+      # ----- Build & start the Spring Boot host -----
+      - name: Build Maven artefacts
+        run: mvn -B -DskipTests -pl packages/@brix/enterprise-host/host-shell-standalone -am package
+
+      - name: Start Spring Boot host
+        run: |
+          nohup mvn -B -pl packages/@brix/enterprise-host/host-shell-standalone spring-boot:run \
+            > host.log 2>&1 &
+          echo "HOST_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for backend on :8081
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8081/actuator/health >/dev/null 2>&1; then
+              echo "Backend is healthy."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Backend did not become healthy within 5 minutes."
+          tail -n 200 host.log || true
+          exit 1
+
+      # ----- Run Playwright suite -----
+      - name: Run Playwright suite
+        id: playwright
+        continue-on-error: ${{ github.event_name != 'schedule' }}
+        run: pnpm --filter @brix/super-admin-e2e run test
+        env:
+          CI: 'true'
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e-tests/super-admin/playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload backend log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-host-log
+          path: host.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop Spring Boot host
+        if: always()
+        run: |
+          if [ -n "${HOST_PID:-}" ]; then
+            kill "${HOST_PID}" 2>/dev/null || true
+          fi
+
+      # Surface the Playwright outcome. Scheduled nightly runs fail at the
+      # Playwright step itself; push/workflow_dispatch runs remain advisory.
+      - name: Report outcome
+        if: always()
+        run: |
+          echo "Playwright outcome: ${{ steps.playwright.outcome }}"
+          if [ "${{ steps.playwright.outcome }}" != "success" ]; then
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              echo "::error::Super-admin nightly E2E suite failed — see playwright-report artifact."
+            else
+              echo "::warning::Super-admin E2E suite reported failures — see playwright-report artifact."
+            fi
+          fi

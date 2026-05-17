@@ -1,6 +1,6 @@
 # Changelog
 
-本文件记录 Shinwa Host Assembly 的所有重要变更。
+本文件记录 Brix Enterprise Host 的所有重要变更。
 
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
@@ -60,6 +60,6 @@
 
 ---
 
-[3.2.0]: https://github.com/shinwa/shinwa-host-assembly/compare/v3.1.0...v3.2.0
-[3.1.0]: https://github.com/shinwa/shinwa-host-assembly/compare/v3.0.0...v3.1.0
-[3.0.0]: https://github.com/shinwa/shinwa-host-assembly/releases/tag/v3.0.0
+[3.2.0]: https://github.com/brix-platform/brix-enterprise/compare/v3.1.0...v3.2.0
+[3.1.0]: https://github.com/brix-platform/brix-enterprise/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/brix-platform/brix-enterprise/releases/tag/v3.0.0

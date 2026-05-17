@@ -1,0 +1,118 @@
+﻿# ============================================================
+# Identity Module - OAuth2 配置
+# ============================================================
+#
+# Google OAuth2 配置说明：
+#
+# 1. 前往 Google Cloud Console: https://console.cloud.google.com
+# 2. 创建项目或选择现有项目
+# 3. 启用 Google+ API 和 Google Identity Services
+# 4. 创建 OAuth 2.0 客户端凭据
+# 5. 配置授权重定向 URI:
+#    - http://localhost:8081/api/v1/oauth2/google/callback
+#    - http://localhost:3000/oauth2/callback
+#
+# ============================================================
+
+# ==================== 服务基础配置 ====================
+server:
+  port: 8081
+
+spring:
+  application:
+    name: identity-service
+  
+  # 数据库配置
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:brix_platform}
+    username: ${DB_USER:brix}
+    password: ${DB_PASSWORD:brix123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  
+  # JPA 配置
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  # Flyway 数据库迁移
+  # platform-auth V1 + identity V2 均位于 classpath:db/migration，Flyway 统一管理
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: '0'
+    validate-on-migrate: true
+    out-of-order: false
+    table: flyway_schema_history
+
+# ==================== Identity 模块配置 ====================
+identity:
+  # 默认租户ID
+  default-tenant-id: ${DEFAULT_TENANT_ID:default}
+  
+  # JWT 配置（RS256 非对称签名）
+  jwt:
+    private-key-path: ${JWT_PRIVATE_KEY_PATH:classpath:keys/private.pem}
+    expiration: ${JWT_EXPIRATION:3600}  # 1小时
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}  # 7天
+  
+  # Token 加密存储配置（AES-256-GCM）
+  token-encryption:
+    key: ${TOKEN_ENCRYPTION_KEY:}  # 【必须】生产环境设置环境变量
+  
+  # OAuth2 配置
+  oauth2:
+    # 前端回调 URL
+    frontend-url: ${FRONTEND_URL:http://localhost:3000}
+    default-redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:8081/api/v1/oauth2/google/callback}
+    
+    # Google OAuth2 配置
+    google:
+      # =========================================
+      # 【重要】请替换为你自己的 Google OAuth2 凭据
+      # =========================================
+      client-id: ${GOOGLE_CLIENT_ID:your-google-client-id.apps.googleusercontent.com}
+      client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+      
+      # 授权范围
+      scope: openid email profile
+      
+      # 授权端点（一般不需要修改）
+      authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+      token-uri: https://oauth2.googleapis.com/token
+      userinfo-uri: https://openidconnect.googleapis.com/v1/userinfo
+
+# ==================== 平台安全配置 ====================
+platform:
+  security:
+    enabled: true
+    jwt:
+      enabled: true
+      # 公钥路径（用于验证 JWT，与 identity 模块的私钥配对）
+      public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}
+
+# ==================== 日志配置 ====================
+logging:
+  level:
+    io.brix.enterprise.app.app.identity: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+
+# ==================== 管理端点 ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

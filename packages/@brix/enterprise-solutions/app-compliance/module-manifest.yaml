@@ -1,0 +1,124 @@
+# ===========================================================================================
+# Compliance Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Compliance Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-compliance"
+
+  # Display name
+  name: "Compliance Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (business functionality)
+  type: "plugin"
+
+  # Module category
+  category: "business"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Compliance Management Plugin
+
+    Core responsibilities:
+    - Script templates: manage and publish script templates for regulated operations
+    - Forbidden word detection: maintain and enforce forbidden word lists
+    - Compliance checking: validate content against compliance rules
+    - Audit trail: track compliance check results and violations
+
+    Provides script template management, forbidden word detection, and compliance
+    checking capabilities for regulated business operations.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 200
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/compliance"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - auth-context
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - notification
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.compliance.event.ScriptTemplatePublished"
+      description: "Published when a script template is published"
+
+    - type: "io.brix.plugin.compliance.event.ComplianceCheckCompleted"
+      description: "Published when a compliance check is completed"
+
+  # Subscribed events
+  subscribes: []
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "compliance:manage"
+    name: "Manage Compliance"
+    description: "Full management access to compliance rules and templates"
+
+  - id: "compliance:read"
+    name: "View Compliance"
+    description: "Read-only access to compliance information"
+
+  - id: "compliance:check"
+    name: "Run Compliance Checks"
+    description: "Permission to execute compliance checks against content"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "compliance.max-forbidden-words"
+    type: "int"
+    default: "10000"
+    description: "Maximum number of forbidden words in the dictionary"
+
+  - key: "compliance.check-timeout"
+    type: "duration"
+    default: "30s"
+    description: "Timeout for compliance check operations"
+
+# ===========================================================================================

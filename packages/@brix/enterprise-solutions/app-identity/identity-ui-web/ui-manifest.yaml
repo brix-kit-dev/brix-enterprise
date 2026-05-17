@@ -1,0 +1,339 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 身份认证模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-30
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "identity"
+  name: "身份认证"
+  version: "3.0.0-SNAPSHOT"
+  description: "Brix Enterprise 用户身份与认证管理模块"
+  vendor: "Brix Platform"
+
+# ============================================================================
+# 页面声明（替代路由配置）
+# 【关键】使用 PageId 而非 path
+# ============================================================================
+pages:
+  # -------------------- 用户列表 --------------------
+  - pageId: "identity:user-list"
+    component: "./pages/UserList"
+    title: "用户列表"
+    titleKey: "identity.page.userList.title"
+    permission: "user:read"
+    platforms:
+      web:
+        suggestedPath: "/identity/users"
+      mobile:
+        suggestedScreen: "UserListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "身份认证"
+
+  # -------------------- 用户详情 --------------------
+  - pageId: "identity:user-detail"
+    component: "./pages/UserDetail"
+    title: "用户详情"
+    titleKey: "identity.page.userDetail.title"
+    permission: "user:read"
+    params:
+      - name: "userId"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/identity/users/:userId"
+      mobile:
+        suggestedScreen: "UserDetailScreen"
+
+  # -------------------- 创建用户 --------------------
+  - pageId: "identity:user-create"
+    component: "./pages/UserCreate"
+    title: "创建用户"
+    titleKey: "identity.page.userCreate.title"
+    permission: "user:create"
+    platforms:
+      web:
+        suggestedPath: "/identity/users/create"
+      mobile:
+        suggestedScreen: "UserCreateScreen"
+
+  # -------------------- 编辑用户 --------------------
+  - pageId: "identity:user-edit"
+    component: "./pages/UserCreate"
+    title: "编辑用户"
+    titleKey: "identity.page.userEdit.title"
+    permission: "user:update"
+    params:
+      - name: "userId"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/identity/users/:userId/edit"
+      mobile:
+        suggestedScreen: "UserEditScreen"
+
+  # -------------------- Organization List (Phase 5 Week 11) --------------------
+  - pageId: "identity:organization-list"
+    component: "./pages/OrganizationList"
+    title: "组织列表"
+    titleKey: "identity.page.organizationList.title"
+    permission: "organization:read"
+    platforms:
+      web:
+        suggestedPath: "/organizations"
+      mobile:
+        suggestedScreen: "OrganizationListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "组织管理"
+
+  # -------------------- Organization Detail (Phase 5 Week 11) --------------------
+  - pageId: "identity:organization-detail"
+    component: "./pages/OrganizationDetail"
+    title: "组织详情"
+    titleKey: "identity.page.organizationDetail.title"
+    permission: "organization:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/organizations/:id"
+      mobile:
+        suggestedScreen: "OrganizationDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "组织管理"
+          pageId: "identity:organization-list"
+        - label: "组织详情"
+
+  # -------------------- Role List (Phase 5 Week 11) --------------------
+  - pageId: "identity:role-list"
+    component: "./pages/RoleList"
+    title: "角色列表"
+    titleKey: "identity.page.roleList.title"
+    permission: "role:read"
+    platforms:
+      web:
+        suggestedPath: "/roles"
+      mobile:
+        suggestedScreen: "RoleListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "角色管理"
+
+  # -------------------- Role Detail (Phase 5 Week 11) --------------------
+  - pageId: "identity:role-detail"
+    component: "./pages/RoleDetail"
+    title: "角色详情"
+    titleKey: "identity.page.roleDetail.title"
+    permission: "role:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/roles/:id"
+      mobile:
+        suggestedScreen: "RoleDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "角色管理"
+          pageId: "identity:role-list"
+        - label: "角色详情"
+
+# ============================================================================
+# 菜单声明（替代菜单配置）
+# 【关键】关联 PageId 而非 path
+# ============================================================================
+menus:
+  - id: "identity"
+    title: "身份认证"
+    icon: "security"
+    order: 10
+    permission: "user:read"
+    children:
+      - id: "identity:user-list"
+        title: "用户管理"
+        pageId: "identity:user-list"
+        icon: "people"
+        order: 1
+      - id: "identity:user-create"
+        title: "创建用户"
+        pageId: "identity:user-create"
+        icon: "person_add"
+        order: 2
+        permission: "user:create"
+      # Organization menu items (Phase 5 Week 11)
+      - id: "identity:organization-list"
+        title: "组织管理"
+        pageId: "identity:organization-list"
+        icon: "business"
+        order: 3
+        permission: "organization:read"
+      # Role menu items (Phase 5 Week 11)
+      - id: "identity:role-list"
+        title: "角色管理"
+        pageId: "identity:role-list"
+        icon: "admin_panel_settings"
+        order: 4
+        permission: "role:read"
+
+# ============================================================================
+# 事件声明
+# ============================================================================
+events:
+  published:
+    # 用户创建事件
+    - type: "user:created"
+      description: "用户创建成功"
+      payload:
+        type: "object"
+        properties:
+          userId: { type: "string" }
+          username: { type: "string" }
+          email: { type: "string" }
+      scope: "global"
+
+    # 用户选择事件（供其他插件订阅，如 booking 模块）
+    - type: "user:selected"
+      description: "用户被选中"
+      payload:
+        type: "object"
+        properties:
+          userId: { type: "string" }
+          userName: { type: "string" }
+      scope: "global"
+
+    # 用户状态变更事件
+    - type: "user:status-changed"
+      description: "用户状态变更"
+      payload:
+        type: "object"
+        properties:
+          userId: { type: "string" }
+          oldStatus: { type: "string" }
+          newStatus: { type: "string" }
+      scope: "global"
+
+  subscribed: []
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - id: "user:read"
+    name: "查看用户"
+    nameKey: "permission.user.read"
+    description: "允许查看用户列表和详情"
+
+  - id: "user:create"
+    name: "创建用户"
+    nameKey: "permission.user.create"
+    description: "允许创建新用户"
+
+  - id: "user:update"
+    name: "更新用户"
+    nameKey: "permission.user.update"
+    description: "允许更新用户信息"
+
+  - id: "user:delete"
+    name: "删除用户"
+    nameKey: "permission.user.delete"
+    description: "允许删除用户"
+
+  - id: "user:status"
+    name: "管理用户状态"
+    nameKey: "permission.user.status"
+    description: "允许启用/禁用/锁定/解锁用户"
+
+  # Organization permissions (Phase 5 Week 11)
+  - id: "organization:read"
+    name: "查看组织"
+    nameKey: "permission.organization.read"
+    description: "允许查看组织列表和详情"
+
+  - id: "organization:create"
+    name: "创建组织"
+    nameKey: "permission.organization.create"
+    description: "允许创建新组织"
+
+  - id: "organization:update"
+    name: "更新组织"
+    nameKey: "permission.organization.update"
+    description: "允许更新组织信息"
+
+  - id: "organization:delete"
+    name: "删除组织"
+    nameKey: "permission.organization.delete"
+    description: "允许删除组织"
+
+  # Role permissions (Phase 5 Week 11)
+  - id: "role:read"
+    name: "查看角色"
+    nameKey: "permission.role.read"
+    description: "允许查看角色列表和详情"
+
+  - id: "role:create"
+    name: "创建角色"
+    nameKey: "permission.role.create"
+    description: "允许创建新角色"
+
+  - id: "role:update"
+    name: "更新角色"
+    nameKey: "permission.role.update"
+    description: "允许更新角色信息和权限"
+
+  - id: "role:delete"
+    name: "删除角色"
+    nameKey: "permission.role.delete"
+    description: "允许删除角色"
+
+# ============================================================================
+# 能力依赖声明
+# ============================================================================
+capabilities:
+  required:
+    - navigation
+    - menu
+    - auth
+    - event-bus
+    - plugin-state
+  optional:
+    - i18n
+    - theme
+    - layout
+
+# ============================================================================
+# 开发配置
+# ============================================================================
+devServer:
+  port: 3001
+  host: "localhost"

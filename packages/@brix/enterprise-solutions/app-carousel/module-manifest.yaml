@@ -1,0 +1,125 @@
+# ===========================================================================================
+# Carousel Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Carousel Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-carousel"
+
+  # Display name
+  name: "Carousel Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (content functionality)
+  type: "plugin"
+
+  # Module category
+  category: "content"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Carousel Management Plugin
+
+    Core responsibilities:
+    - Position management: create and manage carousel display positions
+    - Banner content: manage banner images, text, and links
+    - Scheduling: schedule banner visibility periods
+    - Publishing: publish and unpublish carousel content
+
+    Provides carousel position and banner content management for marketing
+    and promotional displays.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 300
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/carousel"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - file-storage
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.carousel.event.CarouselCreated"
+      description: "Published when a new carousel position is created"
+
+    - type: "io.brix.plugin.carousel.event.CarouselUpdated"
+      description: "Published when a carousel position is updated"
+
+    - type: "io.brix.plugin.carousel.event.BannerPublished"
+      description: "Published when a banner is published to a carousel"
+
+    - type: "io.brix.plugin.carousel.event.BannerScheduled"
+      description: "Published when a banner is scheduled for future display"
+
+  # Subscribed events
+  subscribes: []
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "carousel:manage"
+    name: "Manage Carousels"
+    description: "Full management access to carousel positions and banners"
+
+  - id: "carousel:read"
+    name: "View Carousels"
+    description: "Read-only access to carousel information"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "carousel.max-banners-per-position"
+    type: "int"
+    default: "20"
+    description: "Maximum number of banners allowed per carousel position"
+
+  - key: "carousel.default-duration"
+    type: "duration"
+    default: "5s"
+    description: "Default display duration for each banner in rotation"
+
+# ===========================================================================================

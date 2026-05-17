@@ -1,0 +1,145 @@
+# UI Manifest for Tenant Management Plugin
+# Based on v3.0.9 Architecture Blueprint Section 7.2.5
+
+plugin:
+  id: tenant
+  name: 租户管理
+  version: 3.0.0
+  description: Platform-level tenant management module
+
+platforms:
+  web:
+    enabled: true
+  mobile:
+    enabled: false  # Admin interface not needed on mobile
+
+# ═════════════════════════════════════════════════════════════════
+# Menu Definitions
+# ═════════════════════════════════════════════════════════════════
+menus:
+  - id: platform-admin
+    title:
+      zh-CN: 平台管理
+      en-US: Platform Admin
+      ja-JP: プラットフォーム管理
+    icon: admin_panel_settings
+    order: 900
+    permission: tenant:admin:read
+    children:
+      - id: tenant:list
+        title:
+          zh-CN: 租户列表
+          en-US: Tenant List
+          ja-JP: テナント一覧
+        pageId: tenant:list
+        icon: business
+        order: 1
+        permission: tenant:admin:read
+      
+      - id: tenant:create
+        title:
+          zh-CN: 创建租户
+          en-US: Create Tenant
+          ja-JP: テナント作成
+        pageId: tenant:create
+        icon: add_business
+        order: 2
+        permission: tenant:admin:create
+
+      - id: tenant:statistics
+        title:
+          zh-CN: 租户统计
+          en-US: Tenant Statistics
+          ja-JP: テナント統計
+        pageId: tenant:statistics
+        icon: insights
+        order: 3
+        permission: tenant:admin:read
+
+# ═════════════════════════════════════════════════════════════════
+# Page Definitions
+# ═════════════════════════════════════════════════════════════════
+pages:
+  - pageId: tenant:list
+    title:
+      zh-CN: 租户列表
+      en-US: Tenant List
+    component: ./pages/TenantList
+    platforms:
+      web:
+        suggestedPath: /admin/tenants
+    permission: tenant:admin:read
+
+  - pageId: tenant:detail
+    title:
+      zh-CN: 租户详情
+      en-US: Tenant Detail
+    component: ./pages/TenantDetail
+    platforms:
+      web:
+        suggestedPath: /admin/tenants/:tenantId
+    permission: tenant:admin:read
+
+  - pageId: tenant:create
+    title:
+      zh-CN: 创建租户
+      en-US: Create Tenant
+    component: ./pages/TenantCreate
+    platforms:
+      web:
+        suggestedPath: /admin/tenants/create
+    permission: tenant:admin:create
+
+  - pageId: tenant:members
+    title:
+      zh-CN: 成员管理
+      en-US: Member Management
+    component: ./pages/TenantMembers
+    platforms:
+      web:
+        suggestedPath: /admin/tenants/:tenantId/members
+    permission: tenant:member:manage
+
+  - pageId: tenant:features
+    title:
+      zh-CN: 功能配置
+      en-US: Feature Configuration
+    component: ./pages/TenantFeatures
+    platforms:
+      web:
+        suggestedPath: /admin/tenants/:tenantId/features
+    permission: tenant:feature:configure
+
+  - pageId: tenant:audit
+    title:
+      zh-CN: 审计日志
+      en-US: Audit Logs
+    component: ./pages/TenantAudit
+    platforms:
+      web:
+        suggestedPath: /admin/tenants/:tenantId/audit
+    permission: tenant:admin:read
+
+  - pageId: tenant:statistics
+    title:
+      zh-CN: 租户统计
+      en-US: Tenant Statistics
+    component: ./pages/TenantStatistics
+    platforms:
+      web:
+        suggestedPath: /admin/tenants/statistics
+    permission: tenant:admin:read
+
+# ═════════════════════════════════════════════════════════════════
+# Capability Dependencies
+# ═════════════════════════════════════════════════════════════════
+capabilities:
+  required:
+    - http
+    - auth
+    - navigation
+    - eventBus
+  optional:
+    - theme
+    - i18n
+    - notification

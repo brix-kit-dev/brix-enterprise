@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ============================================================
-# Shinwa Solutions - Unified Development Startup Script (Unix)
+# Brix Enterprise Solutions - Unified Development Startup Script (Unix)
 # ============================================================
 #
 # This script starts the development environment for any 
-# shinwa-app-* module.
+# app-* module.
 #
 # Usage:
 #   ./start-dev.sh <module-name> [options]
@@ -21,7 +21,7 @@
 #   --rebuild         Force Maven rebuild before starting
 #
 # 使用说明：
-#   此脚本为所有 shinwa-app-* 模块提供统一的开发环境启动方式
+#   此脚本为所有 app-* 模块提供统一的开发环境启动方式
 #   支持跳过特定组件以加速开发循环
 #
 # ============================================================
@@ -127,7 +127,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-MODULE_PATH="$ROOT_DIR/shinwa-app-$MODULE"
+MODULE_PATH="$ROOT_DIR/app-$MODULE"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose-dev.yml"
 
 # ============================================================
@@ -135,7 +135,7 @@ COMPOSE_FILE="$SCRIPT_DIR/docker-compose-dev.yml"
 # 前置检查
 # ============================================================
 
-header "Shinwa Solutions Dev Environment - Module: $MODULE"
+header "Brix Enterprise Solutions Dev Environment - Module: $MODULE"
 echo "  Root: $ROOT_DIR"
 echo "  Module: $MODULE_PATH"
 
@@ -186,7 +186,7 @@ if [[ "$SKIP_DOCKER" == false ]]; then
     retry_count=0
     
     while [[ $retry_count -lt $max_retries ]]; do
-        if docker exec shinwa-dev-postgres pg_isready -U brix > /dev/null 2>&1; then
+        if docker exec brix-dev-postgres pg_isready -U brix > /dev/null 2>&1; then
             info "PostgreSQL: Ready"
             break
         fi
@@ -271,4 +271,4 @@ if [[ "$SKIP_FRONTEND" == false ]]; then
 fi
 
 header "Development Environment Ready"
-echo -e "  ${GREEN}Module: shinwa-app-$MODULE${NC}"
+echo -e "  ${GREEN}Module: app-$MODULE${NC}"

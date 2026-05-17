@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  compliance-api — Compliance Module API Layer
+  
+  Responsibilities:
+  - DTO (Data Transfer Objects) for script templates, forbidden words, compliance checks
+  - Request/Response objects for REST endpoints  
+  - Integration event definitions
+  - Service interface declarations
+  
+  Design principles:
+  - Pure API definitions; no business logic
+  - Only depends on runtime-sdk-api (for IntegrationEvent base class)
+  - Shared across core / server layers
+  
+  @version 3.2.0-SNAPSHOT
+  @since 3.2.0
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-compliance</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>compliance-api</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Compliance API</name>
+    <description>Compliance module API layer — DTOs, events, and service interfaces</description>
+
+    <dependencies>
+        <!--
+            Runtime SDK API — for IntegrationEvent base class
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- Jakarta Validation API (parameter validation annotations) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Jackson Annotations (JSON serialization annotations) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <!-- OpenAPI Annotations (Phase 5: API documentation) -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+
+        <!-- Spring Data Commons — for Page/Pageable in service interfaces -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

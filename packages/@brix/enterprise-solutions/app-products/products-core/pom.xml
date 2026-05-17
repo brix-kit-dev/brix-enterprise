@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ========================================================================
+  Products Module - Core
+  ========================================================================
+  
+  产品套餐模块核心实现层，包含：
+  - 领域实体（Product）
+  - 仓储接口与实现
+  - 服务实现（ProductServiceImpl）
+  
+  v3.0 改造要点：
+  - 使用 RuntimeContext 获取能力契约
+  - 事件发布通过 EventBusCapability
+  - 状态存储通过 StateStoreCapability
+  - 可观测性通过 ObservabilityCapability
+  
+  @author Brix Platform Team
+  @since 3.0.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-products</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>products-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Products Module - Core</name>
+    <description>产品套餐模块 - 核心实现层（实体、仓储、服务实现）</description>
+
+    <dependencies>
+        <!-- 本模块 API -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>products-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Runtime SDK API（v3.0 能力契约） -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- JPA persistence contract allowed by v3.0.9 R1.1 (not an infra adapter). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Spring Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Jackson（JSON 处理） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- SLF4J Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

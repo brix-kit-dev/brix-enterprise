@@ -1,9 +1,9 @@
 # ============================================================
-# Shinwa Solutions - Development Infrastructure
+# Brix Enterprise Solutions - Development Infrastructure
 # ============================================================
 #
 # This Docker Compose file provides common development
-# infrastructure for all shinwa-app-* modules.
+# infrastructure for all app-* modules.
 #
 # Usage:
 #   docker compose -f scripts/docker-compose-dev.yml up -d
@@ -21,12 +21,13 @@ services:
   # Primary database for all business modules
   postgres:
     image: postgres:16-alpine
-    container_name: shinwa-dev-postgres
+    container_name: brix-dev-postgres
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-brix}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brix123}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      # SECURITY: Password must be provided via .env file or environment variable
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-brix_platform}
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -36,13 +37,13 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - shinwa-dev
+      - brix-dev
 
   # ==================== Redis ====================
   # Session storage and caching
   redis:
     image: redis:7-alpine
-    container_name: shinwa-dev-redis
+    container_name: brix-dev-redis
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
@@ -54,13 +55,13 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - shinwa-dev
+      - brix-dev
 
   # ==================== Adminer (Database UI) ====================
   # Web-based database management
   adminer:
     image: adminer:4
-    container_name: shinwa-dev-adminer
+    container_name: brix-dev-adminer
     ports:
       - "8092:8080"
     depends_on:
@@ -69,23 +70,23 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgres
     networks:
-      - shinwa-dev
+      - brix-dev
 
   # ==================== MailHog (Email Testing) ====================
   # Captures outgoing emails for testing
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: shinwa-dev-mailhog
+    container_name: brix-dev-mailhog
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI
     networks:
-      - shinwa-dev
+      - brix-dev
 
 volumes:
   postgres-data:
   redis-data:
 
 networks:
-  shinwa-dev:
+  brix-dev:
     driver: bridge

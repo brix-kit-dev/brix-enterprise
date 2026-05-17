@@ -1,0 +1,13 @@
+{
+  "name": "@brix-sdk/enterprise-products-app",
+  "version": "3.2.0",
+  "private": true,
+  "description": "浜у搧濂楅搴旂敤 - v3.0 Manifest-Driven 鏋舵瀯",
+  "scripts": {
+    "generate:api": "pnpm --filter @brix-sdk/enterprise-products-shared generate:api",
+    "build": "pnpm --filter @brix-sdk/enterprise-products-shared build && pnpm --filter @brix-sdk/enterprise-products-ui-web build",
+    "build:shared": "pnpm --filter @brix-sdk/enterprise-products-shared build",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean"
+  }
+}

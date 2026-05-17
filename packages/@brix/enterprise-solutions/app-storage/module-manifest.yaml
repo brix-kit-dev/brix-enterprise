@@ -1,0 +1,141 @@
+# ===========================================================================================
+# File Storage Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the File Storage plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-storage"
+
+  # Display name
+  name: "File Storage"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (platform-level functionality)
+  type: "plugin"
+
+  # Module category
+  category: "platform"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    File Storage Plugin
+
+    Core responsibilities:
+    - File upload: handle file upload with validation and virus scanning
+    - File download: serve files with access control and presigned URLs
+    - File management: organize, tag, and manage stored files
+    - Storage backend: MinIO S3-compatible object storage integration
+
+    Provides file upload, download, and management capabilities with
+    MinIO S3-compatible backend.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  # Platform-level module, early start required
+  startup-order: 30
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/storage"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+    - file-storage
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - image-processing
+    - video-processing
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.storage.event.FileUploaded"
+      description: "Published when a file is successfully uploaded"
+
+    - type: "io.brix.plugin.storage.event.FileDeleted"
+      description: "Published when a file is deleted"
+
+    - type: "io.brix.plugin.storage.event.FileShared"
+      description: "Published when a file is shared with other users"
+
+    - type: "io.brix.plugin.storage.event.StorageQuotaExceeded"
+      description: "Published when a tenant's storage quota is exceeded"
+
+  # Subscribed events
+  subscribes: []
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "storage:manage"
+    name: "Manage Storage"
+    description: "Full management access to file storage system"
+
+  - id: "storage:read"
+    name: "View Files"
+    description: "Read-only access to stored files"
+
+  - id: "storage:upload"
+    name: "Upload Files"
+    description: "Permission to upload files"
+
+  - id: "storage:delete"
+    name: "Delete Files"
+    description: "Permission to delete files"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "storage.max-file-size"
+    type: "string"
+    default: "100MB"
+    description: "Maximum allowed file size for uploads"
+
+  - key: "storage.default-bucket"
+    type: "string"
+    default: "brix-uploads"
+    description: "Default S3 bucket name for file storage"
+
+  - key: "storage.presigned-url-expiry"
+    type: "duration"
+    default: "1h"
+    description: "Expiration time for presigned download URLs"
+
+# ===========================================================================================

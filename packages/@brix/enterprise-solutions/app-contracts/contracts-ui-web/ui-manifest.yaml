@@ -1,0 +1,203 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 合同管理模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0.6 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 4. 声明 WHAT（菜单、页面、权限），不声明 HOW（加载技术）
+# 
+# @version 3.0.0
+# @date 2026-02-28
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "contracts"
+  name: "合同管理"
+  version: "3.0.0-SNAPSHOT"
+  description: "合同模板与合同实例管理模块"
+  vendor: "Brix Platform"
+  icon: "Assignment"
+  category: "business"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 合同列表 --------------------
+  - pageId: "contracts:list"
+    component: "./pages/ContractListPage"
+    title: "合同列表"
+    titleKey: "contracts.page.list.title"
+    permission: "contracts:read"
+    platforms:
+      web:
+        suggestedPath: "/contracts"
+      mobile:
+        suggestedScreen: "ContractListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合同管理"
+
+  # -------------------- 合同详情 --------------------
+  - pageId: "contracts:detail"
+    component: "./pages/ContractDetailPage"
+    title: "合同详情"
+    titleKey: "contracts.page.detail.title"
+    permission: "contracts:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/contracts/:id"
+      mobile:
+        suggestedScreen: "ContractDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合同管理"
+          pageId: "contracts:list"
+        - label: "合同详情"
+
+  # -------------------- 创建合同 --------------------
+  - pageId: "contracts:create"
+    component: "./pages/ContractCreatePage"
+    title: "创建合同"
+    titleKey: "contracts.page.create.title"
+    permission: "contracts:write"
+    platforms:
+      web:
+        suggestedPath: "/contracts/create"
+      mobile:
+        suggestedScreen: "ContractCreateScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合同管理"
+          pageId: "contracts:list"
+        - label: "创建合同"
+
+  # -------------------- 合同模板列表 --------------------
+  - pageId: "contracts:template-list"
+    component: "./pages/ContractTemplateListPage"
+    title: "合同模板"
+    titleKey: "contracts.page.templateList.title"
+    permission: "contracts:template:read"
+    platforms:
+      web:
+        suggestedPath: "/contracts/templates"
+      mobile:
+        suggestedScreen: "ContractTemplateListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合同管理"
+        - label: "合同模板"
+
+  # -------------------- 合同模板详情 --------------------
+  - pageId: "contracts:template-detail"
+    component: "./pages/ContractTemplateDetailPage"
+    title: "模板详情"
+    titleKey: "contracts.page.templateDetail.title"
+    permission: "contracts:template:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/contracts/templates/:id"
+      mobile:
+        suggestedScreen: "ContractTemplateDetailScreen"
+
+  # -------------------- 创建合同模板 --------------------
+  - pageId: "contracts:template-create"
+    component: "./pages/ContractTemplateCreatePage"
+    title: "创建模板"
+    titleKey: "contracts.page.templateCreate.title"
+    permission: "contracts:template:write"
+    platforms:
+      web:
+        suggestedPath: "/contracts/templates/create"
+      mobile:
+        suggestedScreen: "ContractTemplateCreateScreen"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+# 【关键】关联 PageId 而非 path
+# ============================================================================
+menus:
+  - id: "contracts"
+    title: "合同管理"
+    icon: "assignment"
+    order: 200
+    permission: "contracts:read"
+    children:
+      - id: "contracts:list"
+        title: "合同列表"
+        pageId: "contracts:list"
+        icon: "list"
+        order: 1
+      - id: "contracts:templates"
+        title: "合同模板"
+        pageId: "contracts:template-list"
+        icon: "description"
+        order: 2
+        permission: "contracts:template:read"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "contracts:read"
+    name: "查看合同"
+    description: "允许查看合同列表和详情"
+  - code: "contracts:write"
+    name: "编辑合同"
+    description: "允许创建和编辑合同"
+  - code: "contracts:delete"
+    name: "删除合同"
+    description: "允许删除合同"
+  - code: "contracts:template:read"
+    name: "查看合同模板"
+    description: "允许查看合同模板"
+  - code: "contracts:template:write"
+    name: "编辑合同模板"
+    description: "允许创建和编辑合同模板"
+  - code: "contracts:template:delete"
+    name: "删除合同模板"
+    description: "允许删除合同模板"
+
+# ============================================================================
+# 能力依赖（运行时注入）
+# ============================================================================
+capabilities:
+  required:
+    - http
+    - auth
+    - navigation
+  optional:
+    - theme
+    - i18n
+    - fileStorage
+    - pdfGeneration
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3051
+  host: "localhost"

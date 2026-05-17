@@ -1,0 +1,118 @@
+{
+  "name": "identity",
+  "pluginId": "brix-app-identity",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "身份认证",
+  "description": "Brix Enterprise Identity Management - provides user authentication, authorization, organization structure, and role-based access control for the platform.",
+  
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/identity/ui-manifest.json",
+      "scope": "identity",
+      "routes": [
+        {
+          "path": "/identity/users",
+          "component": "./pages/UserList",
+          "exact": true,
+          "menu": {
+            "title": "用户列表",
+            "icon": "people",
+            "order": 1,
+            "parentId": "identity"
+          }
+        },
+        {
+          "path": "/identity/users/:userId",
+          "component": "./pages/UserDetail",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/identity/users/create",
+          "component": "./pages/UserCreate",
+          "menu": {
+            "title": "创建用户",
+            "icon": "person_add",
+            "order": 2,
+            "parentId": "identity"
+          }
+        },
+        {
+          "path": "/organizations",
+          "component": "./pages/OrganizationList",
+          "exact": true,
+          "menu": {
+            "title": "组织管理",
+            "icon": "corporate_fare",
+            "order": 3,
+            "parentId": "identity"
+          }
+        },
+        {
+          "path": "/organizations/:id",
+          "component": "./pages/OrganizationDetail",
+          "menu": {
+            "hidden": true
+          }
+        },
+        {
+          "path": "/roles",
+          "component": "./pages/RoleList",
+          "exact": true,
+          "menu": {
+            "title": "角色管理",
+            "icon": "admin_panel_settings",
+            "order": 4,
+            "parentId": "identity"
+          }
+        },
+        {
+          "path": "/roles/:id",
+          "component": "./pages/RoleDetail",
+          "menu": {
+            "hidden": true
+          }
+        }
+      ],
+      "menus": [
+        {
+          "id": "identity",
+          "title": "身份认证",
+          "icon": "security",
+          "order": 10
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "identity://manifest"
+    }
+  },
+  
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["NotificationService", "AuditLog"]
+  },
+  
+  "events": {
+    "publish": [
+      "UserCreated",
+      "UserUpdated",
+      "UserDeleted",
+      "UserActivated",
+      "UserDeactivated",
+      "RoleAssigned",
+      "OrganizationCreated"
+    ],
+    "subscribe": []
+  },
+
+  "metadata": {
+    "category": "platform",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

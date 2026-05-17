@@ -1,0 +1,23 @@
+{
+  "name": "@brix/super-admin-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Super-admin Playwright suite (Phase 3 / C-5) — runs against a real backend stack.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "stack:up": "docker compose -f docker-compose.yml up -d",
+    "stack:down": "docker compose -f docker-compose.yml down -v",
+    "stack:logs": "docker compose -f docker-compose.yml logs -f",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install --with-deps chromium",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "@types/node": "^22.10.1",
+    "typescript": "^5.3.0"
+  }
+}

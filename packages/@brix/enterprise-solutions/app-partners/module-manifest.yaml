@@ -1,0 +1,143 @@
+# ===========================================================================================
+# Partner Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Partner Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-partners"
+
+  # Display name
+  name: "Partner Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (business functionality)
+  type: "plugin"
+
+  # Module category
+  category: "business"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Partner Management Plugin
+
+    Core responsibilities:
+    - Hospital management: manage hospital partner relationships and contracts
+    - Hotel management: manage accommodation partners
+    - Transportation: manage ground transportation service providers
+    - Translation services: manage language and translation service providers
+    - Contract tracking: track partner agreements and renewal dates
+
+    Manages hospitals, hotels, transportation, and translation service provider
+    relationships for medical tourism operations.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 90
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/partners"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - geo-location
+    - notification
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.partners.event.PartnerCreated"
+      description: "Published when a new partner is registered"
+
+    - type: "io.brix.plugin.partners.event.PartnerUpdated"
+      description: "Published when partner information is updated"
+
+    - type: "io.brix.plugin.partners.event.PartnerDeleted"
+      description: "Published when a partner is removed"
+
+    - type: "io.brix.plugin.partners.event.PartnerStatusChanged"
+      description: "Published when a partner's status changes (active, suspended, etc.)"
+
+    - type: "io.brix.plugin.partners.event.PartnerContractUpdated"
+      description: "Published when a partner contract is updated or renewed"
+
+  # Subscribed events
+  subscribes:
+    - type: "io.brix.plugin.booking.event.BookingCreated"
+      description: "When a booking is created, notify relevant partners"
+
+    - type: "io.brix.plugin.booking.event.BookingCancelled"
+      description: "When a booking is cancelled, notify affected partners"
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "partners:manage"
+    name: "Manage Partners"
+    description: "Full management access to partner relationships"
+
+  - id: "partners:read"
+    name: "View Partners"
+    description: "Read-only access to partner information"
+
+  - id: "partners:create"
+    name: "Create Partners"
+    description: "Permission to register new partners"
+
+  - id: "partners:delete"
+    name: "Delete Partners"
+    description: "Permission to remove partners"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "partners.max-contacts-per-partner"
+    type: "int"
+    default: "20"
+    description: "Maximum number of contact persons per partner"
+
+  - key: "partners.contract-alert-days"
+    type: "int"
+    default: "30"
+    description: "Number of days before contract expiry to send alert notifications"
+
+# ===========================================================================================

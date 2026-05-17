@@ -1,0 +1,124 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 消息通知模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 
+# @version 3.0.0
+# @date 2026-01-31
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "messenger"
+  name: "消息中心"
+  version: "3.0.0"
+  description: "消息通知模块 Web 界面"
+  vendor: "Brix Platform"
+  icon: "Notifications"
+  category: "platform"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 收件箱 --------------------
+  - pageId: "messenger:inbox"
+    component: "./pages/InboxPage"
+    title: "消息收件箱"
+    titleKey: "messenger.page.inbox.title"
+    permission: "message:read"
+    platforms:
+      web:
+        suggestedPath: "/messenger/inbox"
+      mobile:
+        suggestedScreen: "InboxScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "消息中心"
+
+  # -------------------- 消息详情 --------------------
+  - pageId: "messenger:detail"
+    component: "./pages/MessageDetailPage"
+    title: "消息详情"
+    titleKey: "messenger.page.detail.title"
+    permission: "message:read"
+    params:
+      - name: "messageId"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/messenger/messages/:messageId"
+      mobile:
+        suggestedScreen: "MessageDetailScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "消息中心"
+          pageId: "messenger:inbox"
+        - label: "消息详情"
+
+  # -------------------- 发送消息 --------------------
+  - pageId: "messenger:compose"
+    component: "./pages/ComposePage"
+    title: "发送消息"
+    titleKey: "messenger.page.compose.title"
+    permission: "message:send"
+    platforms:
+      web:
+        suggestedPath: "/messenger/compose"
+      mobile:
+        suggestedScreen: "ComposeScreen"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+# ============================================================================
+menus:
+  - id: "messenger"
+    title: "消息中心"
+    icon: "notifications"
+    order: 5
+    permission: "message:read"
+    children:
+      - id: "messenger:inbox"
+        title: "收件箱"
+        icon: "inbox"
+        pageId: "messenger:inbox"
+        order: 1
+      - id: "messenger:compose"
+        title: "发送消息"
+        icon: "send"
+        pageId: "messenger:compose"
+        order: 2
+        permission: "message:send"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "message:read"
+    name: "查看消息"
+    description: "允许查看消息列表和详情"
+  - code: "message:send"
+    name: "发送消息"
+    description: "允许发送站内消息"
+  - code: "message:manage"
+    name: "管理消息"
+    description: "允许归档和删除消息"
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3004
+  host: "localhost"

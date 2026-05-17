@@ -1,0 +1,168 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 预约模块 Mobile UI 声明清单
+#
+# 【设计原则】遵循 v3.0 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+#
+# 【与代码的关系】
+# - pages[].component 对应 package.json 的 exports（mobile 打包产物）
+# - screens 对应 src/screens/ 目录中的 React Native 屏幕组件
+# - events/permissions 与 booking-ui-web 共享同一 booking-shared 定义
+#
+# 【与 Web 端的差异】
+# - 使用 screens 而非 paths 做页面映射
+# - 导航使用 React Navigation stack 而非 react-router
+# - 无 breadcrumb 配置（移动端使用原生 back 导航）
+# - 无 keepAlive 配置（移动端由 React Navigation 管理屏幕生命周期）
+#
+# @version 3.0.0
+# @date 2025-07
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "booking"
+  name: "预约管理"
+  version: "3.0.0-SNAPSHOT"
+  description: "Brix Enterprise 预约管理业务插件 — Mobile 端"
+  vendor: "Brix Platform"
+  platform: "mobile"
+
+# ============================================================================
+# 页面声明（Mobile 屏幕）
+# 【关键】插件不注册导航路由，只声明 PageId，Host 负责 stack 映射
+# ============================================================================
+pages:
+  # -------------------- 预约列表 --------------------
+  - pageId: "booking:list"
+    component: "./BookingList"
+    title: "预约列表"
+    titleKey: "booking.page.list.title"
+    permission: "booking:read"
+    platforms:
+      mobile:
+        screen: "BookingListScreen"
+        stackGroup: "BookingStack"
+        initialRoute: true
+
+  # -------------------- 预约详情 --------------------
+  - pageId: "booking:detail"
+    component: "./BookingDetail"
+    title: "预约详情"
+    titleKey: "booking.page.detail.title"
+    permission: "booking:read"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+        description: "预约 ID"
+    platforms:
+      mobile:
+        screen: "BookingDetailScreen"
+        stackGroup: "BookingStack"
+
+  # -------------------- 创建预约 --------------------
+  - pageId: "booking:create"
+    component: "./BookingCreate"
+    title: "创建预约"
+    titleKey: "booking.page.create.title"
+    permission: "booking:create"
+    platforms:
+      mobile:
+        screen: "BookingCreateScreen"
+        stackGroup: "BookingStack"
+        presentation: "modal"
+
+# ============================================================================
+# 菜单声明（Tab / Drawer 入口）
+# 【关键】关联 PageId 而非屏幕名
+# ============================================================================
+menus:
+  - id: "booking"
+    title: "预约管理"
+    icon: "calendar"
+    order: 100
+    permission: "booking:read"
+    children:
+      - id: "booking:list"
+        title: "预约列表"
+        pageId: "booking:list"
+        icon: "list"
+        order: 1
+      - id: "booking:create"
+        title: "创建预约"
+        pageId: "booking:create"
+        icon: "add"
+        order: 2
+        permission: "booking:create"
+
+# ============================================================================
+# 事件声明（与 Web 端共享事件契约）
+# ============================================================================
+events:
+  published:
+    - type: "booking:created"
+      description: "预约创建成功后发布"
+      payload:
+        type: "object"
+        properties:
+          id: { type: "number", description: "预约 ID" }
+          bookingNo: { type: "string", description: "预约编号" }
+          customerId: { type: "string", description: "客户 ID" }
+          resourceId: { type: "number", description: "资源 ID" }
+          date: { type: "string", format: "date", description: "预约日期" }
+          startTime: { type: "string", description: "开始时间" }
+          endTime: { type: "string", description: "结束时间" }
+      scope: "global"
+
+    - type: "booking:cancelled"
+      description: "预约被取消后发布"
+      payload:
+        type: "object"
+        properties:
+          id: { type: "number" }
+          bookingNo: { type: "string" }
+          reason: { type: "string" }
+          cancelledAt: { type: "string", format: "date-time" }
+      scope: "global"
+
+  subscribed:
+    - type: "user:selected"
+      description: "用户选择事件（来自 identity 插件）"
+      source: "identity"
+
+# ============================================================================
+# 权限声明（与 Web 端共享权限定义）
+# ============================================================================
+permissions:
+  - id: "booking:read"
+    name: "查看预约"
+    nameKey: "permission.booking.read"
+    description: "允许查看预约列表和详情"
+
+  - id: "booking:create"
+    name: "创建预约"
+    nameKey: "permission.booking.create"
+    description: "允许创建新预约"
+
+  - id: "booking:cancel"
+    name: "取消预约"
+    nameKey: "permission.booking.cancel"
+    description: "允许取消预约"
+
+# ============================================================================
+# 能力依赖声明
+# ============================================================================
+capabilities:
+  required:
+    - navigation
+    - auth
+    - event-bus
+    - plugin-state
+  optional:
+    - i18n
+    - theme

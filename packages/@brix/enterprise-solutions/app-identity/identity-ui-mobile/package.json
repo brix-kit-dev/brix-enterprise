@@ -1,0 +1,42 @@
+{
+  "name": "@brix-sdk/enterprise-identity-ui-mobile",
+  "version": "3.2.0",
+  "description": "身份认证模块 - React Native 移动端界面",
+  "private": true,
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "clean": "rimraf dist node_modules/.cache"
+  },
+  "dependencies": {
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "^6.11.0",
+    "react": "18.3.1",
+    "react-native": "0.76.0",
+    "react-native-paper": "^5.12.5",
+    "react-native-safe-area-context": "^4.14.0",
+    "react-native-screens": "^4.3.0",
+    "react-native-vector-icons": "^10.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-native": "^0.73.0",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.72.0",
+    "@brix-sdk/platform-tenant-web": "link:../../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web",
+    "@brix-sdk/runtime-sdk-react": "link:../../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-react"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

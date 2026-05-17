@@ -1,0 +1,41 @@
+# ============================================================================
+# Super-admin E2E Stack — Phase 3 / C-5
+#
+# Spins up the *infrastructure* dependencies (Postgres + Redis) required by
+# the Spring Boot host.  The Java host itself is started by
+# `scripts/start-stack.ps1` so developers can iterate on Java code without
+# rebuilding a Docker image.
+#
+# Ports mirror `tests/constants.ts` — keep them in sync.
+# ============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: brix-e2e-postgres
+    environment:
+      POSTGRES_DB: brix_platform
+      POSTGRES_USER: brix
+      POSTGRES_PASSWORD: brix_local_e2e
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brix -d brix_platform"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    tmpfs:
+      # Use tmpfs so each `stack:up` starts from a clean slate; Flyway will
+      # recreate the schema on host startup.
+      - /var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: brix-e2e-redis
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20

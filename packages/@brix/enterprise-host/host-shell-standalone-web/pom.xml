@@ -37,7 +37,7 @@
     <parent>
         <groupId>io.brix.host</groupId>
         <artifactId>host-assembly</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -56,7 +56,7 @@
         
         【架构原则】
         Host 只做组装，不实现任何能力。
-        能力实现来自 @shinwa/platform-* 包。
+        能力实现来自 @brix/platform-* 包。
     </description>
 
     <properties>

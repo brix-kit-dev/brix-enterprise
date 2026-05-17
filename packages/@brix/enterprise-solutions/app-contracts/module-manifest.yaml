@@ -1,0 +1,143 @@
+# ===========================================================================================
+# Contract Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Contract Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-contracts"
+
+  # Display name
+  name: "Contract Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (business functionality)
+  type: "plugin"
+
+  # Module category
+  category: "business"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Contract Management Plugin
+
+    Core responsibilities:
+    - Template management: create and manage contract templates
+    - Contract generation: generate contracts from templates with dynamic data
+    - Digital signatures: support digital signature workflows
+    - Lifecycle management: track contract status from creation to expiration
+
+    Provides contract template management, contract generation, and digital
+    signature workflows.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 120
+
+  # Required modules (must be ready before this module starts)
+  depends-on: []
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/contracts"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - file-storage
+    - digital-signature
+    - pdf-generation
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.contracts.event.ContractCreated"
+      description: "Published when a new contract is created"
+
+    - type: "io.brix.plugin.contracts.event.ContractSigned"
+      description: "Published when a contract is signed"
+
+    - type: "io.brix.plugin.contracts.event.ContractApproved"
+      description: "Published when a contract is approved"
+
+    - type: "io.brix.plugin.contracts.event.ContractExpired"
+      description: "Published when a contract expires"
+
+    - type: "io.brix.plugin.contracts.event.TemplatePublished"
+      description: "Published when a contract template is published"
+
+  # Subscribed events
+  subscribes:
+    - type: "io.brix.plugin.booking.event.BookingConfirmed"
+      description: "When a booking is confirmed, generate the associated contract"
+
+    - type: "io.brix.plugin.case.event.CaseCreated"
+      description: "When a case is created, link existing contracts"
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "contracts:manage"
+    name: "Manage Contracts"
+    description: "Full management access to contracts"
+
+  - id: "contracts:read"
+    name: "View Contracts"
+    description: "Read-only access to contract information"
+
+  - id: "contracts:sign"
+    name: "Sign Contracts"
+    description: "Permission to sign contracts"
+
+  - id: "contracts:template:manage"
+    name: "Manage Contract Templates"
+    description: "Permission to create and manage contract templates"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "contracts.default-expiry-days"
+    type: "int"
+    default: "365"
+    description: "Default number of days before a contract expires"
+
+  - key: "contracts.signature-timeout"
+    type: "duration"
+    default: "72h"
+    description: "Timeout for pending signature requests"
+
+# ===========================================================================================

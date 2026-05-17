@@ -1,9 +1,9 @@
-# Contributing to Shinwa Platform - Host Assembly
+# Contributing to Brix Enterprise - Host Assembly
 
 > **版本**: v3.2.0  
 > **最后更新**: 2026-02-13
 
-感谢您对 Shinwa Host Assembly 的贡献！本文档提供了参与项目开发所需的指南。
+感谢您对 Brix Enterprise Host 的贡献！本文档提供了参与项目开发所需的指南。
 
 ## 目录
 
@@ -26,8 +26,8 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/shinwa/shinwa-host-assembly.git
-cd shinwa-host-assembly
+git clone https://github.com/brix-platform/brix-enterprise.git
+cd enterprise-host
 
 # 2. 安装依赖并构建
 mvn clean install
@@ -43,16 +43,16 @@ docker-compose up -d
 ### 项目结构
 
 ```
-shinwa-host-assembly/
+enterprise-host/
 ├── host-shell-embedded/              # 嵌入式 Shell (测试用)
 │   ├── src/main/java/
-│   │   └── com/shinwa/host/
+│   │   └── io/brix/enterprise/host/
 │   │       ├── HostShellApplication.java
 │   │       └── config/
 │   └── pom.xml
 ├── host-shell-standalone/            # 独立部署 Shell
 │   ├── src/main/java/
-│   │   └── com/shinwa/host/
+│   │   └── io/brix/enterprise/host/
 │   │       ├── HostShellApplication.java
 │   │       └── config/
 │   │           └── HostConfiguration.java
@@ -70,7 +70,7 @@ shinwa-host-assembly/
 
 ### Host Assembly 职责
 
-shinwa-host-assembly 是**后端 Host 壳层 (Layer 3)**，职责：
+enterprise-host 是**后端 Host 壳层 (Layer 3)**，职责：
 
 - 组装所有模块
 - 提供应用入口
@@ -159,7 +159,7 @@ public class HostConfiguration {
  * 本类不包含任何业务逻辑或实现代码，
  * 符合极薄 Host 架构原则。
  * 
- * @author Shinwa Team
+ * @author Brix Team
  * @since 3.0.0
  */
 @SpringBootApplication
@@ -195,10 +195,10 @@ public class HostShellApplication {
 
 spring:
   application:
-    name: shinwa-host
+    name: brix-host
     
 # 业务插件配置
-shinwa:
+brix:
   identity:
     jwt:
       secret: ${JWT_SECRET:changeme}  # ⚠️ 生产环境必须通过环境变量配置
@@ -269,7 +269,7 @@ Refs: #890
 
 - **Issue 追踪**: GitHub Issues
 - **技术讨论**: GitHub Discussions
-- **安全问题**: security@shinwa.io
+- **安全问题**: security@brix.io
 
 ---
 

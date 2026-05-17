@@ -1,1 +1,1 @@
-io.host.shell.embedded.config.EmbeddedShellAutoConfiguration
+io.brix.enterprise.host.embedded.config.EmbeddedShellAutoConfiguration

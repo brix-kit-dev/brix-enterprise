@@ -383,7 +383,7 @@ jobs:
           if [ "$failed" = true ]; then
             echo ""
             echo "⚠️  TS Host violates ultra-thin principle"
-            echo "    Move runtime logic to shinwa-platform-shell-web or plugins"
+            echo "    Move runtime logic to brix-platform-shell-web or plugins"
             exit 1
           fi
       
@@ -401,7 +401,7 @@ jobs:
               
               if [ "$components" -gt 5 ]; then
                 echo "⚠️  Found $components UI components (>5) in Host layer"
-                echo "    UI components should be in shinwa-platform-shell-web, not Host"
+                echo "    UI components should be in brix-platform-shell-web, not Host"
                 # Warning only, not failing for now
               else
                 echo "✅ UI component count acceptable"

@@ -8,7 +8,7 @@
   - 提供 Spring Boot 可执行入口
   - 支持嵌入到客户系统
   
-  版本: 3.0.0-SNAPSHOT
+  版本: 3.2.0-SNAPSHOT
   =========================================================
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -19,7 +19,7 @@
     <parent>
         <groupId>io.brix.host</groupId>
         <artifactId>host-assembly</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -51,7 +51,7 @@
     </description>
 
     <properties>
-        <start-class>io.host.shell.embedded.ShellApplication</start-class>
+        <start-class>io.brix.enterprise.host.embedded.ShellApplication</start-class>
     </properties>
 
     <dependencies>
@@ -134,7 +134,7 @@
         <dependency>
             <groupId>io.brix</groupId>
             <artifactId>architecture-guard</artifactId>
-            <version>3.1.0-SNAPSHOT</version>
+            <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

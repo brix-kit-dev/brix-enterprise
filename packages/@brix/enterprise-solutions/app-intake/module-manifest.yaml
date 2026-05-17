@@ -1,0 +1,141 @@
+# ===========================================================================================
+# Intake Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Intake Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-intake"
+
+  # Display name
+  name: "Intake Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (business functionality)
+  type: "plugin"
+
+  # Module category
+  category: "business"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Intake Management Plugin
+
+    Core responsibilities:
+    - Application intake: receive and process incoming applications
+    - Review workflow: manage review and approval processes
+    - Document processing: handle document uploads, verification, and tracking
+    - SLA management: monitor and enforce intake processing deadlines
+
+    Provides application intake, review workflow, and document processing
+    capabilities for medical tourism business operations.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 130
+
+  # Required modules (must be ready before this module starts)
+  depends-on:
+    - "brix-app-identity"
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/intake"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - auth-context
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - file-storage
+    - notification
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.intake.event.IntakeSubmitted"
+      description: "Published when a new intake application is submitted"
+
+    - type: "io.brix.plugin.intake.event.IntakeApproved"
+      description: "Published when an intake application is approved"
+
+    - type: "io.brix.plugin.intake.event.IntakeRejected"
+      description: "Published when an intake application is rejected"
+
+    - type: "io.brix.plugin.intake.event.IntakeDocumentUploaded"
+      description: "Published when a document is uploaded to an intake application"
+
+  # Subscribed events
+  subscribes:
+    - type: "io.brix.plugin.identity.event.UserCreated"
+      description: "When a new user is created, prepare intake profile"
+
+    - type: "io.brix.plugin.intake.event.DocumentVerified"
+      description: "When a document is verified, update intake status"
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "intake:manage"
+    name: "Manage Intakes"
+    description: "Full management access to intake applications"
+
+  - id: "intake:read"
+    name: "View Intakes"
+    description: "Read-only access to intake information"
+
+  - id: "intake:review"
+    name: "Review Intakes"
+    description: "Permission to review intake applications"
+
+  - id: "intake:approve"
+    name: "Approve Intakes"
+    description: "Permission to approve or reject intake applications"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "intake.max-document-size"
+    type: "string"
+    default: "50MB"
+    description: "Maximum file size for uploaded documents"
+
+  - key: "intake.review-sla-hours"
+    type: "int"
+    default: "48"
+    description: "SLA deadline in hours for intake review completion"
+
+# ===========================================================================================

@@ -5,7 +5,7 @@
   
   职责：
   - 组装完整运行时能力（Kafka EventBus, Redis StateStore, OTel）
-  - 集成所有业务模块 (shinwa-app-*)
+  - 集成所有业务模块 (app-*)
   - 提供 Spring Boot 可执行入口
   - 支持 Docker 容器化部署
   
@@ -20,7 +20,7 @@
     <parent>
         <groupId>io.brix.host</groupId>
         <artifactId>host-assembly</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -43,7 +43,7 @@
         - Full Scheduling（定时任务）
         
         适用场景：
-        - Shinwa Platform 标准产品部署
+        - Brix Platform 标准产品部署
         - 需要完整功能的生产环境
         - 需要所有基础设施能力的场景
         
@@ -51,11 +51,11 @@
         java -jar host-shell-standalone.jar --spring.profiles.active=standalone
         
         Docker 启动：
-        docker run -p 8081:8081 brix/host-shell-standalone:3.0.0-SNAPSHOT
+        docker run -p 8081:8081 brix/host-shell-standalone:3.2.0-SNAPSHOT
     </description>
 
     <properties>
-        <start-class>io.host.shell.standalone.ShellApplication</start-class>
+        <start-class>io.brix.enterprise.host.standalone.ShellApplication</start-class>
     </properties>
 
     <dependencies>
@@ -97,11 +97,14 @@
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-otel</artifactId>
         </dependency>
-        <!-- ✅ 架构修复：Fallback 能力适配器，提供默认实现 -->
+        <!--
+          Architecture fix: Fallback capability adapter providing default implementations.
+                    Declared by dependency so Spring Boot auto-configuration discovery can assemble
+                    fallback capabilities without host-side scan rules or marker references.
+        -->
         <dependency>
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-fallback</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <!-- ✅ 红线 R1 修复：数据库能力适配器（PostgreSQL + HikariCP） -->
         <dependency>
@@ -114,56 +117,121 @@
             <artifactId>infra-adapter-minio</artifactId>
         </dependency>
 
-        <!-- ========== Platform Auth（认证能力）========== -->
+        <!-- ========== Platform Auth Servlet（认证能力 — Servlet 运行时绑定）========== -->
         <dependency>
             <groupId>io.brix.platform</groupId>
-            <artifactId>platform-auth</artifactId>
-            <version>3.1.0-SNAPSHOT</version>
+            <artifactId>platform-auth-servlet</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <!-- spring-security-crypto: platform-auth 将其声明为 optional，Host 必须显式引入
+             以确保 BCryptPasswordEncoder 在 fat JAR 中可用，从而激活 PasswordCapabilityAutoConfiguration
+             → PasswordCapability → AuthFlowCapability → AuthController 启动成功 -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
+        <!-- ========== Platform Auth Web（D3：AuthFlowCapability + OAuth2FederationCapability 的 REST 表面）========== -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth-web</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <!-- ========== Platform Tenant（多租户能力）========== -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-tenant</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <!--
+          ========== Platform Admin（平台超管能力 — Layer 2C）==========
+          Provides /api/platform/** endpoints (auth, admins, tenants view, audit logs).
+          Per SSoT v1.0-平台超管最小实现-唯一真相来源.md §13 (P-2 Maven module) and
+          v3.0.9 蓝图 约束 6 (Host 极薄原则): capability assembled by dependency declaration
+          only; no host-side code/wiring. AutoConfiguration:
+          io.brix.platform.admin.config.PlatformAdminAutoConfiguration.
+        -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-admin</artifactId>
+            <version>3.2.0</version>
         </dependency>
 
         <!-- ========== 业务模块（按需引入）========== -->
         <!-- 用户身份 -->
         <dependency>
-            <groupId>com.shinwa.solutions</groupId>
+            <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>identity-server</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
         </dependency>
 
         <!-- ========== 业务模块 - 产品模式完整功能 ========== -->
         <!-- 预约管理 -->
         <dependency>
-            <groupId>com.shinwa.solutions</groupId>
+            <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>booking-server</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
         </dependency>
 
         <!-- 产品套餐管理 -->
         <dependency>
-            <groupId>com.shinwa.solutions</groupId>
+            <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>products-server</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
         </dependency>
 
         <!-- 合作伙伴管理 -->
         <dependency>
-            <groupId>com.shinwa.solutions</groupId>
+            <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>partners-server</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
         </dependency>
 
         <!-- 消息通知 -->
         <dependency>
-            <groupId>com.shinwa.solutions</groupId>
+            <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>messenger-server</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
         </dependency>
 
         <!-- 轮播Banner管理 -->
         <dependency>
-            <groupId>com.shinwa.solutions</groupId>
+            <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>carousel-server</artifactId>
-            <version>3.0.0-SNAPSHOT</version>
+            <version>3.2.0-SNAPSHOT</version>
         </dependency>
+
+        <!-- Case管理 -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>case-server</artifactId>
+            <version>3.2.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 合同管理 -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>contracts-server</artifactId>
+            <version>3.2.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 文件存储 -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>storage-server</artifactId>
+            <version>3.2.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- 进件管理 (待集成：需调整 Maven 构建顺序后启用)
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>intake-server</artifactId>
+            <version>3.2.0-SNAPSHOT</version>
+        </dependency>
+        -->
 
         <!-- ========== Spring Boot Starter ========== -->
         <dependency>

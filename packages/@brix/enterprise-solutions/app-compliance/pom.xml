@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  Compliance Management Module — Parent POM
+  
+  Provides compliance management functionality including:
+  - Script templates for sales/service calls
+  - Forbidden words and phrase detection
+  - Compliance checking and auditing
+  
+  Architecture: Following v3.0.6 Runtime Shell Design Blueprint
+  
+  @author Brix Architecture Team
+  @version 3.2.0-SNAPSHOT
+  @since 3.2.0
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>brix-enterprise-solutions-parent</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>app-compliance</artifactId>
+    <packaging>pom</packaging>
+    <name>Brix Compliance Management Module</name>
+    <description>Compliance management module for sales script templates and forbidden words detection</description>
+
+    <modules>
+        <!-- compliance-shared is a TypeScript-only module (no pom.xml) — managed by pnpm -->
+        <module>compliance-api</module>
+        <module>compliance-core</module>
+        <module>compliance-server</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.brix.enterprise.solutions</groupId>
+                <artifactId>compliance-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix.enterprise.solutions</groupId>
+                <artifactId>compliance-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+    booking-core - booking module core layer
+  
+    Responsibilities:
+    - Domain entities
+    - Repository interfaces
+    - Business services
+    - Application event handlers
+  
+    Architecture constraints:
+    - Depend on booking-api for DTO and event contracts
+    - Depend on runtime-sdk-api for capability contracts
+    - Use RuntimeContext for capabilities such as EventBus and StateStore
+    - JPA is allowed as a persistence contract by v3.0.9 R1.1
+    - Direct Kafka, Redis, MinIO, HTTP client, and non-JPA data-store dependencies are forbidden
+  
+  版本: 3.2.0-SNAPSHOT
+  日期: 2026-01-28
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-booking</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>booking-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Booking Core</name>
+    <description>预约模块核心层 - 领域模型、业务逻辑、事件处理器</description>
+
+    <dependencies>
+        <!-- ========== 模块内部依赖 ========== -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>booking-api</artifactId>
+        </dependency>
+
+        <!-- ========== 跨模块事件契约依赖 ========== -->
+        <!--
+            【设计说明 — R8.1 fix】
+            Cross-plugin integration event contracts now reside in the
+            shared-events module.  This replaced the previous direct
+            dependency on identity-api, which caused a compile-time
+            coupling from booking to identity (violating plugin isolation).
+            
+            @since 3.2.0
+        -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>shared-events</artifactId>
+        </dependency>
+
+        <!-- ========== Runtime SDK（开源核心层）========== -->
+        <!--
+            【核心依赖】运行壳能力契约
+            通过 RuntimeContext 获取：
+            - EventBusCapability: 事件发布
+            - StateStoreCapability: 状态存储
+            - AuthContextCapability: 认证上下文
+            - ObservabilityCapability: 日志/指标/追踪
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+
+        <!-- ========== JPA persistence contract allowed by v3.0.9 R1.1 (not an infra adapter). ========== -->
+        <!--
+            【设计说明】
+            JPA is a persistence contract in plugin-core, not an infrastructure adapter.
+            具体的数据源配置由 Host 层提供。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ========== 工具类 ========== -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ========== 测试依赖 ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

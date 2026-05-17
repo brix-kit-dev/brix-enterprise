@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  tenant-core - tenant module core layer
+
+  Responsibilities:
+  - Domain entities
+  - Repository interfaces
+  - Business services
+  - ArchUnit architecture guard tests
+
+  Architecture constraints:
+  - Depend on runtime-sdk-api for capability contracts
+  - Use RuntimeContext for capabilities
+  - Direct Kafka, Redis, MinIO, HTTP client, and non-JPA data-store dependencies are forbidden
+
+  版本: 3.2.0-SNAPSHOT
+  日期: 2026-06-10
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-tenant</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>tenant-core</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Tenant Core</name>
+    <description>多租户模块核心层 - 领域模型、业务逻辑、架构守护</description>
+</project>

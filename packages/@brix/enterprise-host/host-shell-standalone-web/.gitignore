@@ -2,5 +2,7 @@ node_modules/
 dist/
 target/
 .env
+.env.local
+.env.*.local
 *.log
 .DS_Store

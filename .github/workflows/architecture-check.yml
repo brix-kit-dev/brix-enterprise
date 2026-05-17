@@ -1,0 +1,532 @@
+# ============================================================================
+# Architecture Guard CI Workflow
+# ============================================================================
+#
+# This workflow enforces architectural constraints defined in v3.0.9 Runtime Shell
+# Architecture Blueprint, specifically:
+#
+# - Constraint 9: BrixUI Unified Governance
+#   - enterprise-solutions plugins MUST use useUI() from @brix-sdk/runtime-sdk-react
+#   - Direct imports of @mui/material, antd, element-plus are forbidden
+#
+# - Design Token Governance (UI设计令牌改造方�?v2.0 Phase 7)
+#   - @brix-architecture/no-plugin-theme-tokens: plugins must not define ThemeTokens
+#   - @brix-architecture/no-direct-design-tokens-import: plugins must not import
+#     @brix-sdk/platform-design-tokens (static primitive tokens)
+#   - @brix-architecture/no-mui-in-plugins: plugins must not use MUI-specific
+#     palette/theme APIs directly
+#
+# This CI gate prevents architecture violations from being merged into main branch.
+#
+# @see v3.0.9 Runtime Shell Architecture Blueprint - Constraint 9
+# @see UI设计令牌改造方�?v2.0.md - Phase 7: ESLint 治理规则
+# @see BrixUI组件扩展与治理改造计�?v1.0.md - Phase 5: ESLint 治理
+# ============================================================================
+
+name: Architecture Guard
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      # Only trigger when enterprise-solutions source files change
+      - 'packages/@brix/enterprise-solutions/**/*.ts'
+      - 'packages/@brix/enterprise-solutions/**/*.tsx'
+      - 'packages/@brix/enterprise-solutions/**/*.js'
+      - 'packages/@brix/enterprise-solutions/**/*.jsx'
+      - 'packages/@brix/enterprise-solutions/**/*.java'
+      - 'packages/@brix/enterprise-solutions/**/pom.xml'
+      - 'packages/@brix/enterprise-solutions/**/package.json'
+      - 'packages/@brix/enterprise-solutions/**/*.sql'
+      - 'packages/@brix/enterprise-solutions/**/*.yml'
+      - 'packages/@brix/enterprise-solutions/**/*.yaml'
+      - 'packages/@brix/enterprise-host/**/*.java'
+      - 'packages/@brix/enterprise-host/**/pom.xml'
+      - 'packages/@brix/enterprise-host/**/package.json'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pom.xml'
+      # Also trigger when ESLint config or this workflow changes
+      - '.eslintrc.*'
+      - 'eslint.config.*'
+      - '.github/workflows/architecture-check.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/@brix/enterprise-solutions/**/*.ts'
+      - 'packages/@brix/enterprise-solutions/**/*.tsx'
+      - 'packages/@brix/enterprise-solutions/**/*.js'
+      - 'packages/@brix/enterprise-solutions/**/*.jsx'
+      - 'packages/@brix/enterprise-solutions/**/*.java'
+      - 'packages/@brix/enterprise-solutions/**/pom.xml'
+      - 'packages/@brix/enterprise-solutions/**/package.json'
+      - 'packages/@brix/enterprise-solutions/**/*.sql'
+      - 'packages/@brix/enterprise-solutions/**/*.yml'
+      - 'packages/@brix/enterprise-solutions/**/*.yaml'
+      - 'packages/@brix/enterprise-host/**/*.java'
+      - 'packages/@brix/enterprise-host/**/pom.xml'
+      - 'packages/@brix/enterprise-host/**/package.json'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pom.xml'
+
+# Concurrency: Cancel previous runs for the same PR/branch
+concurrency:
+  group: architecture-check-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zero-tolerance-red-lines:
+    name: Phase 0 Zero Tolerance Red Lines
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Host must not hardcode app or infra scans
+        run: |
+          set -euo pipefail
+          if grep -RInE '^\s*@(EntityScan|ComponentScan|Import)\b' \
+            packages/@brix/enterprise-host/host-shell-*/src/main/java; then
+            echo "Host Shell startup/config must rely on dependency, manifest, YAML, and AutoConfiguration discovery."
+            exit 1
+          fi
+
+      - name: Core modules must not expose controllers
+        run: |
+          set -euo pipefail
+          if grep -RInE '^\s*@(RestController|Controller|RequestMapping)\b' \
+            packages/@brix/enterprise-solutions/*/*-core/src/main/java; then
+            echo "Plugin core modules must not contain Spring MVC controllers or request mappings."
+            exit 1
+          fi
+
+      - name: Core modules must not depend on infra or web clients
+        run: |
+          set -euo pipefail
+          if grep -RInE '<artifactId>(spring-boot-starter-web|spring-kafka|spring-data-redis|spring-cloud-starter-openfeign|okhttp|retrofit|minio|aws-java-sdk|azure-storage-blob)</artifactId>' \
+            packages/@brix/enterprise-solutions/*/*-core/pom.xml; then
+            echo "Plugin core POMs must not directly depend on web, messaging, cache, storage, or HTTP-client infrastructure."
+            exit 1
+          fi
+
+      - name: Case UI must use injected RuntimeContext capabilities
+        run: |
+          set -euo pipefail
+          if grep -RInE 'fetch\(|@brix-sdk/infra-adapter-ui-mui|muiUIAdapter|standaloneRuntimeContext' \
+            packages/@brix/enterprise-solutions/app-case/case-ui-web; then
+            echo "Case UI must not use raw fetch, local UI infra adapters, or standalone mocked RuntimeContext."
+            exit 1
+          fi
+
+      - name: SQL must not default tenant ids
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.sql' "tenant_id[^\n]*(DEFAULT\s+('default'|'public'|'tenant-default'|0)|NOT NULL\s+DEFAULT)" \
+            packages/@brix/enterprise-solutions; then
+            echo "Tenant columns must be populated from RuntimeContext, not SQL defaults."
+            exit 1
+          fi
+
+      - name: IntegrationEvent constructors must include tenant metadata
+        run: |
+          set -euo pipefail
+          if grep -RInE 'super\((SOURCE_MODULE|"[^"]+")\);' \
+            packages/@brix/enterprise-solutions/*/*-api/src/main/java \
+            packages/@brix/enterprise-solutions/shared-events/src/main/java; then
+            echo "IntegrationEvent subclasses must call a tenant-aware super constructor."
+            exit 1
+          fi
+
+      - name: Cross-plugin persistence types must not be imported directly
+        run: |
+          set -euo pipefail
+          violations=0
+          while IFS= read -r line; do
+            file="${line%%:*}"
+            imported="${line#*import }"
+            imported_module="$(echo "$imported" | sed -E 's/^io\.brix\.enterprise\.app\.([^.]+)\..*/\1/')"
+            source_module="$(grep -m1 '^package io\.brix\.enterprise\.app\.' "$file" | sed -E 's/^package io\.brix\.enterprise\.app\.([^.]+)\..*/\1/')"
+            if [ -n "$source_module" ] && [ "$imported_module" != "$source_module" ]; then
+              echo "$line"
+              violations=1
+            fi
+          done < <(grep -RInE '^import io\.brix\.enterprise\.app\.[^.]+\.(core\.)?(entity|repository|mapper)\.' \
+            packages/@brix/enterprise-solutions/*/*-core/src/main/java || true)
+
+          if [ "$violations" -ne 0 ]; then
+            echo "Plugins must not import another plugin's entity, repository, or mapper types directly."
+            exit 1
+          fi
+
+  dependency-governance:
+    name: Phase 2 Dependency Governance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup Java (17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: UI dependency residue scan
+        run: |
+          set -euo pipefail
+
+          if grep -RInE '@brix-sdk/infra-adapter-ui-mui|@mui/material|@mui/icons-material|@emotion/' \
+            --include='package.json' --include='pnpm-lock.yaml' \
+            packages/@brix/enterprise-solutions; then
+            echo "Non-adapter enterprise solution package metadata must not retain MUI, Emotion, or UI infra adapter dependencies."
+            exit 1
+          fi
+
+          DIST_FILES=$(git ls-files 'packages/@brix/**/dist/**' 'packages/@brix/**/target/dist/**')
+          if [ -n "$DIST_FILES" ] && echo "$DIST_FILES" | xargs grep -InE '@brix-sdk/infra-adapter-ui-mui|@mui/material|@mui/icons-material|@emotion/'; then
+            echo "Committed dist artifacts must not retain MUI, Emotion, or UI infra adapter references."
+            exit 1
+          fi
+
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const root = path.join('packages', '@brix', 'enterprise-solutions');
+          const singletonDeps = [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            '@brix-sdk/runtime-sdk-api-web',
+            '@brix-sdk/runtime-sdk-react',
+            '@brix-sdk/shared-runtime-web',
+          ];
+          const violations = [];
+
+          function walk(dir) {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const fullPath = path.join(dir, entry.name);
+              if (entry.isDirectory()) {
+                if (entry.name !== 'node_modules' && entry.name !== 'dist' && entry.name !== 'target') {
+                  walk(fullPath);
+                }
+                continue;
+              }
+              if (entry.name !== 'package.json' || !path.basename(path.dirname(fullPath)).endsWith('ui-web')) {
+                continue;
+              }
+              const pkg = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+              for (const depName of singletonDeps) {
+                if (pkg.dependencies && Object.prototype.hasOwnProperty.call(pkg.dependencies, depName)) {
+                  violations.push(`${fullPath}: dependencies must not contain ${depName}; use peerDependencies for shared runtime singletons.`);
+                }
+              }
+            }
+          }
+
+          walk(root);
+          if (violations.length > 0) {
+            console.error(violations.join('\n'));
+            process.exit(1);
+          }
+          NODE
+
+      - name: TypeScript dependency cycle check
+        run: pnpm dlx madge@6.1.0 --circular --extensions ts,tsx packages/@brix/enterprise-solutions packages/@brix/enterprise-host --exclude '(^|/)(dist|target|node_modules)(/|$)'
+
+      - name: Maven dependency analysis
+        run: mvn -q -DskipTests -DfailOnWarning=true dependency:analyze-only
+
+  # ============================================================================
+  # Job: Lint UI Imports
+  # ============================================================================
+  # Checks that enterprise-solutions plugins do not directly import UI libraries.
+  # All UI components must be obtained via useUI() from @brix-sdk/runtime-sdk-react.
+  # ============================================================================
+  lint-ui-imports:
+    name: BrixUI Governance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ========================================================================
+      # Step 1: Checkout code
+      # ========================================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for accurate change detection
+
+      # ========================================================================
+      # Step 2: Setup pnpm
+      # ========================================================================
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      # ========================================================================
+      # Step 3: Setup Node.js with caching
+      # ========================================================================
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # ========================================================================
+      # Step 4: Install dependencies
+      # ========================================================================
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ========================================================================
+      # Step 5: Run ESLint on enterprise-solutions
+      # ========================================================================
+      # This step runs ESLint with architecture rules on all enterprise-solutions
+      # plugins. The no-direct-ui-import rule will fail if any plugin directly
+      # imports @mui/material, antd, or other banned UI libraries.
+      #
+      # Using pnpm filter to run lint only on affected packages improves CI speed.
+      # ========================================================================
+      - name: Lint enterprise-solutions for UI import violations
+        run: |
+          echo "🔍 Checking enterprise-solutions for direct UI library imports..."
+          echo "📋 Enforcing Red Line 9: BrixUI Unified Governance"
+          echo ""
+          pnpm --filter "@brix-sdk/enterprise-solutions..." lint
+        env:
+          # Treat all lint warnings as errors in CI
+          ESLINT_RULE_LEVEL: error
+          # Enable CI mode for better error formatting
+          CI: true
+
+      # ========================================================================
+      # Step 6: Generate violation report (on failure)
+      # ========================================================================
+      - name: Generate violation report
+        if: failure()
+        run: |
+          echo "�?Architecture Guard Failed: BrixUI Governance Violation Detected"
+          echo ""
+          echo "📖 Constraint 9 from v3.0.9 Runtime Shell Architecture Blueprint:"
+          echo "   enterprise-solutions plugins MUST obtain UI components via useUI()"
+          echo "   from @brix-sdk/runtime-sdk-react instead of directly importing UI libraries."
+          echo ""
+          echo "🔧 How to fix (UI components):"
+          echo "   1. Remove direct imports of @mui/material, antd, element-plus"
+          echo "   2. Import useUI from @brix-sdk/runtime-sdk-react"
+          echo "   3. Get components: const { Button, Card, Table } = useUI();"
+          echo ""
+          echo "🔧 How to fix (Design Token violations):"
+          echo "   1. Replace @brix-sdk/platform-design-tokens imports with useTheme().tokens"
+          echo "   2. Replace palette.primary.main with tokens.colors.brand.primary"
+          echo "   3. Replace local ThemeTokens objects with useTheme() from @brix-sdk/runtime-sdk-react"
+          echo "   4. Replace theme.palette/theme.typography with tokens.colors/tokens.typography"
+          echo ""
+          echo "📚 Reference documents:"
+          echo "   - v3.0.9-运行壳架构设计蓝�?md - Constraint 9"
+          echo "   - UI设计令牌改造方�?v2.0.md - Phase 7: ESLint 治理规则"
+          echo "   - BrixUI组件扩展与治理改造计�?v1.0.md - Phase 5"
+          echo ""
+          echo "🚨 For escape hatch (rich text, charts, maps):"
+          echo "   - Submit RFC for approval"
+          echo "   - Use eslint-disable with RFC reference"
+          echo "   - Wrap in dedicated file, declare in plugin-manifest"
+
+  # ============================================================================
+  # Job: Architecture Metrics (optional reporting)
+  # ============================================================================
+  # Generates metrics about architecture compliance across plugins.
+  # This job always runs to provide visibility, even if violations exist.
+  # ============================================================================
+  architecture-metrics:
+    name: Architecture Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Run even if lint job fails to provide visibility
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Count UI library violations
+        run: |
+          echo "📊 Architecture Metrics Report"
+          echo "================================"
+          echo ""
+          echo "--- BrixUI Governance (Constraint 9) ---"
+          
+          # Count direct MUI imports
+          MUI_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]@mui/material" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "📦 @mui/material direct imports: $MUI_COUNT"
+          
+          # Count direct MUI icons imports
+          MUI_ICONS_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]@mui/icons-material" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "🎨 @mui/icons-material direct imports: $MUI_ICONS_COUNT"
+          
+          # Count direct antd imports
+          ANTD_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]antd" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "🐜 antd direct imports: $ANTD_COUNT"
+          
+          # Count useUI usage (correct pattern)
+          USE_UI_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "useUI()" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "�?useUI() correct usage: $USE_UI_COUNT"
+          
+          echo ""
+          echo "--- Design Token Governance (Phase 7) ---"
+          
+          # Count @brix-sdk/platform-design-tokens direct imports
+          DESIGN_TOKENS_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]@brix-sdk/platform-design-tokens" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "🎨 @brix-sdk/platform-design-tokens direct imports: $DESIGN_TOKENS_COUNT"
+          
+          # Count palette.*.main MUI pattern usage
+          PALETTE_COUNT=$(grep -r --include="*.tsx" --include="*.ts" -E "palette\.(primary|secondary|error|warning|info|success|background)\.(main|light|dark|paper|default)" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "🎨 MUI palette.*.main patterns: $PALETTE_COUNT"
+          
+          # Count theme.palette / theme.typography references
+          THEME_MUI_COUNT=$(grep -r --include="*.tsx" --include="*.ts" -E "theme\.(palette|typography|spacing|shape|shadows|components|breakpoints)" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "🎨 MUI theme structure references: $THEME_MUI_COUNT"
+          
+          # Count ThemeTokens exports
+          THEME_TOKENS_COUNT=$(grep -r --include="*.tsx" --include="*.ts" -E "export.*(const|let|var).*[Tt]heme[Tt]okens" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "🎨 ThemeTokens exports: $THEME_TOKENS_COUNT"
+          
+          # Count useTheme usage (correct pattern)
+          USE_THEME_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "useTheme()" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "�?useTheme() correct usage: $USE_THEME_COUNT"
+          
+          echo ""
+          TOTAL_VIOLATIONS=$((MUI_COUNT + MUI_ICONS_COUNT + ANTD_COUNT + DESIGN_TOKENS_COUNT + PALETTE_COUNT + THEME_MUI_COUNT + THEME_TOKENS_COUNT))
+          echo "🚦 Total violations: $TOTAL_VIOLATIONS"
+          
+          if [ "$TOTAL_VIOLATIONS" -eq 0 ]; then
+            echo "🎉 All enterprise-solutions plugins comply with BrixUI & Design Token Governance!"
+          else
+            echo "⚠️  Migration in progress: $TOTAL_VIOLATIONS violation patterns found"
+          fi
+
+      - name: Create metrics summary
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "## 🏛�?Architecture Compliance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### BrixUI Governance" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          
+          MUI_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]@mui/material" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| @mui/material violations | $MUI_COUNT |" >> $GITHUB_STEP_SUMMARY
+          
+          MUI_ICONS_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]@mui/icons-material" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| @mui/icons-material violations | $MUI_ICONS_COUNT |" >> $GITHUB_STEP_SUMMARY
+          
+          USE_UI_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "useUI()" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| useUI() correct usage | $USE_UI_COUNT |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Design Token Governance" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          
+          DESIGN_TOKENS_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "from ['\"]@brix-sdk/platform-design-tokens" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| @brix-sdk/platform-design-tokens imports | $DESIGN_TOKENS_COUNT |" >> $GITHUB_STEP_SUMMARY
+          
+          PALETTE_COUNT=$(grep -r --include="*.tsx" --include="*.ts" -E "palette\.(primary|secondary|error|warning|info|success|background)\.(main|light|dark|paper|default)" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| MUI palette patterns | $PALETTE_COUNT |" >> $GITHUB_STEP_SUMMARY
+          
+          THEME_MUI_COUNT=$(grep -r --include="*.tsx" --include="*.ts" -E "theme\.(palette|typography|spacing|shape)" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| MUI theme references | $THEME_MUI_COUNT |" >> $GITHUB_STEP_SUMMARY
+          
+          USE_THEME_COUNT=$(grep -r --include="*.tsx" --include="*.ts" "useTheme()" packages/@brix/enterprise-solutions 2>/dev/null | wc -l || echo "0")
+          echo "| useTheme() correct usage | $USE_THEME_COUNT |" >> $GITHUB_STEP_SUMMARY
+
+  # ==========================================================================
+  # Job: Frontend Stability Tests
+  #
+  # Phase 3 / C-6 — runs the Vitest hook suites added in Phase 3 §5.1
+  # for every plugin that owns a vitest.config.ts.  This job is *blocking*:
+  # a failed unit test or a coverage drop below the configured thresholds
+  # (lines / statements / functions ≥ 70 %, branches ≥ 60 %) fails the PR.
+  #
+  # Scope (today): tenant-ui-web, identity-ui-web, platform-tenant-web.
+  # Pattern: relies on `pnpm -r --filter` to skip plugins that have not
+  # opted in yet, so onboarding new plugins requires no workflow change.
+  #
+  # @see docs-dev/前端稳定性改造计划-v1.0.md §5.1
+  # ==========================================================================
+  frontend-stability-tests:
+    name: Frontend Stability Tests (Vitest + Coverage)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ----------------------------------------------------------------------
+      # Step: Typecheck — every plugin with a `typecheck` script must pass.
+      # `--if-present` keeps the gate friendly to new plugins.
+      # ----------------------------------------------------------------------
+      - name: Typecheck (all plugins)
+        run: pnpm -r --if-present run typecheck
+        env:
+          CI: true
+
+      # ----------------------------------------------------------------------
+      # Step: Run unit tests with coverage.
+      #
+      # Coverage thresholds are enforced by each plugin's own
+      # vitest.config.ts (Phase 3 §5.1) — Vitest exits non-zero when a
+      # threshold is breached, which fails the job here.
+      # ----------------------------------------------------------------------
+      - name: Vitest (all plugins, with coverage)
+        run: pnpm -r --if-present run test:coverage
+        env:
+          CI: true
+
+      # ----------------------------------------------------------------------
+      # Step: Aggregate coverage artefacts so reviewers can drill in.
+      # ----------------------------------------------------------------------
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: |
+            packages/**/coverage/**
+          retention-days: 14
+          if-no-files-found: ignore

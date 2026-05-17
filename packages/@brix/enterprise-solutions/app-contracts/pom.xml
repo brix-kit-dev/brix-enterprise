@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  合同管理应用模块 - 父 POM
+  
+  版本: v3.0
+  
+  模块结构:
+  - contracts-api: API层（DTO、枚举、服务接口）
+  - contracts-core: 核心实现（实体、仓储、服务实现）
+  - contracts-server: 服务启动器（控制器、配置、自动装配）
+  
+  从 plugin-contract 迁移而来，改造为独立可运行的应用模块。
+  
+  @author Brix Platform Team
+  @since 3.0.0
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>brix-enterprise-solutions-parent</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>app-contracts</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Brix Enterprise App - Contracts</name>
+    <description>合同管理应用模块 - 提供合同模板管理、合同创建、多方签署、版本控制等功能</description>
+
+    <!-- =====================================================
+         子模块聚合
+         ===================================================== -->
+    <modules>
+        <module>contracts-api</module>
+        <module>contracts-core</module>
+        <module>contracts-server</module>
+    </modules>
+
+</project>

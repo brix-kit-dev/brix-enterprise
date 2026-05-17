@@ -1,10 +1,10 @@
 # ============================================================================
 # Runtime Shell Performance Optimization Configuration
 # ============================================================================
-# Production-grade performance configuration for Shinwa Platform
+# Production-grade performance configuration for Brix Enterprise
 # Following v3.0.4 architecture design guidelines
 #
-# Author: Shinwa Team
+# Author: Brix Team
 # Version: 3.0.0-SNAPSHOT
 # Date: 2026-02-24
 # ============================================================================
@@ -57,7 +57,7 @@ spring:
       validation-timeout: 5000
       
       # Pool name for monitoring
-      pool-name: ShinwaPlatformHikariCP
+      pool-name: BrixPlatformHikariCP
 
   # ----- Jackson JSON Performance -----
   jackson:
@@ -124,7 +124,7 @@ spring.cache:
     time-to-live: 3600000  # 1 hour default TTL
     cache-null-values: false
     use-key-prefix: true
-    key-prefix: shinwa:cache:
+    key-prefix: brix:cache:
 
 spring.data.redis:
   # Connection settings (externalize to environment)
@@ -197,7 +197,7 @@ logging:
   
   level:
     root: INFO
-    com.shinwa: INFO
+    io.brix.enterprise.app: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: OFF
     org.hibernate.type: OFF

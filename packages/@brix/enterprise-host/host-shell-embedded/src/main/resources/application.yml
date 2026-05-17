@@ -1,5 +1,5 @@
 # ============================================================
-# Shinwa Platform - 嵌入模式运行壳配置
+# Brix Enterprise - 嵌入模式运行壳配置
 # ============================================================
 # 
 # host-shell-embedded：嵌入模式运行壳
@@ -14,7 +14,7 @@
 
 spring:
   application:
-    name: shinwa-embedded
+    name: brix-embedded
   profiles:
     active: embedded
 

@@ -1,0 +1,73 @@
+{
+  "name": "partners",
+  "pluginId": "brix-app-partners",
+  "version": "3.0.0-SNAPSHOT",
+  "displayName": "合作伙伴管理",
+  "description": "Brix Enterprise Partner Management - manages hospitals, hotels, transportation, and translation service provider relationships for medical tourism operations.",
+  "ui": {
+    "web": {
+      "enabled": true,
+      "manifestUrl": "/plugins/partners/ui-manifest.json",
+      "scope": "partners",
+      "routes": [
+        {
+          "path": "/partners",
+          "component": "./pages/PartnerListV2",
+          "exact": true,
+          "menu": {
+            "title": "合作方目录",
+            "icon": "business_center",
+            "order": 1,
+            "parentId": "partners"
+          }
+        },
+        {
+          "path": "/partners/create",
+          "component": "./pages/PartnerCreate",
+          "menu": {
+            "title": "新建合作方",
+            "icon": "add",
+            "order": 2,
+            "parentId": "partners"
+          }
+        },
+        {
+          "path": "/partners/:id",
+          "component": "./pages/PartnerDetail",
+          "menu": { "hidden": true }
+        },
+        {
+          "path": "/partners/:id/edit",
+          "component": "./pages/PartnerEdit",
+          "menu": { "hidden": true }
+        }
+      ],
+      "menus": [
+        {
+          "id": "partners",
+          "title": "合作方目录",
+          "icon": "business",
+          "order": 50
+        }
+      ]
+    },
+    "mobile": {
+      "enabled": true,
+      "manifestUrl": "partners://manifest"
+    }
+  },
+  "capabilities": {
+    "required": ["EventBusCapability", "StateStoreCapability", "HttpCapability"],
+    "optional": ["GeoLocation", "NotificationService"]
+  },
+  "events": {
+    "publish": ["PartnerCreated", "PartnerUpdated", "PartnerDeleted", "PartnerStatusChanged", "PartnerContractUpdated"],
+    "subscribe": ["BookingCreated", "BookingCancelled"]
+  },
+  "metadata": {
+    "category": "business",
+    "vendor": "Brix Enterprise Solutions",
+    "license": "Commercial",
+    "minRuntimeVersion": "3.0.0"
+  }
+}

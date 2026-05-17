@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  identity-server - 用户身份模块服务层
+  
+  职责：
+  - REST Controller（API 端点）
+  - Spring Boot 自动配置
+  - 模块启动入口（可选，一般由 Host 组装）
+  
+  架构说明：
+  - 依赖 identity-core 获取业务逻辑
+  - 提供 REST API 暴露给 Gateway
+  - 自动配置类用于 Host 组装时自动扫描
+  
+  端口规划：8081（由 brix-service-user 服务承载）
+  
+  迁移来源：plugin-user-core（Controller 部分）
+  版本: 3.2.0-SNAPSHOT
+  日期: 2026-01-28
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>app-identity</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>identity-server</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Identity Server</name>
+    <description>用户身份模块服务层 - REST Controller、自动配置</description>
+
+    <dependencies>
+        <!-- ========== 模块内部依赖 ========== -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>identity-core</artifactId>
+        </dependency>
+
+        <!-- ========== Spring Web ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ========== 参数校验 ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- ========== 自动配置 ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <!-- [RED-LINE R2 修复] 已移除 io.platform:platform-auth 直接依赖。
+             安全能力现通过 runtime-sdk-api 中的 AuthContextCapability 契约获取，
+             由 Host 组装层注入实现。-->
+
+        <!-- ========== 工具类 ========== -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ========== 测试依赖 ========== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- [RED-LINE R1 修复] 已移除 postgresql 直接依赖。
+             数据库驱动由 infra-adapter-database 适配器在 Host 组装层提供。
+             JPA starter 通过 identity-core 传递依赖获取。-->
+
+        <!-- ========== Runtime SDK（开发测试用）========== -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+            <version>${runtime-sdk.version}</version>
+        </dependency>
+
+        <!--
+            【OpenAPI 注解】Swagger v3 注解
+            用于 Controller 的 @Operation/@ApiResponse/@Parameter 注解
+        -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+    </dependencies>
+
+    <!-- [RED-LINE R5 修复] 已移除 spring-boot-maven-plugin mainClass 配置。
+         插件模块不应声明独立入口。独立调试请使用 @Profile("dev") 的 IdentityApplication。-->
+</project>

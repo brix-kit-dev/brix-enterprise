@@ -1,4 +1,4 @@
-﻿# Brix Enterprise
+# Brix Enterprise
 
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![Build Status](https://gitlab.example.com/brix/brix-enterprise/badges/main/pipeline.svg)](https://gitlab.example.com/brix/brix-enterprise/-/pipelines)
@@ -23,8 +23,8 @@ Enterprise packages depend on **published versions** of Core packages:
 ```json
 {
   "dependencies": {
-    "@brix/runtime-core": "^3.1.0",
-    "@brix/service-core": "^3.1.0"
+    "@brix-sdk/runtime-core": "^3.1.0",
+    "@brix-sdk/service-core": "^3.1.0"
   }
 }
 ```
@@ -36,9 +36,9 @@ Enterprise packages depend on **published versions** of Core packages:
 
 | Package | Description | Status |
 |---------|-------------|--------|
-| `@brix/enterprise-host` | Host assembly implementations | Stable |
-| `@brix/enterprise-solutions` | Business application plugins | Stable |
-| `@brix/enterprise-shell` | Commercial UI shell components | Stable |
+| `@brix-sdk/enterprise-host` | Host assembly implementations | Stable |
+| `@brix-sdk/enterprise-solutions` | Business application plugins | Stable |
+| `@brix-sdk/enterprise-shell` | Commercial UI shell components | Stable |
 
 ## Setup
 

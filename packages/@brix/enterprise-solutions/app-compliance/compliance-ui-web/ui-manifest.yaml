@@ -1,0 +1,255 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# UI Manifest - 合规管理模块 UI 声明清单
+# 
+# 【设计原则】遵循 v3.0.6 Manifest-Driven 架构
+# 1. 所有 UI 配置在此声明，插件代码不包含任何注册逻辑
+# 2. Host 读取此文件进行统一装配
+# 3. 插件只声明，Host 拥有最终决策权
+# 4. 声明 WHAT（菜单、页面、权限），不声明 HOW（加载技术）
+# 
+# @version 3.0.0
+# @date 2026-02-28
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ============================================================================
+# 插件基本信息
+# ============================================================================
+plugin:
+  id: "compliance"
+  name: "合规管理"
+  version: "3.0.0-SNAPSHOT"
+  description: "销售合规话术模板和禁用词管理"
+  vendor: "Brix Platform"
+  icon: "Shield"
+  category: "business"
+
+# ============================================================================
+# 页面声明（替代路由注册）
+# 【关键】插件不注册路由，只声明 PageId，Host 负责映射
+# ============================================================================
+pages:
+  # -------------------- 话术模板列表 --------------------
+  - pageId: "compliance:script-list"
+    component: "./ScriptTemplateListPage"
+    title: "话术模板列表"
+    titleKey: "compliance.page.scriptList.title"
+    permission: "compliance:script:view"
+    platforms:
+      web:
+        suggestedPath: "/compliance/scripts"
+      mobile:
+        suggestedScreen: "ScriptTemplateListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合规管理"
+
+  # -------------------- 话术模板详情 --------------------
+  - pageId: "compliance:script-detail"
+    component: "./ScriptTemplateDetailPage"
+    title: "话术模板详情"
+    titleKey: "compliance.page.scriptDetail.title"
+    permission: "compliance:script:view"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/compliance/scripts/:id"
+      mobile:
+        suggestedScreen: "ScriptTemplateDetailScreen"
+
+  # -------------------- 创建话术模板 --------------------
+  - pageId: "compliance:script-create"
+    component: "./ScriptTemplateCreatePage"
+    title: "创建话术模板"
+    titleKey: "compliance.page.scriptCreate.title"
+    permission: "compliance:script:create"
+    platforms:
+      web:
+        suggestedPath: "/compliance/scripts/create"
+      mobile:
+        suggestedScreen: "ScriptTemplateCreateScreen"
+
+  # -------------------- 编辑话术模板 --------------------
+  - pageId: "compliance:script-edit"
+    component: "./ScriptTemplateCreatePage"
+    title: "编辑话术模板"
+    titleKey: "compliance.page.scriptEdit.title"
+    permission: "compliance:script:update"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/compliance/scripts/:id/edit"
+      mobile:
+        suggestedScreen: "ScriptTemplateEditScreen"
+
+  # -------------------- 禁用词列表 --------------------
+  - pageId: "compliance:forbidden-list"
+    component: "./ForbiddenWordListPage"
+    title: "禁用词列表"
+    titleKey: "compliance.page.forbiddenList.title"
+    permission: "compliance:forbidden:view"
+    platforms:
+      web:
+        suggestedPath: "/compliance/forbidden-words"
+      mobile:
+        suggestedScreen: "ForbiddenWordListScreen"
+    config:
+      keepAlive: true
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合规管理"
+        - label: "禁用词管理"
+
+  # -------------------- 添加禁用词 --------------------
+  - pageId: "compliance:forbidden-create"
+    component: "./ForbiddenWordCreatePage"
+    title: "添加禁用词"
+    titleKey: "compliance.page.forbiddenCreate.title"
+    permission: "compliance:forbidden:create"
+    platforms:
+      web:
+        suggestedPath: "/compliance/forbidden-words/create"
+      mobile:
+        suggestedScreen: "ForbiddenWordCreateScreen"
+
+  # -------------------- 编辑禁用词 --------------------
+  - pageId: "compliance:forbidden-edit"
+    component: "./ForbiddenWordCreatePage"
+    title: "编辑禁用词"
+    titleKey: "compliance.page.forbiddenEdit.title"
+    permission: "compliance:forbidden:update"
+    params:
+      - name: "id"
+        type: "string"
+        required: true
+    platforms:
+      web:
+        suggestedPath: "/compliance/forbidden-words/:id/edit"
+      mobile:
+        suggestedScreen: "ForbiddenWordEditScreen"
+
+  # -------------------- 合规检查工具 --------------------
+  - pageId: "compliance:check"
+    component: "./ComplianceCheckPage"
+    title: "合规检查"
+    titleKey: "compliance.page.check.title"
+    permission: "compliance:check:execute"
+    platforms:
+      web:
+        suggestedPath: "/compliance/check"
+      mobile:
+        suggestedScreen: "ComplianceCheckScreen"
+    config:
+      breadcrumb:
+        - label: "首页"
+          pageId: "home"
+        - label: "合规管理"
+        - label: "合规检查"
+
+# ============================================================================
+# 菜单声明（替代菜单注册）
+# 【关键】关联 PageId 而非 path
+# ============================================================================
+menus:
+  - id: "compliance"
+    title: "合规管理"
+    icon: "shield"
+    order: 60
+    permission: "compliance:script:view"
+    children:
+      - id: "compliance:scripts"
+        title: "话术管理"
+        pageId: "compliance:script-list"
+        icon: "message"
+        order: 1
+      - id: "compliance:forbidden"
+        title: "禁用词管理"
+        pageId: "compliance:forbidden-list"
+        icon: "warning"
+        order: 2
+        permission: "compliance:forbidden:view"
+      - id: "compliance:check"
+        title: "合规检查工具"
+        pageId: "compliance:check"
+        icon: "verified"
+        order: 3
+        permission: "compliance:check:execute"
+
+# ============================================================================
+# 权限声明
+# ============================================================================
+permissions:
+  - code: "compliance:script:view"
+    name: "查看话术模板"
+    description: "View script templates list and details"
+  - code: "compliance:script:create"
+    name: "创建话术模板"
+    description: "Create new script templates"
+  - code: "compliance:script:update"
+    name: "编辑话术模板"
+    description: "Update existing script templates"
+  - code: "compliance:script:delete"
+    name: "删除话术模板"
+    description: "Delete script templates"
+  - code: "compliance:script:publish"
+    name: "发布话术模板"
+    description: "Publish script templates for use"
+  - code: "compliance:forbidden:view"
+    name: "查看禁用词"
+    description: "View forbidden words list"
+  - code: "compliance:forbidden:create"
+    name: "添加禁用词"
+    description: "Add new forbidden words"
+  - code: "compliance:forbidden:update"
+    name: "编辑禁用词"
+    description: "Update forbidden word settings"
+  - code: "compliance:forbidden:delete"
+    name: "删除禁用词"
+    description: "Remove forbidden words"
+  - code: "compliance:check:execute"
+    name: "执行合规检查"
+    description: "Run compliance checks on text content"
+  - code: "compliance:audit:view"
+    name: "查看合规审计"
+    description: "View compliance audit history"
+
+# ============================================================================
+# 能力依赖（运行时注入）
+# ============================================================================
+capabilities:
+  required:
+    - http
+    - auth
+    - navigation
+  optional:
+    - theme
+    - i18n
+    - notification
+
+# ============================================================================
+# 开发服务器配置
+# ============================================================================
+devServer:
+  port: 3052
+  host: "localhost"
+
+# Feature flags for conditional functionality
+features:
+  - id: compliance-real-time-check
+    name: Real-time Compliance Check
+    description: Enable real-time checking as user types
+    defaultEnabled: true
+    
+  - id: compliance-ai-suggestion
+    name: AI Compliance Suggestions
+    description: AI-powered suggestions for compliant alternatives
+    defaultEnabled: false

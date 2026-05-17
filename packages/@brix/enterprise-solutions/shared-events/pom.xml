@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================================================
+  Brix Enterprise - Shared Integration Events
+  
+  This module defines cross-plugin integration event contracts.
+  
+  Design rationale (v3.0 Runtime Shell Architecture Blueprint):
+  - Constraint 4: Plugins communicate solely through events
+  - Constraint 2: Plugins only depend on Runtime Capability Contract
+  - Integration events that cross plugin boundaries must NOT live
+    inside any single plugin's API module, because that creates a
+    compile-time coupling between publisher and subscriber.
+  
+  By extracting cross-plugin event contracts into this module,
+  both the publishing plugin (e.g. identity) and subscribing
+  plugins (e.g. booking) depend on shared-events rather than
+  each other, preserving full plugin isolation.
+  
+  Dependency rules:
+  - This module depends ONLY on runtime-sdk-api (for IntegrationEvent base)
+  - Plugin -api modules may optionally depend on this module
+  - Plugin -core modules may depend on this module
+  - This module MUST NOT depend on any plugin module
+  
+  @version 3.2.0-SNAPSHOT
+  @since 3.2.0
+  =========================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.brix.enterprise.solutions</groupId>
+        <artifactId>brix-enterprise-solutions-parent</artifactId>
+        <version>3.2.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>shared-events</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Brix Enterprise Shared Events</name>
+    <description>
+        Cross-plugin integration event contracts for Brix Enterprise.
+        Contains event classes that are published by one plugin and
+        subscribed to by other plugins. This eliminates direct
+        compile-time dependencies between plugin modules.
+    </description>
+
+    <dependencies>
+        <!--
+            Runtime SDK API — provides IntegrationEvent base class.
+            This is the ONLY allowed dependency for this module.
+        -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-sdk-api</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

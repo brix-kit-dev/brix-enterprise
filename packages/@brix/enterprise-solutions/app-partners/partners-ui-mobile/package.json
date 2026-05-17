@@ -1,0 +1,31 @@
+{
+  "name": "@brix-sdk/enterprise-partners-ui-mobile",
+  "version": "3.2.0",
+  "description": "合作伙伴管理模块 Mobile UI",
+  "private": true,
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "scripts": {
+    "start": "expo start --port 4004",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "eslint src --ext ts,tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-native": "^0.76.0",
+    "react-native-paper": "^5.12.0",
+    "react-native-safe-area-context": "^4.8.0",
+    "react-native-vector-icons": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.73.0"
+  }
+}

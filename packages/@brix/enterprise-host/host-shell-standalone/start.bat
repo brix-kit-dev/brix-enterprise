@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM Shinwa Platform - 产品模式启动脚本 (Windows)
+REM Brix Platform - 产品模式启动脚本 (Windows)
 REM ============================================================
 REM 
 REM 用途：构建并启动产品模式运行壳及所有依赖服务
@@ -13,7 +13,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo ============================================================
-echo   Shinwa Platform - 产品模式启动
+echo   Brix Platform - 产品模式启动
 echo ============================================================
 echo.
 

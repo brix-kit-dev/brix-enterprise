@@ -1,9 +1,9 @@
-# Contributing to Shinwa Platform - Solutions
+# Contributing to Brix Enterprise - Solutions
 
 > **版本**: v3.2.0  
 > **最后更新**: 2026-02-13
 
-感谢您对 Shinwa Solutions 的贡献！本文档提供了参与项目开发所需的指南。
+感谢您对 Brix Enterprise Solutions 的贡献！本文档提供了参与项目开发所需的指南。
 
 ## 目录
 
@@ -27,30 +27,30 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/shinwa/shinwa-solutions.git
-cd shinwa-solutions
+git clone https://github.com/brix-platform/brix-enterprise.git
+cd enterprise-solutions
 
 # 2. 安装依赖并构建
 mvn clean install
 pnpm install
 
 # 3. 运行特定插件测试
-cd shinwa-app-identity
+cd app-identity
 mvn test
 
 # 4. 运行前端测试
-cd shinwa-app-identity/identity-ui-web
+cd app-identity/identity-ui-web
 pnpm test
 ```
 
 ### 项目结构
 
 ```
-shinwa-solutions/
-├── shinwa-app-identity/              # 身份认证插件
+enterprise-solutions/
+├── app-identity/              # 身份认证插件
 │   ├── identity-server/              # 后端服务
 │   │   ├── src/main/java/
-│   │   │   └── com/shinwa/identity/
+│   │   │   └── io/brix/enterprise/identity/
 │   │   │       ├── domain/           # 领域层
 │   │   │       ├── application/      # 应用层
 │   │   │       └── infra/            # 基础设施层
@@ -63,13 +63,13 @@ shinwa-solutions/
 │       │   ├── pages/                # 页面层
 │       │   └── manifest.json         # 插件声明
 │       └── package.json
-├── shinwa-app-booking/               # 预约管理插件
-├── shinwa-app-messenger/             # 消息插件
-├── shinwa-app-partners/              # 合作伙伴插件
-├── shinwa-app-products/              # 产品管理插件
-├── shinwa-app-storage/               # 存储插件
-├── shinwa-app-carousel/              # 轮播图插件
-├── shinwa-app-contracts/             # 合同管理插件
+├── app-booking/               # 预约管理插件
+├── app-messenger/             # 消息插件
+├── app-partners/              # 合作伙伴插件
+├── app-products/              # 产品管理插件
+├── app-storage/               # 存储插件
+├── app-carousel/              # 轮播图插件
+├── app-contracts/             # 合同管理插件
 └── pom.xml
 ```
 
@@ -79,9 +79,9 @@ shinwa-solutions/
 
 ### Solutions 职责
 
-shinwa-solutions 是**业务插件层 (Layer 4)**，包含所有业务模块：
+enterprise-solutions 是**业务插件层 (Layer 4)**，包含所有业务模块：
 
-- 每个 `shinwa-app-xxx` 是一个独立业务插件
+- 每个 `app-xxx` 是一个独立业务插件
 - 插件包含前端 (xxx-ui-web) 和后端 (xxx-server)
 - 插件遵循 DDD 分层架构
 
@@ -168,7 +168,7 @@ shinwa-solutions 是**业务插件层 (Layer 4)**，包含所有业务模块：
  * 通过 CacheCapability 接口访问缓存，
  * 不直接使用 RedisTemplate。
  * 
- * @author Shinwa Team
+ * @author Brix Team
  * @since 3.0.0
  */
 @Service
@@ -327,7 +327,7 @@ Refs: #123
 
 - **Issue 追踪**: GitHub Issues
 - **技术讨论**: GitHub Discussions
-- **安全问题**: security@shinwa.io
+- **安全问题**: security@brix.io
 
 ---
 

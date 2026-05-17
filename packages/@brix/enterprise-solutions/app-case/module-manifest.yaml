@@ -1,0 +1,152 @@
+# ===========================================================================================
+# Case Management Module Manifest
+# ===========================================================================================
+#
+# This file defines the capabilities, lifecycle configuration, and event relationships
+# for the Case Management plugin module.
+# Follows the Brix Runtime SDK module-manifest.yaml specification.
+#
+# Version: 3.0.0
+# Updated: 2026-03-23
+# ===========================================================================================
+
+# ===========================================================================================
+# Module Information
+# ===========================================================================================
+module:
+  # Unique module identifier
+  id: "brix-app-case"
+
+  # Display name
+  name: "Case Management"
+
+  # Module version
+  version: "3.0.0-SNAPSHOT"
+
+  # Module type: plugin (business functionality)
+  type: "plugin"
+
+  # Module category
+  category: "business"
+
+  # Vendor information
+  vendor: "Brix Platform"
+
+  # Module description
+  description: |
+    Case Management Plugin
+
+    Core responsibilities:
+    - Case tracking: create and manage customer service cases
+    - Workflow management: define and execute case processing workflows
+    - Service coordination: coordinate between departments and partners
+    - Timeline recording: maintain detailed case activity timelines
+    - Schedule management: manage case-related appointments and deadlines
+
+    Provides customer case tracking, workflow management, service coordination,
+    timeline recording, and schedule management capabilities.
+
+# ===========================================================================================
+# Lifecycle Configuration
+# ===========================================================================================
+lifecycle:
+  # Startup priority (lower number starts first)
+  startup-order: 110
+
+  # Required modules (must be ready before this module starts)
+  depends-on:
+    - "brix-app-booking"
+
+  # Health check configuration
+  health-check:
+    path: "/actuator/health/case"
+    interval: 30
+    timeout: 5
+
+# ===========================================================================================
+# Capability Requirements
+# ===========================================================================================
+capabilities:
+  # Required capabilities (module fails to start if missing)
+  required:
+    - event-bus
+    - state-store
+    - http
+
+  # Optional capabilities (module degrades gracefully if missing)
+  optional:
+    - workflow
+    - notification
+    - file-storage
+
+# ===========================================================================================
+# Event Declarations
+# ===========================================================================================
+events:
+  # Published events
+  publishes:
+    - type: "io.brix.plugin.case.event.CaseCreated"
+      description: "Published when a new case is created"
+
+    - type: "io.brix.plugin.case.event.CaseUpdated"
+      description: "Published when a case is updated"
+
+    - type: "io.brix.plugin.case.event.CaseStatusChanged"
+      description: "Published when a case status transitions"
+
+    - type: "io.brix.plugin.case.event.CaseAssigned"
+      description: "Published when a case is assigned to an agent"
+
+    - type: "io.brix.plugin.case.event.CaseClosed"
+      description: "Published when a case is closed"
+
+  # Subscribed events
+  subscribes:
+    - type: "io.brix.plugin.booking.event.BookingCreated"
+      description: "When a booking is created, optionally create a related case"
+
+    - type: "io.brix.plugin.booking.event.BookingConfirmed"
+      description: "When a booking is confirmed, update the related case status"
+
+    - type: "io.brix.plugin.booking.event.PaymentCompleted"
+      description: "When payment is completed, update case payment status"
+
+# ===========================================================================================
+# Permission Declarations
+# ===========================================================================================
+permissions:
+  - id: "case:manage"
+    name: "Manage Cases"
+    description: "Full management access to cases"
+
+  - id: "case:read"
+    name: "View Cases"
+    description: "Read-only access to case information"
+
+  - id: "case:create"
+    name: "Create Cases"
+    description: "Permission to create new cases"
+
+  - id: "case:assign"
+    name: "Assign Cases"
+    description: "Permission to assign cases to agents"
+
+  - id: "case:close"
+    name: "Close Cases"
+    description: "Permission to close cases"
+
+# ===========================================================================================
+# Configuration Declarations
+# ===========================================================================================
+config:
+  - key: "case.auto-close-after-days"
+    type: "int"
+    default: "90"
+    description: "Number of days after which inactive cases are automatically closed"
+
+  - key: "case.max-attachments"
+    type: "int"
+    default: "50"
+    description: "Maximum number of attachments allowed per case"
+
+# ===========================================================================================

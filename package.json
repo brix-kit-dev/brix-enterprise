@@ -1,6 +1,6 @@
-﻿{
-  "name": "@brix/enterprise-monorepo",
-  "version": "3.1.0",
+{
+  "name": "@brix-sdk/enterprise-monorepo",
+  "version": "3.2.0",
   "private": true,
   "description": "Brix Enterprise - Commercial Extensions (PROPRIETARY)",
   "keywords": [
@@ -29,12 +29,26 @@
     "prepare": "echo 'Brix Enterprise workspace ready'"
   },
   "devDependencies": {
+    "@brix-sdk/shared-runtime-web": "link:../brix/packages/@brix/shared-runtime/shared-runtime-web",
     "@changesets/cli": "^2.27.1",
     "@types/node": "^20.10.0",
     "eslint": "^8.56.0",
     "prettier": "^3.2.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@brix-sdk/shared-runtime-web"
+      ]
+    },
+    "overrides": {
+      "@brix-sdk/shared-runtime-web": "link:../brix/packages/@brix/shared-runtime/shared-runtime-web",
+      "@brix-sdk/runtime-sdk-react": "link:../brix/packages/@brix/runtime-sdk/runtime-sdk-react",
+      "@brix-sdk/runtime-sdk-api-web": "link:../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web",
+      "@brix-sdk/platform-tenant-web": "link:../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web"
+    }
   },
   "engines": {
     "node": ">=18.0.0",

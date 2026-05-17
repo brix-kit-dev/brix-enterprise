@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   =========================================================
-  Shinwa Solutions - 业务应用模块集合
+  Brix Enterprise Solutions - 业务应用模块集合
   
   本仓库包含所有基于 Runtime Shell 架构的商业业务模块。
   每个模块仅依赖 runtime-sdk-api 能力契约，
   不直接依赖任何基础设施（Kafka/Redis/etc.）。
   
-  版本: 3.0.0-SNAPSHOT
+  版本: 3.2.0-SNAPSHOT
   日期: 2026-01-27
   =========================================================
 -->
@@ -17,56 +17,65 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- ==================== 项目坐标 ==================== -->
-    <groupId>com.shinwa.solutions</groupId>
-    <artifactId>shinwa-solutions-parent</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <groupId>io.brix.enterprise.solutions</groupId>
+    <artifactId>brix-enterprise-solutions-parent</artifactId>
+    <version>3.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Shinwa Solutions Parent</name>
+    <name>Brix Enterprise Solutions Parent</name>
     <description>
-        Shinwa 商业业务模块集合
+        Brix Enterprise 商业业务模块集合
         
         包含：
-        - shinwa-app-booking: 预约管理
-        - shinwa-app-identity: 用户身份
-        - shinwa-app-messenger: 消息通知
-        - shinwa-app-carousel: 轮播组件
-        - shinwa-app-partners: 合作方目录
-        - shinwa-app-products: 产品目录
-        - shinwa-app-storage: 存储服务
-        - shinwa-app-contracts: 合同管理
-        - shinwa-app-workflow: 工作流引擎
-        - shinwa-app-intake: 医疗进件
-        - shinwa-app-compliance: 风控合规
+        - app-booking: 预约管理
+        - app-identity: 用户身份
+        - app-messenger: 消息通知
+        - app-carousel: 轮播组件
+        - app-partners: 合作方目录
+        - app-products: 产品目录
+        - app-storage: 存储服务
+        - app-contracts: 合同管理
+        - app-workflow: 工作流引擎
+        - app-intake: 医疗进件
+        - app-compliance: 风控合规
         
         所有模块仅依赖 Runtime Capability Contract，不依赖基础设施。
     </description>
 
     <!-- ==================== 子模块 ==================== -->
     <modules>
+        <!-- Shared cross-plugin contracts -->
+        <module>shared-events</module>
+        
         <!-- P0: 试点模块 -->
-        <module>shinwa-app-booking</module>
+        <module>app-booking</module>
         
         <!-- P1: 核心模块 -->
-        <module>shinwa-app-identity</module>
-        <module>shinwa-app-messenger</module>
+        <module>app-identity</module>
+        <module>app-messenger</module>
         
         <!-- P2: 基础模块 -->
-        <module>shinwa-app-carousel</module>
-        <module>shinwa-app-partners</module>
-        <module>shinwa-app-products</module>
+        <module>app-carousel</module>
+        <module>app-partners</module>
+        <module>app-products</module>
         
         <!-- P3: 功能模块 -->
-        <module>shinwa-app-storage</module>
-        <module>shinwa-app-contracts</module>
+        <module>app-storage</module>
+        <module>app-contracts</module>
         
         <!-- P4: 案例管理 -->
-        <module>shinwa-app-case</module>
+        <module>app-case</module>
         
-        <!-- P5: 复杂模块 (待创建)
-        <module>shinwa-app-workflow</module>
-        <module>shinwa-app-intake</module>
-        <module>shinwa-app-compliance</module>
+        <!-- P5: 进件管理 -->
+        <module>app-intake</module>
+        
+        <!-- P6: 复杂模块 -->
+        <module>app-compliance</module>
+
+        <!-- P7: 租户管理 -->
+        <module>app-tenant</module>
+        <!--
+        <module>app-workflow</module>
         -->
     </modules>
 
@@ -80,10 +89,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Runtime SDK 版本（开源核心层） -->
-        <runtime-sdk.version>3.0.0-SNAPSHOT</runtime-sdk.version>
+        <runtime-sdk.version>3.2.0</runtime-sdk.version>
         
         <!-- Spring Boot 版本 -->
         <spring-boot.version>3.2.2</spring-boot.version>
+
+        <!-- Flyway 版本（与 platform-commons 对齐，覆盖 Spring Boot BOM 的 9.x） -->
+        <flyway.version>11.8.0</flyway.version>
         
         <!-- 持久层依赖 -->
         <jakarta-persistence.version>3.1.0</jakarta-persistence.version>
@@ -101,7 +113,7 @@
         <archunit.version>1.2.1</archunit.version>
         
         <!-- 架构守护 -->
-        <architecture-guard.version>3.1.0-SNAPSHOT</architecture-guard.version>
+        <architecture-guard.version>3.2.0</architecture-guard.version>
         
         <!-- OpenAPI 文档（Phase 5: OpenAPI 驱动的前后端契约自动化） -->
         <swagger-annotations.version>2.2.28</swagger-annotations.version>
@@ -130,19 +142,31 @@
             </dependency>
             <!-- runtime-sdk 已废弃，合并到 runtime-sdk-api -->
 
+            <!-- Flyway PostgreSQL（Flyway 10+ 必需的独立模块） -->
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-database-postgresql</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+
             <!-- ========== 业务模块 API（跨模块事件契约）========== -->
             <dependency>
-                <groupId>com.shinwa.solutions</groupId>
+                <groupId>io.brix.enterprise.solutions</groupId>
+                <artifactId>shared-events</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix.enterprise.solutions</groupId>
                 <artifactId>identity-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.shinwa.solutions</groupId>
+                <groupId>io.brix.enterprise.solutions</groupId>
                 <artifactId>booking-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.shinwa.solutions</groupId>
+                <groupId>io.brix.enterprise.solutions</groupId>
                 <artifactId>messenger-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -158,7 +182,7 @@
 
             <!-- ========== Platform Commons（开源基础能力）========== -->
             <!-- [红线 R2 修复] 已移除 io.brix.platform:platform-auth 依赖。
-                 安全能力通过 runtime-sdk-api 中的 AuthContextCapability 契约获取。-->
+                 安全能力通过 runtime-sdk-api 中的 AuthCapability 契约获取。-->
 
             <!-- ========== 持久层（JPA 允许保留）========== -->
             <dependency>
@@ -389,34 +413,62 @@
                             </goals>
                             <configuration>
                                 <rules>
-                                    <!-- 禁止直接依赖基础设施 -->
+                                    <!--
+                                        Phase 1 / R1.1 core adjudication:
+                                        JPA and Jakarta persistence contracts are allowed in plugin-core.
+                                        Direct infrastructure clients and non-JPA data stores remain forbidden.
+                                    -->
                                     <bannedDependencies>
                                         <excludes>
-                                            <!-- 禁止直接依赖 Kafka -->
+                                            <!-- Kafka / event middleware clients -->
                                             <exclude>org.apache.kafka:kafka-clients</exclude>
                                             <exclude>org.springframework.kafka:spring-kafka</exclude>
                                             
-                                            <!-- 禁止直接依赖 Redis -->
+                                            <!-- Redis / cache middleware clients -->
+                                            <exclude>org.springframework.boot:spring-boot-starter-data-redis</exclude>
                                             <exclude>redis.clients:jedis</exclude>
                                             <exclude>io.lettuce:lettuce-core</exclude>
                                             <exclude>org.springframework.data:spring-data-redis</exclude>
                                             
-                                            <!-- 禁止直接依赖 MinIO -->
+                                            <!-- AMQP / JMS middleware clients -->
+                                            <exclude>org.springframework.boot:spring-boot-starter-amqp</exclude>
+                                            <exclude>org.springframework.amqp:spring-rabbit</exclude>
+                                            <exclude>com.rabbitmq:amqp-client</exclude>
+                                            <exclude>org.springframework.boot:spring-boot-starter-activemq</exclude>
+                                            <exclude>org.springframework.boot:spring-boot-starter-artemis</exclude>
+
+                                            <!-- Object storage clients -->
                                             <exclude>io.minio:minio</exclude>
                                             
-                                            <!-- 禁止直接依赖 AWS SDK -->
+                                            <!-- Cloud provider SDKs -->
                                             <exclude>software.amazon.awssdk:*</exclude>
+                                            <exclude>com.amazonaws:*</exclude>
+
+                                            <!-- Non-JPA data access stacks. JPA remains allowed as persistence contract. -->
+                                            <exclude>org.mybatis:mybatis</exclude>
+                                            <exclude>org.mybatis:mybatis-spring</exclude>
+                                            <exclude>org.mybatis.spring.boot:mybatis-spring-boot-starter</exclude>
+                                            <exclude>org.springframework.boot:spring-boot-starter-data-jdbc</exclude>
+                                            <exclude>org.springframework.data:spring-data-jdbc</exclude>
+                                            <exclude>org.springframework.boot:spring-boot-starter-data-mongodb</exclude>
+                                            <exclude>org.springframework.data:spring-data-mongodb</exclude>
+                                            <exclude>org.mongodb:mongodb-driver-sync</exclude>
+                                            <exclude>org.springframework.boot:spring-boot-starter-data-elasticsearch</exclude>
+                                            <exclude>org.springframework.data:spring-data-elasticsearch</exclude>
+                                            <exclude>co.elastic.clients:elasticsearch-java</exclude>
+                                            <exclude>org.elasticsearch.client:elasticsearch-rest-client</exclude>
                                             
-                                            <!-- 禁止直接依赖 infra-adapters（应由 Host 层组装）-->
+                                            <!-- Direct infra-adapters are assembled by Host, not enterprise plugins. -->
                                             <exclude>io.brix:infra-adapter-kafka</exclude>
                                             <exclude>io.brix:infra-adapter-redis</exclude>
                                             <exclude>io.brix:infra-adapter-minio</exclude>
                                             <exclude>io.brix:infra-adapter-otel</exclude>
                                         </excludes>
                                         <message>
-                                            [架构约束] 业务模块禁止直接依赖基础设施！
-                                            请通过 Capability 接口（EventBusCapability、StateStoreCapability 等）访问基础设施。
-                                            参考：v3.0 运行壳架构设计蓝图 4.2.1 依赖规则
+                                            [Architecture Guard] Enterprise plugins must not depend on infrastructure clients directly.
+                                            Use Runtime Capability contracts such as EventBusCapability, StateStoreCapability,
+                                            CacheCapability, HttpCapability, and StorageCapability. JPA/Jakarta persistence
+                                            contracts remain allowed in plugin-core by the v3.0.9 R1.1 adjudication.
                                         </message>
                                         <searchTransitive>true</searchTransitive>
                                     </bannedDependencies>

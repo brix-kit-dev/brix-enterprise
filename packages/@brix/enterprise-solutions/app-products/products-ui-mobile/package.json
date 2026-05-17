@@ -1,0 +1,28 @@
+{
+  "name": "@brix-sdk/enterprise-products-ui-mobile",
+  "version": "3.2.0",
+  "private": true,
+  "description": "Product Package Module - Mobile UI (React Native + Paper)",
+  "main": "src/index.tsx",
+  "scripts": {
+    "start": "expo start --port 4005",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "lint": "eslint src --ext ts,tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react-native-paper": "^5.12.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.72.0",
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "@brix-sdk/runtime-sdk-api-mobile": "link:../../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-mobile",
+    "react": "^18.2.0",
+    "react-native": "*",
+    "expo": "*"
+  }
+}

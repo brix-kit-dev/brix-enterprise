@@ -1,0 +1,13 @@
+{
+  "name": "@brix-sdk/enterprise-carousel-app",
+  "version": "3.2.0",
+  "private": true,
+  "description": "轮播应用 - v3.0 Manifest-Driven 架构",
+  "scripts": {
+    "generate:api": "pnpm --filter @brix-sdk/enterprise-carousel-shared generate:api",
+    "build": "pnpm -r run build",
+    "build:shared": "pnpm --filter @brix-sdk/enterprise-carousel-shared build",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean"
+  }
+}

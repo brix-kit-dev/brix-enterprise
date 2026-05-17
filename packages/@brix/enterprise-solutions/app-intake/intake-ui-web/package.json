@@ -1,0 +1,37 @@
+{
+  "name": "@brix-sdk/enterprise-intake-ui",
+  "version": "3.2.0",
+  "description": "Intake 模块 UI 模块 - 资料收集界面",
+  "private": true,
+  "scripts": {
+    "dev": "rspack serve --mode development",
+    "build": "rspack build --mode production",
+    "preview": "rspack serve --mode production",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@brix-sdk/enterprise-intake-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@rspack/cli": "^1.1.0",
+    "@rspack/core": "^1.1.0",
+    "@rspack/plugin-react-refresh": "^1.0.0",
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.5",
+    "eslint": "^9.0.0",
+    "react-refresh": "^0.14.2",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@brix-sdk/shared-runtime-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-api-web": "^3.2.0",
+    "@brix-sdk/runtime-sdk-react": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0"
+  },
+  "author": "Brix Team",
+  "license": "UNLICENSED"
+}

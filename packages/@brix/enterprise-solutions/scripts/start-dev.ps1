@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
-    Shinwa Solutions - Unified Development Startup Script (Windows)
+    Brix Enterprise Solutions - Unified Development Startup Script (Windows)
 
 .DESCRIPTION
-    This script starts the development environment for any shinwa-app-* module.
+    This script starts the development environment for any app-* module.
     It handles:
     - Docker infrastructure (PostgreSQL, Redis, MailHog)
     - Backend services (Spring Boot via Maven)
     - Frontend dev server (if applicable)
     
     使用说明：
-    - 此脚本为所有 shinwa-app-* 模块提供统一的开发环境启动方式
+    - 此脚本为所有 app-* 模块提供统一的开发环境启动方式
     - 支持跳过特定组件以加速开发循环
 
 .PARAMETER Module
@@ -64,7 +64,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $RootDir = Split-Path -Parent $ScriptDir
-$ModulePath = Join-Path $RootDir "shinwa-app-$Module"
+$ModulePath = Join-Path $RootDir "app-$Module"
 $ComposeFile = Join-Path $ScriptDir "docker-compose-dev.yml"
 
 # Colors for output
@@ -79,7 +79,7 @@ function Write-Error { param([string]$Text) Write-Host "  ✗ $Text" -Foreground
 # 前置检查
 # ============================================================
 
-Write-Header "Shinwa Solutions Dev Environment - Module: $Module"
+Write-Header "Brix Enterprise Solutions Dev Environment - Module: $Module"
 Write-Host "  Root: $RootDir"
 Write-Host "  Module: $ModulePath"
 
@@ -146,7 +146,7 @@ if (-not $SkipDocker) {
         $retryCount = 0
         
         while ($retryCount -lt $maxRetries) {
-            $pgReady = docker exec shinwa-dev-postgres pg_isready -U brix 2>&1
+            $pgReady = docker exec brix-dev-postgres pg_isready -U brix 2>&1
             if ($pgReady -match "accepting connections") {
                 Write-Host "    PostgreSQL: Ready" -ForegroundColor Gray
                 break
@@ -240,4 +240,4 @@ if (-not $SkipFrontend) {
 }
 
 Write-Header "Development Environment Ready"
-Write-Host "  Module: shinwa-app-$Module" -ForegroundColor Green
+Write-Host "  Module: app-$Module" -ForegroundColor Green

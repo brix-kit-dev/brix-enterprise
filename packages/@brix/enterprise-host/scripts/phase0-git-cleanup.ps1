@@ -47,9 +47,9 @@ $repositories = @(
     "D:\1.Sources\infra-adapters",
     "D:\1.Sources\platform-commons",
     "D:\1.Sources\platform-devtools",
-    "D:\1.Sources\shinwa-platform",
-    "D:\1.Sources\shinwa-host-assembly",
-    "D:\1.Sources\shinwa-solutions"
+    "D:\1.Sources\brix-platform",
+    "D:\1.Sources\enterprise-host",
+    "D:\1.Sources\enterprise-solutions"
 )
 
 # Files to remove from Git history
