@@ -103,7 +103,7 @@
         
         <!-- 工具类 -->
         <lombok.version>1.18.30</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
         <jackson.version>2.16.1</jackson.version>
         
         <!-- 测试框架 -->
