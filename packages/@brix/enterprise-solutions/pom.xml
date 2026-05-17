@@ -110,7 +110,7 @@
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
         <assertj.version>3.24.2</assertj.version>
-        <archunit.version>1.2.1</archunit.version>
+        <archunit.version>1.4.2</archunit.version>
         
         <!-- 架构守护 -->
         <architecture-guard.version>3.2.0</architecture-guard.version>
