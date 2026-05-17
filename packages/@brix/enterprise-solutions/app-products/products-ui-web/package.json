@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@brix-sdk/enterprise-products-shared": "link:../products-shared",
-    "@tanstack/react-query": "^5.28.4"
+    "@tanstack/react-query": "^5.100.10"
   },
   "devDependencies": {
     "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
