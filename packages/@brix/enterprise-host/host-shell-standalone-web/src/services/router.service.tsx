@@ -31,7 +31,8 @@
 
 import { useLocation } from 'react-router-dom';
 import { ReactRouterAdapter, type ReactRouterAdapter as ReactRouterAdapterType } from '@brix-sdk/platform-router-web';
-import { ProtectedLayout, type ProtectedLayoutProps, type SidebarMenuItem, type PageNavigationService } from '@brix-sdk/platform-frame-web';
+import { ProtectedLayout, type ProtectedLayoutProps, type PageNavigationService } from '@brix-sdk/platform-frame-web';
+import type { SidebarMenuItem } from '@brix-sdk/platform-frame-web/components';
 import type { AggregatedMenuItem } from '@brix-sdk/runtime-orchestrator-web';
 import { getAuthService } from './auth.service';
 

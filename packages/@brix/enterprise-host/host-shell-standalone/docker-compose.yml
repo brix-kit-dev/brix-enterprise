@@ -83,17 +83,35 @@ services:
       # Fallback Auth 配置（standalone 模式下启用 fallback 认证能力）
       - BRIX_FALLBACK_AUTH_ENABLED=true
       # =====================================================
-      # SUPER_ADMIN Bootstrap (Layer 2C — one-shot, idempotent)
+      # Platform Admin Setup + Bootstrap (Layer 2C)
       # =====================================================
-      # SECURITY: Credentials must be provided via .env file.
-      # Bootstrap is silently skipped once ≥1 active SUPER_ADMIN exists.
-      # Operator MUST rotate the seeded password and enroll MFA on first login.
+      # SECURITY: setup links are delivered by NotificationCapability only.
+      # Bootstrap uses a setup code to open a short-lived BOOTSTRAP_SETUP
+      # session; no reusable bootstrap password is accepted or stored.
       # =====================================================
+      - BRIX_PLATFORM_MFA_ISSUER=${BRIX_PLATFORM_MFA_ISSUER:-Brix}
+      - BRIX_PLATFORM_MFA_ENCRYPTION_KEY=${BRIX_PLATFORM_MFA_ENCRYPTION_KEY:?BRIX_PLATFORM_MFA_ENCRYPTION_KEY is required. Create .env file with a base64-encoded 32-byte random value.}
+      - BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:?BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is required, e.g. https://console.example.com/platform/setup}
+      - BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=${BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM:-}
+      - BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS=${BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS:-86400}
+      - BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY=${BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY:-false}
+      - BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=${BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED:-false}
+      # SMTP is the production NotificationCapability adapter for setup links.
+      # Leave these unset when using docker-compose.dev-smtp.yml (Mailpit) or
+      # when another NotificationCapability bean is provided by the runtime.
+      - SPRING_MAIL_HOST=${SPRING_MAIL_HOST:-}
+      - SPRING_MAIL_PORT=${SPRING_MAIL_PORT:-}
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME:-}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD:-}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED=${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED:-}
       - BRIX_BOOTSTRAP_SUPER_ADMIN_ENABLED=${BRIX_BOOTSTRAP_SUPER_ADMIN_ENABLED:-true}
       - BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL=${BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL:?BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL is required. Create .env file with this value.}
-      - BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD=${BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD:?BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD is required. Create .env file with this value.}
       - BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME=${BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME:-Super Admin}
-      - BRIX_BOOTSTRAP_SUPER_ADMIN_REQUIRE_MFA=${BRIX_BOOTSTRAP_SUPER_ADMIN_REQUIRE_MFA:-false}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE=${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE:?BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE is required. Create .env file with this value.}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS=${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS:-900}
+      - BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS=${BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS:-300}
     depends_on:
       postgres:
         condition: service_healthy

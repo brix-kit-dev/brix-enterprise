@@ -359,6 +359,11 @@ export default defineConfig({
     port: parseInt(envVars.VITE_PORT || process.env.VITE_PORT || '3001', 10),
     hot: isDev,          // Only enable HMR in development mode (Constraint 8)
     liveReload: isDev,   // Production serve uses contenthash assets; auto reload causes hash churn loops.
+    // The HTML template lives under public/index.html, but the dev server must
+    // return the HtmlRspackPlugin-generated document so JS/CSS assets are
+    // injected. Serving public/index.html directly leaves the app on the static
+    // "loading" placeholder forever and bypasses SPA history fallback.
+    static: false,
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: true,

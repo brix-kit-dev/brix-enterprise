@@ -146,22 +146,36 @@ brix:
           - app-storage
           - app-intake
           - app-compliance
-  # ==================== Super-Admin Bootstrap (Layer 2C) ====================
-  # One-shot, idempotent bootstrap for the first SUPER_ADMIN account.
-  # Runs at startup via SuperAdminBootstrapRunner; silently skipped when ≥1
-  # active SUPER_ADMIN already exists (idempotency guarantee).
-  # Credentials MUST be sourced from a secret-store (env vars / Vault / mounted secrets).
-  # The operator MUST rotate the seeded password and enroll MFA on first login.
-  # NOTE: require-mfa defaults to false — A1 MFA is a stub (throws MFA_REQUIRED).
-  #       Flip to true once the MFA enrollment flow is production-ready.
+  # ==================== Platform Admin Setup Links (Layer 2C) ====================
+  # Host only supplies externalized delivery metadata. The setup token is created
+  # and delivered by platform-admin via NotificationCapability.
   platform:
+    mfa:
+      issuer: ${BRIX_PLATFORM_MFA_ISSUER:Brix}
+      encryption-key: ${BRIX_PLATFORM_MFA_ENCRYPTION_KEY:}
+
+    admin:
+      setup:
+        base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}
+        mail-from: ${BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM:}
+        token-ttl-seconds: ${BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS:86400}
+        return-url-for-dev-only: ${BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY:false}
+        logging-notification-enabled: ${BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED:false}
+
+    # ==================== Super-Admin Bootstrap (Layer 2C) ====================
+    # v2.0 bootstrap creates only a passwordless BOOTSTRAP anchor in
+    # IdentityStatus.PENDING_SETUP. It never seeds a formal admin password.
+    # The setup code opens a short-lived Bootstrap Setup session, then
+    # /api/platform/bootstrap/create-first-admin issues a setup link for the
+    # first formal PLATFORM_SUPER_ADMIN.
     bootstrap:
       super-admin:
         enabled: ${BRIX_BOOTSTRAP_SUPER_ADMIN_ENABLED:true}
         email: ${BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL:}
-        password: ${BRIX_BOOTSTRAP_SUPER_ADMIN_PASSWORD:}
         username: ${BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME:Super Admin}
-        require-mfa: ${BRIX_BOOTSTRAP_SUPER_ADMIN_REQUIRE_MFA:false}
+        setup-code: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE:}
+        setup-code-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS:900}
+        bootstrap-session-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS:300}
   shell:
     standalone:
       enabled: true

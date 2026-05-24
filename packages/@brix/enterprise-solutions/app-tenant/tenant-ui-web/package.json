@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rspack build",
     "dev": "rspack serve",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

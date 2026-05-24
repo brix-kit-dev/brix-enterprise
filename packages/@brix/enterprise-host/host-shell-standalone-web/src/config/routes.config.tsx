@@ -16,9 +16,11 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
 import {
   renderDynamicRoutes,
+  type AggregatedRoute,
 } from '@brix-sdk/platform-frame-web';
 import { AuthGuardRoute } from '@brix-sdk/platform-router-web';
 import { OAuthCallbackPage } from '@brix-sdk/platform-auth-web';
+import type { RemoteComponentProps } from '@brix-sdk/runtime-sdk-react';
 // Platform admin module — only the module entry is imported; no pages/hooks/repos.
 import {
   platformAdminProtectedRoutes,
@@ -32,6 +34,7 @@ import { RequireViewMode } from '@brix-sdk/platform-tenant-web';
 import { VIEW_MODE_PLATFORM_ADMIN } from '@brix-sdk/runtime-sdk-api-web';
 
 import type { ProtectedLayoutWithLocationProps } from './routes.types';
+import type { HostConfig } from '../types';
 
 interface AuthUserShape {
   readonly role?: string;
@@ -74,26 +77,19 @@ export interface AppRoutesProps {
   /** Whether plugin routes are still loading. */
   readonly pluginsLoading: boolean;
   /** Discovered plugin routes. */
-  readonly pluginRoutes: Array<unknown>;
+  readonly pluginRoutes: AggregatedRoute[];
   /** Plugin menu items for sidebar. */
   readonly pluginMenus: Array<unknown>;
   /** Platform-admin public routes with Host-provided session installer. */
   readonly platformAdminPublicRoutes: ReadonlyArray<PlatformAdminRouteEntry>;
   /** Remote component renderer from plugin loader. */
-  readonly RemoteComponent: React.ComponentType<{ scope: string; module: string }>;
+  readonly RemoteComponent: React.ComponentType<RemoteComponentProps>;
   /** Layout wrapper component. */
   readonly LayoutWrapper: React.ComponentType<ProtectedLayoutWithLocationProps>;
   /** Host configuration for branding and layout. */
-  readonly hostConfig: {
-    branding: Record<string, unknown>;
-    layout?: {
-      sidebarWidth?: number;
-      sidebarCollapsedWidth?: number;
-      headerHeight?: number;
-    };
-  };
+  readonly hostConfig: HostConfig;
   /** Sidebar menu items (already converted). */
-  readonly sidebarMenuItems: Array<unknown>;
+  readonly sidebarMenuItems: ProtectedLayoutWithLocationProps['menuItems'];
   /**
    * View-mode checker (Phase 2 / C-4). Receives a route's allowed-mode
    * set and returns `true` if the active session may render the route.
@@ -129,11 +125,16 @@ export function AppRoutes({
   const defaultAuthenticatedPath = isPlatformAdminUser(authService.getUser())
     ? PLATFORM_ADMIN_ROUTES.DASHBOARD
     : '/dashboard';
+  const layoutBranding = {
+    appName: hostConfig.branding.appName,
+    logo: typeof hostConfig.branding.logo === 'string' ? hostConfig.branding.logo : undefined,
+    primaryColor: hostConfig.branding.primaryColor,
+  };
 
   const renderProtectedLayout = (redirectTo: string) => (
     <AuthGuardRoute isAuthenticated={authService.isAuthenticated} redirectTo={redirectTo}>
       <LayoutWrapper
-        branding={hostConfig.branding}
+        branding={layoutBranding}
         dimensions={{
           sidebarWidth: hostConfig.layout?.sidebarWidth,
           sidebarCollapsedWidth: hostConfig.layout?.sidebarCollapsedWidth,
@@ -157,9 +158,25 @@ export function AppRoutes({
         path="/auth/callback/:provider"
         element={
           <OAuthCallbackPage
-            onHandleCallback={(provider, code, state) =>
-              authService.handleOAuthCallback(provider, code, state)
-            }
+            onHandleCallback={async (provider, code, state) => {
+              try {
+                const result = await authService.handleOAuthCallback(provider, code, state);
+                if (
+                  result &&
+                  typeof result === 'object' &&
+                  'success' in result &&
+                  typeof (result as { success?: unknown }).success === 'boolean'
+                ) {
+                  return result as { success: boolean; error?: string };
+                }
+                return { success: true };
+              } catch (error) {
+                return {
+                  success: false,
+                  error: error instanceof Error ? error.message : 'OAuth callback failed',
+                };
+              }
+            }}
             onSuccess={() => navigationService.navigate('/dashboard', { replace: true })}
           />
         }

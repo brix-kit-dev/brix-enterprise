@@ -86,15 +86,18 @@
         <dependency>
             <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>tenant-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>tenant-core</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>tenant-server</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -137,6 +140,7 @@
         <dependency>
             <groupId>io.brix.platform</groupId>
             <artifactId>platform-auth</artifactId>
+            <version>${runtime-sdk.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -144,6 +148,7 @@
         <dependency>
             <groupId>io.brix.platform</groupId>
             <artifactId>platform-auth-servlet</artifactId>
+            <version>${runtime-sdk.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -151,6 +156,15 @@
         <dependency>
             <groupId>io.brix.platform</groupId>
             <artifactId>platform-auth-web</artifactId>
+            <version>${runtime-sdk.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Platform Admin — /api/platform/auth/login controller under test -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-admin</artifactId>
+            <version>${runtime-sdk.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

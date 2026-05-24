@@ -45,3 +45,18 @@ coverage/
 .cache/
 .parcel-cache/
 .turbo/
+__pycache__/
+*.py[cod]
+
+# Local runtime state and uploaded storage files
+scripts/.state/
+packages/@brix/enterprise-solutions/app-storage/storage-server/data/files/
+
+# Browser automation/debug profiles
+.chrome*/
+tmp/ui-checks/chrome-profile*/
+tmp/ui-checks/*.png
+after-*.png
+final-*.png
+repro-*.png
+verified-*.png

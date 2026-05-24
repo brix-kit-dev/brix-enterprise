@@ -3,31 +3,56 @@
  *
  * PROPRIETARY AND CONFIDENTIAL
  * This software requires a valid Brix Enterprise license.
- * 
+ *
  * @fileoverview TenantCreate Page (View Layer)
- * All UI text is i18n-driven via useTranslation().
+ * Commercial-grade multi-step wizard for provisioning a new enterprise tenant.
+ * All UI text is i18n-driven via useI18n(). All colors via useTheme().tokens.
+ * All components via useUI(). Zero direct MUI / raw-HTML heading usage.
  */
 
 import { useUI, useI18n, useTheme } from '@brix-sdk/runtime-sdk-react';
 import { useTenantCreate } from '../../hooks';
 
+// =========================================
+// Presentation-layer constant: feature key to Material Icon name.
+// This is a View concern (display mapping), not business logic.
+// =========================================
+const FEATURE_ICONS: Record<string, string> = {
+  partners: 'handshake',
+  booking: 'calendar_today',
+  products: 'inventory_2',
+  messenger: 'chat',
+  storage: 'folder_open',
+};
+const DEFAULT_FEATURE_ICON = 'extension';
+
 /**
  * TenantCreate Page Component
+ *
+ * Architecture layer: Plugin View (Layer 1).
+ * Consumes ViewModel via `useTenantCreate()` hook; zero business logic here.
  */
 export function TenantCreatePage() {
   const { t } = useI18n('tenant');
   const { tokens } = useTheme();
+
   // =========================================
-  // UI Components (via UIAdapter)
+  // UI Components (via UIAdapter, Constraint 9)
   // =========================================
   const {
     Card,
+    Box,
+    Stack,
     Button,
     Input,
     FormItem,
     Switch,
     Divider,
     Steps,
+    Typography,
+    Tag,
+    Alert,
+    Icon,
     message,
   } = useUI();
 
@@ -35,240 +60,395 @@ export function TenantCreatePage() {
   // ViewModel Hook
   // =========================================
   const { state, actions } = useTenantCreate();
+  const pageMaxWidth = tokens.breakpoints.md;
+  const featureIconBoxSize = tokens.spacing(5);
+  const headerIconBoxSize = tokens.space.xxl;
+  const headerIconSize = tokens.space.lg;
+  const featureIconSize = tokens.spacing(2.5);
+  const tagIconSize = tokens.spacing(1.75);
+  const confirmLabelColumn = `minmax(${tokens.spacing(15)}, ${tokens.spacing(18)}) minmax(0, 1fr)`;
 
   // =========================================
   // Step Content Renderers
   // =========================================
+
   const renderBasicInfoStep = () => (
-    <div className="step-content">
-      <h3>{t('create.stepBasicInfo')}</h3>
-      <FormItem
-        label={t('create.tenantCode')}
-        required
-        helperText={state.errors.code || t('create.tenantCodeHelper')}
-        validateStatus={state.errors.code ? 'error' : undefined}
-      >
-        <Input
-          placeholder={t('create.tenantCodePlaceholder')}
-          value={state.form.code}
-          onChange={(e) => actions.updateForm({ code: e.target.value })}
-          disabled={state.isSubmitting}
-          data-testid="tenant-create-code"
-        />
-      </FormItem>
+    <Stack direction="column" style={{ gap: tokens.space.lg }}>
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          {t('create.stepBasicInfo')}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t('create.basicInfoDesc')}
+        </Typography>
+      </Box>
 
-      <FormItem
-        label={t('create.tenantName')}
-        required
-        helperText={state.errors.name}
-        validateStatus={state.errors.name ? 'error' : undefined}
-      >
-        <Input
-          placeholder={t('create.tenantNamePlaceholder')}
-          value={state.form.name}
-          onChange={(e) => actions.updateForm({ name: e.target.value })}
-          disabled={state.isSubmitting}
-          data-testid="tenant-create-name"
-        />
-      </FormItem>
+      <Stack direction="column" style={{ gap: tokens.space.md }}>
+        <FormItem
+          label={t('create.tenantCode')}
+          required
+          helperText={state.errors.code || t('create.tenantCodeHelper')}
+          validateStatus={state.errors.code ? 'error' : undefined}
+        >
+          <Input
+            placeholder={t('create.tenantCodePlaceholder')}
+            value={state.form.code}
+            onChange={(e) => actions.updateForm({ code: e.target.value })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-code"
+          />
+        </FormItem>
 
-      <FormItem label={t('create.description')}>
-        <Input
-          placeholder={t('create.descriptionPlaceholder')}
-          value={state.form.description}
-          onChange={(e) => actions.updateForm({ description: e.target.value })}
-          disabled={state.isSubmitting}
-          data-testid="tenant-create-description"
-        />
-      </FormItem>
+        <Alert severity="warning" style={{ marginTop: tokens.space.xs }}>
+          {t('create.tenantCodeTip')}
+        </Alert>
 
-      <FormItem
-        label={t('create.contactEmail')}
-        helperText={state.errors.contactEmail}
-        validateStatus={state.errors.contactEmail ? 'error' : undefined}
-      >
-        <Input
-          type="email"
-          placeholder={t('create.contactEmailPlaceholder')}
-          value={state.form.contactEmail}
-          onChange={(e) => actions.updateForm({ contactEmail: e.target.value })}
-          disabled={state.isSubmitting}
-          data-testid="tenant-create-contact-email"
-        />
-      </FormItem>
-    </div>
+        <FormItem
+          label={t('create.tenantName')}
+          required
+          helperText={state.errors.name}
+          validateStatus={state.errors.name ? 'error' : undefined}
+        >
+          <Input
+            placeholder={t('create.tenantNamePlaceholder')}
+            value={state.form.name}
+            onChange={(e) => actions.updateForm({ name: e.target.value })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-name"
+          />
+        </FormItem>
+
+        <FormItem label={t('create.description')}>
+          <Input
+            placeholder={t('create.descriptionPlaceholder')}
+            value={state.form.description}
+            onChange={(e) => actions.updateForm({ description: e.target.value })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-description"
+          />
+        </FormItem>
+
+        <FormItem
+          label={t('create.contactEmail')}
+          helperText={state.errors.contactEmail}
+          validateStatus={state.errors.contactEmail ? 'error' : undefined}
+        >
+          <Input
+            type="email"
+            placeholder={t('create.contactEmailPlaceholder')}
+            value={state.form.contactEmail}
+            onChange={(e) => actions.updateForm({ contactEmail: e.target.value })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-contact-email"
+          />
+        </FormItem>
+      </Stack>
+    </Stack>
   );
 
   const renderFeaturesStep = () => (
-    <div className="step-content">
-      <h3>{t('create.stepFeatures')}</h3>
-      <p style={{ color: tokens.colors.text.secondary, marginBottom: 24 }}>
-        {t('create.featuresDesc')}
-      </p>
+    <Stack direction="column" style={{ gap: tokens.space.lg }}>
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          {t('create.stepFeatures')}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t('create.featuresDesc')}
+        </Typography>
+      </Box>
 
       {state.availableFeatures.length === 0 ? (
-        <p>{t('create.noFeatures')}</p>
+        <Typography variant="body2" color="textSecondary">
+          {t('create.noFeatures')}
+        </Typography>
       ) : (
-        <div className="feature-list" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {state.availableFeatures.map((feature) => (
-            <div
-              key={feature.key}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '12px 16px',
-                border: `1px solid ${tokens.colors.border.default}`,
-                borderRadius: 8,
-              }}
-            >
-              <div>
-                <div style={{ fontWeight: 500 }}>{feature.name}</div>
-                {feature.description && (
-                  <div style={{ color: tokens.colors.text.secondary, fontSize: 12, marginTop: 4 }}>
-                    {feature.description}
-                  </div>
-                )}
-              </div>
-              <Switch
-                checked={state.form.featureKeys?.includes(feature.key) ?? false}
-                onChange={(event) => {
-                  const checked = event.target.checked;
-                  const current = state.form.featureKeys || [];
-                  const updated = checked
-                    ? [...current, feature.key]
-                    : current.filter((k: string) => k !== feature.key);
-                  actions.updateForm({ featureKeys: updated });
+        <Stack direction="column" style={{ gap: tokens.space.sm }}>
+          {state.availableFeatures.map((feature) => {
+            const isEnabled = state.form.featureKeys?.includes(feature.key) ?? false;
+            return (
+              <Box
+                key={feature.key}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: `${tokens.space.md} ${tokens.space.lg}`,
+                  border: `1px solid ${isEnabled ? tokens.colors.brand.primary : tokens.colors.border.default}`,
+                  borderRadius: tokens.shape.md,
+                  background: isEnabled ? tokens.colors.brand.primaryLight : tokens.colors.surface.card,
+                  transition: `border-color ${tokens.motion.durationShort} ${tokens.motion.easing}, background ${tokens.motion.durationShort} ${tokens.motion.easing}`,
                 }}
-                disabled={state.isSubmitting}
-              />
-            </div>
-          ))}
-        </div>
+                data-testid={`tenant-create-feature-${feature.key}`}
+              >
+                <Stack direction="row" style={{ gap: tokens.space.md, alignItems: 'center', minWidth: 0 }}>
+                  <Box
+                    style={{
+                      width: featureIconBoxSize,
+                      height: featureIconBoxSize,
+                      borderRadius: tokens.shape.md,
+                      background: isEnabled ? tokens.colors.brand.primary : tokens.colors.surface.page,
+                      border: `1px solid ${isEnabled ? tokens.colors.brand.primary : tokens.colors.border.subtle}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon
+                      name={FEATURE_ICONS[feature.key] ?? DEFAULT_FEATURE_ICON}
+                      style={{
+                        fontSize: featureIconSize,
+                        color: isEnabled ? tokens.colors.brand.primaryContrast : tokens.colors.text.secondary,
+                      }}
+                    />
+                  </Box>
+                  <Box style={{ minWidth: 0 }}>
+                    <Typography
+                      variant="subtitle2"
+                      style={{ fontWeight: 600, color: tokens.colors.text.primary }}
+                    >
+                      {feature.name}
+                    </Typography>
+                    {feature.description && (
+                      <Typography variant="caption" color="textSecondary">
+                        {feature.description}
+                      </Typography>
+                    )}
+                  </Box>
+                </Stack>
+                <Switch
+                  checked={isEnabled}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    const current = state.form.featureKeys || [];
+                    const updated = checked
+                      ? [...current, feature.key]
+                      : current.filter((k: string) => k !== feature.key);
+                    actions.updateForm({ featureKeys: updated });
+                  }}
+                  disabled={state.isSubmitting}
+                  data-testid={`tenant-create-feature-switch-${feature.key}`}
+                />
+              </Box>
+            );
+          })}
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 
   const renderAdminStep = () => (
-    <div className="step-content">
-      <h3>{t('create.stepAdmin')}</h3>
-      <p style={{ color: tokens.colors.text.secondary, marginBottom: 24 }}>
-        {t('create.adminDesc')}
-      </p>
+    <Stack direction="column" style={{ gap: tokens.space.lg }}>
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          {t('create.stepAdmin')}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t('create.adminDesc')}
+        </Typography>
+      </Box>
 
-      <FormItem
-        label={t('create.adminEmail')}
-        required
-        helperText={state.errors.adminEmail}
-        validateStatus={state.errors.adminEmail ? 'error' : undefined}
-      >
-        <Input
-          type="email"
-          placeholder={t('create.adminEmailPlaceholder')}
-          value={state.form.adminEmail}
-          onChange={(e) => actions.updateForm({ adminEmail: e.target.value })}
-          disabled={state.isSubmitting}
-          data-testid="tenant-create-admin-email"
-        />
-      </FormItem>
+      <Stack direction="column" style={{ gap: tokens.space.md }}>
+        <FormItem
+          label={t('create.adminEmail')}
+          required
+          helperText={state.errors.adminEmail}
+          validateStatus={state.errors.adminEmail ? 'error' : undefined}
+        >
+          <Input
+            type="email"
+            placeholder={t('create.adminEmailPlaceholder')}
+            value={state.form.adminEmail}
+            onChange={(e) => actions.updateForm({ adminEmail: e.target.value })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-admin-email"
+          />
+        </FormItem>
 
-      <FormItem label={t('create.adminName')}>
-        <Input
-          placeholder={t('create.adminNamePlaceholder')}
-          value={state.form.adminName}
-          onChange={(e) => actions.updateForm({ adminName: e.target.value })}
-          disabled={state.isSubmitting}
-          data-testid="tenant-create-admin-name"
-        />
-      </FormItem>
+        <FormItem label={t('create.adminName')}>
+          <Input
+            placeholder={t('create.adminNamePlaceholder')}
+            value={state.form.adminName}
+            onChange={(e) => actions.updateForm({ adminName: e.target.value })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-admin-name"
+          />
+        </FormItem>
 
-      <FormItem label={t('create.autoInvite')}>
-        <Switch
-          checked={state.form.sendInvitation ?? true}
-          onChange={(event) => actions.updateForm({ sendInvitation: event.target.checked })}
-          disabled={state.isSubmitting}
-        />
-        <span style={{ marginLeft: 8, color: tokens.colors.text.secondary }}>
-          {state.form.sendInvitation !== false
-            ? t('create.autoInviteOn')
-            : t('create.autoInviteOff')}
-        </span>
-      </FormItem>
-    </div>
+        <Box
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: tokens.space.sm,
+            padding: `${tokens.space.md} ${tokens.space.lg}`,
+            border: `1px solid ${tokens.colors.border.default}`,
+            borderRadius: tokens.shape.md,
+            background: tokens.colors.surface.card,
+          }}
+        >
+          <Switch
+            checked={state.form.sendInvitation ?? true}
+            onChange={(event) => actions.updateForm({ sendInvitation: event.target.checked })}
+            disabled={state.isSubmitting}
+            data-testid="tenant-create-auto-invite"
+          />
+          <Box>
+            <Typography variant="subtitle2" style={{ fontWeight: 500 }}>
+              {t('create.autoInvite')}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              {state.form.sendInvitation !== false
+                ? t('create.autoInviteOn')
+                : t('create.autoInviteOff')}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Alert severity="info">
+          {t('create.inviteNote')}
+        </Alert>
+      </Stack>
+    </Stack>
   );
 
   const renderConfirmStep = () => (
-    <div className="step-content">
-      <h3>{t('create.stepConfirm')}</h3>
-      <p style={{ color: tokens.colors.text.secondary, marginBottom: 24 }}>
-        {t('create.confirmDesc')}
-      </p>
+    <Stack direction="column" style={{ gap: tokens.space.lg }}>
+      <Box>
+        <Typography variant="h6" gutterBottom>
+          {t('create.stepConfirm')}
+        </Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t('create.confirmDesc')}
+        </Typography>
+      </Box>
 
-      <div
-        className="confirm-info"
-        style={{ background: tokens.colors.surface.page, padding: 24, borderRadius: 8 }}
+      <Box
+        style={{
+          padding: tokens.space.lg,
+          border: `1px solid ${tokens.colors.border.subtle}`,
+          borderRadius: tokens.shape.md,
+          background: tokens.colors.surface.card,
+        }}
       >
-        <h4>{t('create.confirmBasicInfo')}</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px 16px', marginBottom: 16 }}>
-          <span style={{ color: tokens.colors.text.secondary }}>{t('create.confirmTenantCode')}</span>
-          <code>{state.form.code || '-'}</code>
-          <span style={{ color: tokens.colors.text.secondary }}>{t('create.confirmTenantName')}</span>
-          <span>{state.form.name || '-'}</span>
-          <span style={{ color: tokens.colors.text.secondary }}>{t('create.confirmDescription')}</span>
-          <span>{state.form.description || '-'}</span>
-          <span style={{ color: tokens.colors.text.secondary }}>{t('create.confirmContactEmail')}</span>
-          <span>{state.form.contactEmail || '-'}</span>
-        </div>
+        <Stack direction="column" style={{ gap: tokens.space.sm }}>
+          <Typography
+            variant="overline"
+            color="textSecondary"
+            style={{ letterSpacing: 0, fontWeight: 600 }}
+          >
+            {t('create.confirmBasicInfo')}
+          </Typography>
+          <Divider />
+          <Box style={{ display: 'grid', gridTemplateColumns: confirmLabelColumn, gap: `${tokens.space.sm} ${tokens.space.md}`, wordBreak: 'break-word' }}>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmTenantCode')}</Typography>
+            <Tag color="primary" data-testid="confirm-tenant-code">{state.form.code || '-'}</Tag>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmTenantName')}</Typography>
+            <Typography variant="body2">{state.form.name || '-'}</Typography>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmDescription')}</Typography>
+            <Typography variant="body2">{state.form.description || '-'}</Typography>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmContactEmail')}</Typography>
+            <Typography variant="body2">{state.form.contactEmail || '-'}</Typography>
+          </Box>
+        </Stack>
+      </Box>
 
-        <Divider />
+      <Box
+        style={{
+          padding: tokens.space.lg,
+          border: `1px solid ${tokens.colors.border.subtle}`,
+          borderRadius: tokens.shape.md,
+          background: tokens.colors.surface.card,
+        }}
+      >
+        <Stack direction="column" style={{ gap: tokens.space.sm }}>
+          <Typography
+            variant="overline"
+            color="textSecondary"
+            style={{ letterSpacing: 0, fontWeight: 600 }}
+          >
+            {t('create.confirmFeatures')}
+          </Typography>
+          <Divider />
+          <Box style={{ display: 'flex', flexWrap: 'wrap', gap: tokens.space.sm }}>
+            {state.form.featureKeys?.length ? (
+              state.form.featureKeys.map((key) => (
+                <Tag
+                  key={key}
+                  color="primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: tokens.space.xs }}
+                >
+                  <Icon
+                    name={FEATURE_ICONS[key] ?? DEFAULT_FEATURE_ICON}
+                    style={{ fontSize: tagIconSize }}
+                  />
+                  {state.availableFeatures.find((f) => f.key === key)?.name || key}
+                </Tag>
+              ))
+            ) : (
+              <Typography variant="body2" color="textSecondary">
+                {t('create.noFeaturesSelected')}
+              </Typography>
+            )}
+          </Box>
+        </Stack>
+      </Box>
 
-        <h4>{t('create.confirmFeatures')}</h4>
-        <div style={{ marginBottom: 16 }}>
-          {state.form.featureKeys?.length ? (
-            state.form.featureKeys.map((key) => (
-              <span
-                key={key}
-                style={{
-                  display: 'inline-block',
-                  padding: '2px 8px',
-                  background: tokens.colors.brand.primaryLight,
-                  border: `1px solid ${tokens.colors.brand.primary}`,
-                  borderRadius: 4,
-                  marginRight: 8,
-                  marginBottom: 8,
-                }}
-              >
-                {state.availableFeatures.find((f) => f.key === key)?.name || key}
-              </span>
-            ))
-          ) : (
-            <span style={{ color: tokens.colors.text.disabled }}>{t('create.noFeaturesSelected')}</span>
-          )}
-        </div>
-
-        <Divider />
-
-        <h4>{t('create.confirmAdmin')}</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px 16px' }}>
-          <span style={{ color: '#666' }}>{t('create.confirmAdminEmail')}</span>
-          <span>{state.form.adminEmail || '-'}</span>
-          <span style={{ color: '#666' }}>{t('create.confirmAdminName')}</span>
-          <span>{state.form.adminName || '-'}</span>
-          <span style={{ color: '#666' }}>{t('create.confirmSendInvite')}</span>
-          <span>{state.form.sendInvitation !== false ? t('create.yes') : t('create.no')}</span>
-        </div>
-      </div>
-    </div>
+      <Box
+        style={{
+          padding: tokens.space.lg,
+          border: `1px solid ${tokens.colors.border.subtle}`,
+          borderRadius: tokens.shape.md,
+          background: tokens.colors.surface.card,
+        }}
+      >
+        <Stack direction="column" style={{ gap: tokens.space.sm }}>
+          <Typography
+            variant="overline"
+            color="textSecondary"
+            style={{ letterSpacing: 0, fontWeight: 600 }}
+          >
+            {t('create.confirmAdmin')}
+          </Typography>
+          <Divider />
+          <Box style={{ display: 'grid', gridTemplateColumns: confirmLabelColumn, gap: `${tokens.space.sm} ${tokens.space.md}`, wordBreak: 'break-word' }}>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmAdminEmail')}</Typography>
+            <Typography variant="body2">{state.form.adminEmail || '-'}</Typography>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmAdminName')}</Typography>
+            <Typography variant="body2">{state.form.adminName || '-'}</Typography>
+            <Typography variant="body2" color="textSecondary">{t('create.confirmSendInvite')}</Typography>
+            <Typography variant="body2">
+              {state.form.sendInvitation !== false ? t('create.yes') : t('create.no')}
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
+    </Stack>
   );
 
   // =========================================
   // Step Configuration
   // =========================================
   const steps = [
-    { title: t('create.stepBasicInfo'), content: renderBasicInfoStep() },
-    { title: t('create.stepFeatures'), content: renderFeaturesStep() },
-    { title: t('create.stepAdmin'), content: renderAdminStep() },
-    { title: t('create.stepConfirm'), content: renderConfirmStep() },
+    {
+      title: t('create.stepBasicInfo'),
+      description: t('create.stepDesc.basicInfo'),
+      content: renderBasicInfoStep(),
+    },
+    {
+      title: t('create.stepFeatures'),
+      description: t('create.stepDesc.features'),
+      content: renderFeaturesStep(),
+    },
+    {
+      title: t('create.stepAdmin'),
+      description: t('create.stepDesc.admin'),
+      content: renderAdminStep(),
+    },
+    {
+      title: t('create.stepConfirm'),
+      description: t('create.stepDesc.confirm'),
+      content: renderConfirmStep(),
+    },
   ];
 
   // =========================================
@@ -287,7 +467,11 @@ export function TenantCreatePage() {
       message.success(t('create.createSuccess'));
       actions.cancel();
     } catch (error) {
-      message.error(t('create.createFailed', { interpolation: { error: error instanceof Error ? error.message : 'Unknown error' } }));
+      message.error(
+        t('create.createFailed', {
+          interpolation: { error: error instanceof Error ? error.message : 'Unknown error' },
+        }),
+      );
     }
   };
 
@@ -295,69 +479,103 @@ export function TenantCreatePage() {
   // Render
   // =========================================
   return (
-    <div className="tenant-create-page">
+    <Stack direction="column" style={{ gap: tokens.space.lg, maxWidth: pageMaxWidth, margin: '0 auto' }}>
       {/* Page Header */}
-      <div className="page-header" style={{ marginBottom: 24 }}>
+      <Box>
         <Button
+          variant="text"
+          startIcon="arrow_back"
           onClick={actions.cancel}
-          style={{ marginRight: 16 }}
+          style={{ marginBottom: tokens.space.sm, padding: 0 }}
           data-testid="tenant-create-cancel"
         >
           {t('create.backToList')}
         </Button>
-        <h1 style={{ display: 'inline', margin: 0 }}>{t('create.pageTitle')}</h1>
-      </div>
 
+        <Stack direction="row" style={{ gap: tokens.space.md, alignItems: 'flex-start' }}>
+          <Box
+            style={{
+              width: headerIconBoxSize,
+              height: headerIconBoxSize,
+              borderRadius: tokens.shape.md,
+              background: tokens.colors.brand.primary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="domain_add" style={{ fontSize: headerIconSize, color: tokens.colors.brand.primaryContrast }} />
+          </Box>
+          <Box>
+            <Typography variant="h5" style={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {t('create.pageTitle')}
+            </Typography>
+            <Typography variant="body2" color="textSecondary" style={{ marginTop: tokens.space.xs }}>
+              {t('create.pageSubtitle')}
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
+
+      {/* Wizard Card */}
       <Card>
-        {/* Steps Navigation */}
+        {/* Steps Progress */}
         <Steps
           current={state.currentStep}
-          items={steps.map((s) => ({ title: s.title }))}
-          style={{ marginBottom: 32 }}
+          items={steps.map((s) => ({ title: s.title, description: s.description }))}
+          style={{ marginBottom: tokens.space.xl }}
         />
 
         {/* Step Content */}
-        <div className="steps-content" style={{ minHeight: 300 }}>
+        <Box style={{ minHeight: tokens.spacing(40) }}>
           {steps[state.currentStep].content}
-        </div>
+        </Box>
 
-        <Divider />
+        <Divider style={{ margin: `${tokens.space.lg} 0` }} />
 
-        {/* Step Actions */}
-        <div className="steps-action" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-          {state.currentStep > 0 && (
-            <Button
-              onClick={actions.prevStep}
-              disabled={state.isSubmitting}
-              data-testid="tenant-create-prev"
-            >
-              {t('create.prevStep')}
-            </Button>
-          )}
-          {state.currentStep < steps.length - 1 && (
-            <Button
-              onClick={handleNext}
-              variant="primary"
-              disabled={state.isSubmitting}
-              data-testid="tenant-create-next"
-            >
-              {t('create.nextStep')}
-            </Button>
-          )}
-          {state.currentStep === steps.length - 1 && (
-            <Button
-              onClick={handleSubmit}
-              variant="primary"
-              disabled={state.isSubmitting}
-              loading={state.isSubmitting}
-              data-testid="tenant-create-submit"
-            >
-              {t('create.submitBtn')}
-            </Button>
-          )}
-        </div>
+        {/* Navigation Actions */}
+        <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="caption" color="textSecondary">
+            {t('create.stepProgress', { current: state.currentStep + 1, total: steps.length })}
+          </Typography>
+          <Stack direction="row" style={{ gap: tokens.space.sm }}>
+            {state.currentStep > 0 && (
+              <Button
+                onClick={actions.prevStep}
+                disabled={state.isSubmitting}
+                data-testid="tenant-create-prev"
+              >
+                {t('create.prevStep')}
+              </Button>
+            )}
+            {state.currentStep < steps.length - 1 && (
+              <Button
+                onClick={handleNext}
+                variant="primary"
+                endIcon="arrow_forward"
+                disabled={state.isSubmitting}
+                data-testid="tenant-create-next"
+              >
+                {t('create.nextStep')}
+              </Button>
+            )}
+            {state.currentStep === steps.length - 1 && (
+              <Button
+                onClick={handleSubmit}
+                variant="primary"
+                startIcon="check_circle"
+                disabled={state.isSubmitting}
+                loading={state.isSubmitting}
+                data-testid="tenant-create-submit"
+              >
+                {t('create.submitBtn')}
+              </Button>
+            )}
+          </Stack>
+        </Box>
       </Card>
-    </div>
+    </Stack>
   );
 }
 

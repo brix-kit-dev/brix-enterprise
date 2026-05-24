@@ -188,6 +188,22 @@ function Test-CommandAvailable {
     return $null -ne $cmd
 }
 
+function Resolve-EnterpriseRoot {
+    $candidate = Split-Path -Parent $PSScriptRoot
+    $hostRelativePath = "packages\@brix\enterprise-host\host-shell-standalone-web"
+
+    if (Test-Path (Join-Path $candidate $hostRelativePath)) {
+        return $candidate
+    }
+
+    $nestedCandidate = Join-Path $candidate "brix-enterprise"
+    if (Test-Path (Join-Path $nestedCandidate $hostRelativePath)) {
+        return $nestedCandidate
+    }
+
+    throw "Cannot resolve brix-enterprise root from script path: $PSScriptRoot"
+}
+
 function Start-FrontendProcess {
     param(
         [Parameter(Mandatory = $true)]
@@ -250,8 +266,7 @@ function Main {
         exit 1
     }
 
-    $sourceRoot = Split-Path -Parent $PSScriptRoot
-    $enterpriseRoot = Join-Path $sourceRoot "brix-enterprise"
+    $enterpriseRoot = Resolve-EnterpriseRoot
     $hostRoot = Join-Path $enterpriseRoot "packages\@brix\enterprise-host\host-shell-standalone-web"
     $solutionsRoot = Join-Path $enterpriseRoot "packages\@brix\enterprise-solutions"
 
@@ -281,10 +296,30 @@ function Main {
         exit 1
     }
 
-    if ((Test-Path $pidFile) -and -not $Force) {
-        Write-Fail "Existing state file detected: $pidFile"
-        Write-Info "Use stop-frontend.ps1 first, or pass -Force."
-        exit 1
+    if (Test-Path $pidFile) {
+        if (-not $Force) {
+            Write-Fail "Existing state file detected: $pidFile"
+            Write-Info "Use stop-frontend.ps1 first, or pass -Force."
+            exit 1
+        }
+
+        # -Force: kill any PIDs recorded in the old state file before starting fresh.
+        Write-Info "-Force: stopping processes from previous state file..."
+        $oldState = Get-Content $pidFile -Raw | ConvertFrom-Json
+        foreach ($proc in $oldState.Processes) {
+            $procId = [int]$proc.PID
+            $running = Get-Process -Id $procId -ErrorAction SilentlyContinue
+            if ($null -ne $running) {
+                try {
+                    Stop-Process -Id $procId -Force -ErrorAction Stop
+                    Write-Info "Stopped $($proc.Name) (PID=$procId)"
+                }
+                catch {
+                    Write-Fail "Could not stop $($proc.Name) (PID=$procId): $_"
+                }
+            }
+        }
+        Start-Sleep -Milliseconds 500
     }
 
     New-Item -ItemType Directory -Path $stateRoot -Force | Out-Null

@@ -34,7 +34,6 @@ export async function initializeSharedScope(): Promise<void> {
   if (typeof __webpack_init_sharing__ === 'function') {
     try {
       await __webpack_init_sharing__('default');
-      const sharedKeys = Object.keys(__webpack_share_scopes__?.default || {});
     } catch (error) {
     }
   } else {

@@ -89,9 +89,6 @@ public class LoginResponse {
     @Schema(description = "是否需要多因素认证挑战（仅在平台管理员与开启 MFA 的账号上为 true）", example = "false")
     private Boolean mfaRequired;
 
-    @Schema(description = "是否以平台管理员身份登录（决定 UI 是否进入控制台主题）", example = "false")
-    private Boolean platformAdminMode;
-    
     public LoginResponse() {}
 
     /**
@@ -193,7 +190,4 @@ public class LoginResponse {
 
     public Boolean getMfaRequired() { return mfaRequired; }
     public void setMfaRequired(Boolean mfaRequired) { this.mfaRequired = mfaRequired; }
-
-    public Boolean getPlatformAdminMode() { return platformAdminMode; }
-    public void setPlatformAdminMode(Boolean platformAdminMode) { this.platformAdminMode = platformAdminMode; }
 }

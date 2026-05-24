@@ -29,7 +29,9 @@ $Tunnels = @(
     @{ Local = 6379;  Remote = 6379;  Name = "Redis";         Hint = "redis-cli -h localhost -p {LOCAL}" },
     @{ Local = 9092;  Remote = 9092;  Name = "Kafka";         Hint = "bootstrap.servers=localhost:{LOCAL}" },
     @{ Local = 9000;  Remote = 9000;  Name = "MinIO S3";      Hint = "S3 endpoint http://localhost:{LOCAL}" },
-    @{ Local = 9001;  Remote = 9001;  Name = "MinIO Console"; Hint = "http://localhost:{LOCAL}  (minioadmin / .env)" }
+    @{ Local = 9001;  Remote = 9001;  Name = "MinIO Console"; Hint = "http://localhost:{LOCAL}  (minioadmin / .env)" },
+    @{ Local = 1025;  Remote = 1025;  Name = "Mailpit SMTP";  Hint = "SMTP localhost:{LOCAL} (no auth/TLS)" },
+    @{ Local = 8025;  Remote = 8025;  Name = "Mailpit UI";    Hint = "http://localhost:{LOCAL}" }
 )
 
 if ($IncludeFull) {

@@ -188,7 +188,7 @@ export function registerEventBus(
   const eventRouter = new GovernedEventRouter(governanceEnforcer);
   const eventLogger = new EventLogger({
     enabled: import.meta.env.DEV,
-    maxEntries: 1000,
+    maxSize: 1000,
   });
   const eventBusCapability = new EventBusCapabilityImpl({
     eventRouter,
@@ -307,8 +307,8 @@ export function registerI18n(runtime: WebUIRuntime): void {
   const i18nCapability = new I18nCapabilityImpl({
     defaultLocale: 'zh-CN',
     supportedLocales: [
-      { code: 'zh-CN', name: '简体中文', nativeName: '简体中文' },
-      { code: 'en-US', name: 'English', nativeName: 'English' },
+      { code: 'zh-CN', name: '简体中文', englishName: 'Chinese (Simplified)', isDefault: true },
+      { code: 'en-US', name: 'English', englishName: 'English (US)' },
     ],
   });
   runtime.registerCapability(I18nCapabilityType, { provide: () => i18nCapability });
@@ -588,9 +588,9 @@ function parseViewMode(raw: string): ViewMode {
 export function registerViewMode(
   runtime: WebUIRuntime,
   tokenProvider: () => string | null,
+  httpCapability: HttpCapability,
 ) {
   const authService = getAuthService();
-  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api';
 
   const resolveCurrent = (): ViewMode => {
     const token = tokenProvider();
@@ -620,36 +620,16 @@ export function registerViewMode(
     getViewingTenantId: resolveViewingTenantId,
 
     switchTo: async (request: ViewModeSwitchRequest): Promise<ViewModeSwitchResult> => {
-      const token = tokenProvider();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const response = await fetch(`${apiBaseUrl}/auth/view-mode/switch`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+      const payload = await httpCapability
+        .post<ViewModeSwitchResponseShape>('/auth/view-mode/switch', {
           mode: request.mode,
           tenantId: request.tenantId !== undefined ? Number(request.tenantId) : null,
-        }),
-      });
+        })
+        .catch((error: unknown) => {
+          const detail = error instanceof Error ? error.message : String(error);
+          throw new Error(`[host] ViewMode switch failed: ${detail}`);
+        });
 
-      if (!response.ok) {
-        let detail: string;
-        try {
-          const err = await response.json();
-          detail = err.message ?? err.code ?? `${response.status} ${response.statusText}`;
-        } catch {
-          detail = `${response.status} ${response.statusText}`;
-        }
-        throw new Error(`[host] ViewMode switch failed: ${detail}`);
-      }
-
-      const payload = (await response.json()) as ViewModeSwitchResponseShape;
       const result: ViewModeSwitchResult = {
         accessToken: payload.accessToken,
         expiresInSeconds: payload.expiresInSeconds,

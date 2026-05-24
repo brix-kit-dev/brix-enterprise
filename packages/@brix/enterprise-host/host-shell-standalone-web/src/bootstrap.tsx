@@ -89,10 +89,6 @@ export async function bootstrap(): Promise<void> {
 
   const tenantCapability = registerTenant(runtime, () => authService.getToken());
 
-  // Phase 2 / C-4 — ViewMode capability (depends on auth-storage; must come
-  // after registerAuth so the JWT-derived view mode reflects the active session).
-  registerViewMode(runtime, () => authService.getToken());
-
   // EventBus must be registered before HTTP so the latter can publish
   // `system.http.error` events for the centralised toaster (Stability v1.0 C-2).
   const eventBusCapability = registerEventBus(runtime, governanceConfig);
@@ -110,13 +106,24 @@ export async function bootstrap(): Promise<void> {
     eventBus: eventBusCapability,
   });
 
+  // Phase 2 / C-4 — ViewMode capability depends on auth storage and uses the
+  // canonical HttpCapability for switch requests, keeping Host inside the
+  // governed runtime capability boundary.
+  registerViewMode(runtime, () => authService.getToken(), httpCapability);
+
   registerNavigation(runtime);
   registerPluginLoader(runtime);
   registerConfigStore(runtime, httpCapability);
   registerI18n(runtime);
   registerTheme(runtime);
 
-  window[BRIX_RUNTIME_CONTEXT_GLOBAL] = runtime;
+  const runtimeContext: RuntimeContext = {
+    moduleId: 'host',
+    tenantId: tenantCapability.getCurrentTenantId() ?? 'host',
+    getCapability: <T,>(capabilityType: symbol) => runtime.getCapability<T>(capabilityType),
+  };
+
+  window[BRIX_RUNTIME_CONTEXT_GLOBAL] = runtimeContext;
 
   // Render — ThemeProvider from UIAdapter wraps the tree so all
   // MUI (or other adapter) components receive proper CSS-in-JS context.
@@ -124,7 +131,7 @@ export async function bootstrap(): Promise<void> {
   const root = createRoot(container);
   root.render(
     <StrictMode>
-      <RuntimeContextProvider value={runtime}>
+      <RuntimeContextProvider value={runtimeContext}>
         <ThemeProvider theme="light">
           <HttpErrorToaster />
           <App />

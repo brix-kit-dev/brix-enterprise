@@ -9,7 +9,8 @@
  * @version 3.6.0
  */
 
-import type { SidebarMenuItem } from '@brix-sdk/platform-frame-web';
+import type { ProtectedLayoutProps } from '@brix-sdk/platform-frame-web';
+import type { SidebarMenuItem } from '@brix-sdk/platform-frame-web/components';
 
 /**
  * Props for the ProtectedLayoutWithLocation wrapper.
@@ -19,7 +20,7 @@ import type { SidebarMenuItem } from '@brix-sdk/platform-frame-web';
  * stale-prop race condition that caused "User" to appear before "Super admin".
  */
 export interface ProtectedLayoutWithLocationProps {
-  readonly branding: Record<string, unknown>;
+  readonly branding: ProtectedLayoutProps['branding'];
   readonly dimensions?: {
     sidebarWidth?: number;
     sidebarCollapsedWidth?: number;

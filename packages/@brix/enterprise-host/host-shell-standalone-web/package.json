@@ -37,6 +37,7 @@
   "devDependencies": {
     "@rspack/cli": "^1.6.8",
     "@rspack/core": "^1.6.8",
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^8.56.0",

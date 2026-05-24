@@ -80,13 +80,29 @@ function Write-Info {
     Write-Host "[INFO] $Message" -ForegroundColor Gray
 }
 
+function Resolve-EnterpriseRoot {
+    $candidate = Split-Path -Parent $PSScriptRoot
+    $hostRelativePath = "packages\@brix\enterprise-host\host-shell-standalone-web"
+
+    if (Test-Path (Join-Path $candidate $hostRelativePath)) {
+        return $candidate
+    }
+
+    $nestedCandidate = Join-Path $candidate "brix-enterprise"
+    if (Test-Path (Join-Path $nestedCandidate $hostRelativePath)) {
+        return $nestedCandidate
+    }
+
+    throw "Cannot resolve brix-enterprise root from script path: $PSScriptRoot"
+}
+
 # ---------------------------------------------------------------------------
 # Remove the auto-generated host .env.local written by start-frontend.ps1
 # so the next host start uses checked-in defaults from .env.
 # ---------------------------------------------------------------------------
 function Remove-HostLocalEnv {
-    $sourceRoot = Split-Path -Parent $PSScriptRoot
-    $hostEnvLocal = Join-Path $sourceRoot "brix-enterprise\packages\@brix\enterprise-host\host-shell-standalone-web\.env.local"
+    $enterpriseRoot = Resolve-EnterpriseRoot
+    $hostEnvLocal = Join-Path $enterpriseRoot "packages\@brix\enterprise-host\host-shell-standalone-web\.env.local"
     if (Test-Path $hostEnvLocal) {
         try {
             Remove-Item -Path $hostEnvLocal -Force -ErrorAction Stop

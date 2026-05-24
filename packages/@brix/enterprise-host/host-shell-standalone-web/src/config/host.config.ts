@@ -25,9 +25,9 @@
  * routes.config, ui.config) to meet R6.4 Host-Web file count target (≤ 15).
  */
 
-import type { HostConfig, RoutesConfig, MenuItem } from '../types';
+import type { HostConfig, RoutesConfig } from '../types';
 import type { UIAdapter } from '@brix-sdk/runtime-sdk-api-web';
-import type { LocalPluginConfig } from '@brix-sdk/runtime-orchestrator-web';
+import type { AggregatedMenuItem, LocalPluginConfig } from '@brix-sdk/runtime-orchestrator-web';
 import { DEFAULT_THEME, type ThemeConfig } from '@brix-sdk/platform-frame-web';
 import { getSocialProviders, REGIONAL_SOCIAL_PROVIDERS } from '@brix-sdk/platform-auth-service-web';
 import { nativeUIAdapter } from '@brix-sdk/infra-adapter-ui-native';
@@ -68,7 +68,6 @@ export const hostConfig: HostConfig = {
       return apiBase;
     }
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       return 'http://localhost:8080/api';
     }
     throw new Error(
@@ -119,7 +118,7 @@ export const hostConfig: HostConfig = {
  * Plugin menus are declared in each plugin's ui-manifest.yaml and loaded
  * dynamically via usePluginSystem() hook (Blueprint §7.2.5).
  */
-export const hostCoreMenus: MenuItem[] = [
+export const hostCoreMenus: AggregatedMenuItem[] = [
   {
     key: 'dashboard',
     id: 'dashboard',
@@ -206,6 +205,34 @@ function resolvePluginUrl(envVar: string, pluginId: string, devFallback: string)
   );
 }
 
+function getConfiguredLocalPluginIds(): string[] {
+  return ((import.meta.env.VITE_LOCAL_PLUGINS as string | undefined) ?? '')
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter(Boolean);
+}
+
+const LOCAL_PLUGIN_REGISTRY = [
+  {
+    id: 'tenant',
+    envVar: 'VITE_PLUGIN_TENANT_URL',
+    fallback: 'http://localhost:3054',
+    scope: 'tenant',
+  },
+  {
+    id: 'partners',
+    envVar: 'VITE_PLUGIN_PARTNERS_URL',
+    fallback: 'http://localhost:3003',
+    scope: 'partners',
+  },
+  {
+    id: 'products',
+    envVar: 'VITE_PLUGIN_PRODUCTS_URL',
+    fallback: 'http://localhost:3004',
+    scope: 'products',
+  },
+] as const;
+
 /**
  * Local plugin registry — frontend-only plugins that bypass backend discovery.
  *
@@ -213,29 +240,19 @@ function resolvePluginUrl(envVar: string, pluginId: string, devFallback: string)
  * Menus, routes, and pages come from the plugin's ui-manifest.json.
  * (Blueprint §7.2.5: plugins declare WHAT, Host discovers HOW.)
  */
-export const localPlugins: LocalPluginConfig[] = [
-  {
-    id: 'tenant',
-    remoteEntry: `${resolvePluginUrl('VITE_PLUGIN_TENANT_URL', 'tenant', 'http://localhost:3054')}/remoteEntry.js`,
-    scope: 'tenant',
-    manifestUrl: `${resolvePluginUrl('VITE_PLUGIN_TENANT_URL', 'tenant', 'http://localhost:3054')}/ui-manifest.json`,
-  },
-  {
-    id: 'partners',
-    remoteEntry: `${resolvePluginUrl('VITE_PLUGIN_PARTNERS_URL', 'partners', 'http://localhost:3003')}/remoteEntry.js`,
-    scope: 'partners',
-    manifestUrl: `${resolvePluginUrl('VITE_PLUGIN_PARTNERS_URL', 'partners', 'http://localhost:3003')}/ui-manifest.json`,
-  },
-  {
-    // Manifest-Driven Local Plugin (Blueprint §7.2.5)
-    // Backend may also report this plugin; usePluginDiscovery dedupes by
-    // MF scope so the local YAML (SSoT, Constraint 8) takes precedence in dev.
-    id: 'products',
-    remoteEntry: `${resolvePluginUrl('VITE_PLUGIN_PRODUCTS_URL', 'products', 'http://localhost:3004')}/remoteEntry.js`,
-    scope: 'products',
-    manifestUrl: `${resolvePluginUrl('VITE_PLUGIN_PRODUCTS_URL', 'products', 'http://localhost:3004')}/ui-manifest.json`,
-  },
-];
+const configuredLocalPluginIds = new Set(getConfiguredLocalPluginIds());
+
+export const localPlugins: LocalPluginConfig[] = LOCAL_PLUGIN_REGISTRY
+  .filter(plugin => configuredLocalPluginIds.has(plugin.id))
+  .map(plugin => {
+    const baseUrl = resolvePluginUrl(plugin.envVar, plugin.id, plugin.fallback);
+    return {
+      id: plugin.id,
+      remoteEntry: `${baseUrl}/remoteEntry.js`,
+      scope: plugin.scope,
+      manifestUrl: `${baseUrl}/ui-manifest.json`,
+    };
+  });
 
 // ============================================================================
 // UI Adapter Configuration
