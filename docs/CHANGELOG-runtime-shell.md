@@ -4,6 +4,16 @@
 
 ---
 
+## v3.0.10-super-admin-phase5（2026-05-21）— 平台超管 v2.0 治理闭环
+
+- **Phase 5 红线自动化**：新增平台超管禁词扫描、旧平台角色码闭环扫描，并接入 `architecture-check` 质量门。
+- **ArchUnit / 单测闭环**：新增 Identity / PlatformAdmin 状态枚举、旧 `disabled_*` 命名、登录布尔身份标记、JWT permissions claim 不含 `platform:bypass` 的回归保护。
+- **ESLint 治理**：新增 `no-temp-password-in-response-type`、`no-platform-admin-mode-flag`、`no-permission-or-true` 三条前端架构红线规则。
+- **生产 profile 响应扫描**：平台超管响应体黑名单 Advice 支持 `prod` profile 集成测试，防止 setup link、MFA secret、TOTP code 等字段出现在 `/api/platform/**` 响应 JSON。
+- **运维手册更新**：`super-admin-bootstrap` runbook 更新为 v2.0 bootstrap / TOTP 灾难恢复 / setup-token 重发流程。
+
+---
+
 ## v3.0.10（2026-04-26）— 蓝图结构治理与风险修复
 
 ### 结构性重构（治理性变更）
