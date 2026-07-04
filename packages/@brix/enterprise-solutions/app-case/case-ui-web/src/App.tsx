@@ -46,6 +46,7 @@ import {
   TemplateDetailPage,
   TemplateCreatePage,
 } from './pages';
+import { CasePermissionGuard } from './guards/CasePermissionGuard';
 
 /**
  * Application Root Component
@@ -71,10 +72,10 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           {/* Case Routes - Using BrixUI components via useUI() */}
-          <Route path="/case" element={<CaseListPageV2 />} />
-          <Route path="/case/create" element={<CaseCreatePage />} />
-          <Route path="/case/:id" element={<CaseDetailPageV2 />} />
-          <Route path="/case/:id/edit" element={<CaseCreatePage />} />
+          <Route path="/case" element={<CasePermissionGuard permissions={["case:read"]}><CaseListPageV2 /></CasePermissionGuard>} />
+          <Route path="/case/create" element={<CasePermissionGuard permissions={["case:create"]}><CaseCreatePage /></CasePermissionGuard>} />
+          <Route path="/case/:id" element={<CasePermissionGuard permissions={["case:read"]}><CaseDetailPageV2 /></CasePermissionGuard>} />
+          <Route path="/case/:id/edit" element={<CasePermissionGuard permissions={["case:manage"]}><CaseCreatePage /></CasePermissionGuard>} />
 
           {/* Template Routes */}
           <Route path="/template" element={<TemplateListPage />} />

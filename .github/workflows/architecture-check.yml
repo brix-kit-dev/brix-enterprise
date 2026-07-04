@@ -312,7 +312,34 @@ jobs:
           echo "🔍 Checking enterprise-solutions for direct UI library imports..."
           echo "📋 Enforcing Red Line 9: BrixUI Unified Governance"
           echo ""
-          pnpm --filter "@brix-sdk/enterprise-solutions..." lint
+          set -euo pipefail
+          violations=0
+
+          if grep -RInE --include='*.ts' --include='*.tsx' --include='*.js' --include='*.jsx' \
+            --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=target \
+            "from ['\"](@mui/material|@mui/icons-material|@emotion/|antd|element-plus|@brix-sdk/infra-adapter-ui-mui)" \
+            packages/@brix/enterprise-solutions; then
+            violations=1
+          fi
+
+          if grep -RInE --include='*.ts' --include='*.tsx' \
+            --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=target \
+            "from ['\"]@brix-sdk/platform-design-tokens" \
+            packages/@brix/enterprise-solutions; then
+            violations=1
+          fi
+
+          if grep -RInE --include='*.ts' --include='*.tsx' \
+            --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=target \
+            "^[[:space:]]*export.*(const|let|var).*[Tt]heme[Tt]okens" \
+            packages/@brix/enterprise-solutions; then
+            violations=1
+          fi
+
+          if [ "$violations" -ne 0 ]; then
+            echo "Enterprise UI modules must use RuntimeContext-provided BrixUI capabilities and useTheme() tokens."
+            exit 1
+          fi
         env:
           # Treat all lint warnings as errors in CI
           ESLINT_RULE_LEVEL: error

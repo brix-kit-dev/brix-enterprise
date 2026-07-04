@@ -10,8 +10,6 @@ import io.brix.enterprise.app.identity.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +19,6 @@ import java.util.Optional;
  * @author Brix Platform Team
  * @since 3.0.0
  */
-@Repository
 public interface SocialConnectionRepository extends JpaRepository<SocialConnection, String> {
 
     /**

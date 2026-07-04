@@ -53,6 +53,15 @@ public interface CaseRepository extends JpaRepository<CaseEntity, String> {
     Optional<CaseEntity> findByTenantIdAndName(String tenantId, String name);
 
     /**
+     * Finds by ID within a tenant boundary.
+     *
+     * @param id record ID
+     * @param tenantId tenant ID
+     * @return entity (optional)
+     */
+    Optional<CaseEntity> findByIdAndTenantId(String id, String tenantId);
+
+    /**
      * Finds all records by tenant ID.
      * 
      * @param tenantId tenant ID
@@ -68,6 +77,16 @@ public interface CaseRepository extends JpaRepository<CaseEntity, String> {
      * @return paginated results
      */
     Page<CaseEntity> findByTenantId(String tenantId, Pageable pageable);
+
+    /**
+     * Finds records created by the current subject within a tenant.
+     *
+     * @param tenantId tenant ID
+     * @param createdBy creator ID
+     * @param pageable pagination parameters
+     * @return paginated results
+     */
+    Page<CaseEntity> findByTenantIdAndCreatedBy(String tenantId, String createdBy, Pageable pageable);
 
     /**
      * Finds by tenant ID and status.
@@ -89,6 +108,23 @@ public interface CaseRepository extends JpaRepository<CaseEntity, String> {
     @Query("SELECT e FROM CaseEntity e WHERE e.tenantId = :tenantId AND e.name LIKE %:keyword%")
     Page<CaseEntity> searchByName(
         @Param("tenantId") String tenantId,
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
+
+    /**
+     * Searches records created by the current subject within a tenant.
+     *
+     * @param tenantId tenant ID
+     * @param createdBy creator ID
+     * @param keyword search keyword
+     * @param pageable pagination parameters
+     * @return paginated results
+     */
+    @Query("SELECT e FROM CaseEntity e WHERE e.tenantId = :tenantId AND e.createdBy = :createdBy AND e.name LIKE %:keyword%")
+    Page<CaseEntity> searchByNameForCreator(
+        @Param("tenantId") String tenantId,
+        @Param("createdBy") String createdBy,
         @Param("keyword") String keyword,
         Pageable pageable
     );

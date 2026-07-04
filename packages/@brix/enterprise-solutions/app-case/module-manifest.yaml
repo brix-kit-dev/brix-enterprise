@@ -69,6 +69,7 @@ lifecycle:
 capabilities:
   # Required capabilities (module fails to start if missing)
   required:
+    - authorization
     - event-bus
     - state-store
     - http

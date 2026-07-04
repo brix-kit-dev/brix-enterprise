@@ -48,6 +48,19 @@ import type {
 } from '@brix-sdk/enterprise-case-shared';
 import { createCaseRepository, type CaseQueryParams } from '../repositories';
 
+function normalizeCaseError(err: unknown): Error {
+  if (err instanceof Error) {
+    const candidate = err as Error & { code?: string; status?: number; response?: { status?: number; data?: { code?: string; message?: string } } };
+    const status = candidate.status ?? candidate.response?.status;
+    const code = candidate.code ?? candidate.response?.data?.code;
+    if (status === 403 || code === 'AUTHZ-OA-403') {
+      return new Error('Access denied for this case object.');
+    }
+    return err;
+  }
+  return new Error(String(err));
+}
+
 // ============================================================================
 // 列表 Hook
 // ============================================================================
@@ -142,7 +155,7 @@ export function useCaseList(): UseCaseListResult {
         totalPages: response.totalPages,
       });
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      setError(normalizeCaseError(err));
     } finally {
       setIsLoading(false);
     }
@@ -195,7 +208,7 @@ export function useCaseList(): UseCaseListResult {
       // Refresh list after deletion
       await loadData();
     } catch (err) {
-      throw err instanceof Error ? err : new Error(String(err));
+      throw normalizeCaseError(err);
     }
   }, [repository, loadData]);
 
@@ -275,7 +288,7 @@ export function useCaseDetail(id: number | string): UseCaseDetailResult {
       const data = await repository.getById(numericId);
       setItem(data);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      setError(normalizeCaseError(err));
     } finally {
       setIsLoading(false);
     }
@@ -295,7 +308,7 @@ export function useCaseDetail(id: number | string): UseCaseDetailResult {
       setItem(updated);
       return updated;
     } catch (err) {
-      throw err instanceof Error ? err : new Error(String(err));
+      throw normalizeCaseError(err);
     }
   }, [repository, numericId]);
 
@@ -305,7 +318,7 @@ export function useCaseDetail(id: number | string): UseCaseDetailResult {
       await repository.delete(numericId);
       setItem(null);
     } catch (err) {
-      throw err instanceof Error ? err : new Error(String(err));
+      throw normalizeCaseError(err);
     }
   }, [repository, numericId]);
 
@@ -375,7 +388,7 @@ export function useCaseCreate(): UseCaseCreateResult {
       const created = await repository.create(data);
       return created;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
+      const error = normalizeCaseError(err);
       setError(error);
       throw error;
     } finally {

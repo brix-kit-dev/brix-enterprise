@@ -26,6 +26,9 @@ jobs:
   openapi-diff:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      OPENAPI_MODULE: packages/@brix/enterprise-host/host-shell-standalone
+      OPENAPI_WORKDIR: target/openapi-diff
 
     steps:
       - name: Checkout current branch
@@ -40,22 +43,57 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
+      - name: Start CI MinIO
+        run: |
+          set -euo pipefail
+          OPENAPI_MINIO_ACCESS_KEY="$(openssl rand -hex 16)"
+          OPENAPI_MINIO_SECRET_KEY="$(openssl rand -hex 32)"
+          echo "OPENAPI_MINIO_ACCESS_KEY=${OPENAPI_MINIO_ACCESS_KEY}" >> "$GITHUB_ENV"
+          echo "OPENAPI_MINIO_SECRET_KEY=${OPENAPI_MINIO_SECRET_KEY}" >> "$GITHUB_ENV"
+          docker run -d --name brix-openapi-minio \
+            -p 9000:9000 \
+            -e "MINIO_ROOT_USER=${OPENAPI_MINIO_ACCESS_KEY}" \
+            -e "MINIO_ROOT_PASSWORD=${OPENAPI_MINIO_SECRET_KEY}" \
+            minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/ready > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs brix-openapi-minio
+          exit 1
+
       - name: Generate OpenAPI spec (current)
         run: |
-          mvn verify -pl host-shell-standalone -Popenapi-generate -DskipTests -q
-          cp target/openapi.json target/openapi-current.json
+          mkdir -p "${OPENAPI_WORKDIR}"
+          OPENAPI_MFA_KEY="$(openssl rand -base64 32)"
+          cp "${OPENAPI_MODULE}/pom.xml" "${OPENAPI_WORKDIR}/host-pom-current.xml"
+          rm -f "${OPENAPI_MODULE}/target/openapi.json"
+          mvn -B -ntp verify -pl "${OPENAPI_MODULE}" -am -Popenapi-generate -DskipTests \
+            -Dopenapi.mfa.encryption-key="${OPENAPI_MFA_KEY}" \
+            -Dopenapi.minio.access-key="${OPENAPI_MINIO_ACCESS_KEY}" \
+            -Dopenapi.minio.secret-key="${OPENAPI_MINIO_SECRET_KEY}"
+          test -s "${OPENAPI_MODULE}/target/openapi.json"
+          cp "${OPENAPI_MODULE}/target/openapi.json" "${OPENAPI_WORKDIR}/openapi-current.json"
 
       - name: Generate OpenAPI spec (base)
         run: |
-          git stash --include-untracked || true
           git checkout ${{ github.event.pull_request.base.sha }}
-          mvn verify -pl host-shell-standalone -Popenapi-generate -DskipTests -q
-          cp target/openapi.json target/openapi-base.json
+          OPENAPI_MFA_KEY="$(openssl rand -base64 32)"
+          cp "${OPENAPI_WORKDIR}/host-pom-current.xml" "${OPENAPI_MODULE}/pom.xml"
+          rm -f "${OPENAPI_MODULE}/target/openapi.json"
+          mvn -B -ntp verify -pl "${OPENAPI_MODULE}" -am -Popenapi-generate -DskipTests \
+            -Dopenapi.mfa.encryption-key="${OPENAPI_MFA_KEY}" \
+            -Dopenapi.minio.access-key="${OPENAPI_MINIO_ACCESS_KEY}" \
+            -Dopenapi.minio.secret-key="${OPENAPI_MINIO_SECRET_KEY}"
+          test -s "${OPENAPI_MODULE}/target/openapi.json"
+          cp "${OPENAPI_MODULE}/target/openapi.json" "${OPENAPI_WORKDIR}/openapi-base.json"
           git checkout -
 
       - name: Run OpenAPI diff
         uses: openapitools/openapi-diff-action@v1
         with:
-          old-spec: target/openapi-base.json
-          new-spec: target/openapi-current.json
+          old-spec: target/openapi-diff/openapi-base.json
+          new-spec: target/openapi-diff/openapi-current.json
           fail-on-breaking: true

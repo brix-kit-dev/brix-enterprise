@@ -20,7 +20,9 @@ import io.brix.enterprise.app.casemanagement.api.request.UpdateCaseRequest;
 import io.brix.enterprise.app.casemanagement.core.entity.CaseEntity;
 import io.brix.enterprise.app.casemanagement.core.repository.CaseRepository;
 import io.runtime.sdk.context.RuntimeContext;
+import io.runtime.sdk.capability.AuthorizationCapability;
 import io.runtime.sdk.capability.LogLevel;
+import io.runtime.sdk.capability.TenantCapability;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -65,6 +67,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CaseService {
 
+    private static final String OBJECT_TYPE_CASE = "case";
+    private static final String PERMISSION_CASE_READ = "case:read";
+    private static final String PERMISSION_CASE_CREATE = "case:create";
+    private static final String PERMISSION_CASE_MANAGE = "case:manage";
+
     /**
      * [v3.0 Core] Runtime context
      * <p>Obtain all capabilities through RuntimeContext. Direct dependencies on Kafka/Redis etc. are prohibited.</p>
@@ -89,8 +96,9 @@ public class CaseService {
     public CaseDTO create(CreateCaseRequest request) {
         // [v3.0] Get tenant ID and user ID through RuntimeContext
         String tenantId = runtimeContext.getTenantId();
-        Principal principal = runtimeContext.getAuthContext().getCurrentPrincipal();
-        String userId = principal != null ? principal.getName() : "system";
+        String userId = currentUserId();
+
+        requireCreateAccess(tenantId, userId);
 
         // Check for duplicate name
         if (repository.existsByTenantIdAndName(tenantId, request.getName())) {
@@ -136,7 +144,12 @@ public class CaseService {
      */
     @Transactional(readOnly = true)
     public Optional<CaseDTO> findById(String id) {
-        return repository.findById(id).map(this::toDTO);
+        String tenantId = runtimeContext.getTenantId();
+        return repository.findByIdAndTenantId(id, tenantId)
+            .map(entity -> {
+                requireObjectAccess(entity, PERMISSION_CASE_READ);
+                return toDTO(entity);
+            });
     }
 
     /**
@@ -148,6 +161,10 @@ public class CaseService {
     @Transactional(readOnly = true)
     public Page<CaseDTO> findAll(Pageable pageable) {
         String tenantId = runtimeContext.getTenantId();
+        requireTenantScopeAccess(tenantId, PERMISSION_CASE_READ);
+        if (tenantCapability().isSubject()) {
+            return repository.findByTenantIdAndCreatedBy(tenantId, currentSubjectOwnerId(), pageable).map(this::toDTO);
+        }
         return repository.findByTenantId(tenantId, pageable).map(this::toDTO);
     }
 
@@ -162,8 +179,11 @@ public class CaseService {
      */
     @Transactional
     public Optional<CaseDTO> update(String id, UpdateCaseRequest request) {
-        return repository.findById(id)
+        String tenantId = runtimeContext.getTenantId();
+        return repository.findByIdAndTenantId(id, tenantId)
             .map(entity -> {
+                requireObjectAccess(entity, PERMISSION_CASE_MANAGE);
+
                 // Update only non-null fields (partial update pattern)
                 if (request.getName() != null) {
                     entity.setName(request.getName());
@@ -203,6 +223,10 @@ public class CaseService {
     @Transactional(readOnly = true)
     public Page<CaseDTO> search(String keyword, Pageable pageable) {
         String tenantId = runtimeContext.getTenantId();
+        requireTenantScopeAccess(tenantId, PERMISSION_CASE_READ);
+        if (tenantCapability().isSubject()) {
+            return repository.searchByNameForCreator(tenantId, currentSubjectOwnerId(), keyword, pageable).map(this::toDTO);
+        }
         return repository.searchByName(tenantId, keyword, pageable).map(this::toDTO);
     }
 
@@ -213,7 +237,11 @@ public class CaseService {
      */
     @Transactional
     public void delete(String id) {
-        repository.deleteById(id);
+        String tenantId = runtimeContext.getTenantId();
+        repository.findByIdAndTenantId(id, tenantId).ifPresent(entity -> {
+            requireObjectAccess(entity, PERMISSION_CASE_MANAGE);
+            repository.delete(entity);
+        });
         
         runtimeContext.getObservability().log(
             LogLevel.INFO,
@@ -239,5 +267,72 @@ public class CaseService {
             .updatedBy(entity.getUpdatedBy())
             .updatedAt(entity.getUpdatedAt())
             .build();
+    }
+
+    private void requireTenantScopeAccess(String tenantId, String action) {
+        authorizationCapability().requireObjectAccess(
+            AuthorizationCapability.ObjectRef.tenantScope(OBJECT_TYPE_CASE, tenantId, currentSubjectOwnerId()),
+            action
+        );
+    }
+
+    private void requireCreateAccess(String tenantId, String userId) {
+        authorizationCapability().requireObjectAccess(
+            AuthorizationCapability.ObjectRef.of(
+                OBJECT_TYPE_CASE,
+                null,
+                tenantId,
+                currentSubjectOwnerId(),
+                tenantCapability().isActor() ? tenantCapability().getCurrentRefId() : null,
+                userId
+            ),
+            PERMISSION_CASE_CREATE
+        );
+    }
+
+    private void requireObjectAccess(CaseEntity entity, String action) {
+        authorizationCapability().requireObjectAccess(
+            AuthorizationCapability.ObjectRef.of(
+                OBJECT_TYPE_CASE,
+                entity.getId(),
+                entity.getTenantId(),
+                entity.getCreatedBy(),
+                null,
+                entity.getCreatedBy()
+            ),
+            action
+        );
+    }
+
+    private AuthorizationCapability authorizationCapability() {
+        return runtimeContext.getCapabilityRequired(AuthorizationCapability.class);
+    }
+
+    private TenantCapability tenantCapability() {
+        return runtimeContext.getCapabilityRequired(TenantCapability.class);
+    }
+
+    private String currentSubjectOwnerId() {
+        TenantCapability tenantCapability = tenantCapability();
+        if (tenantCapability.isSubject()) {
+            String refId = tenantCapability.getCurrentRefId();
+            if (refId != null && !refId.isBlank()) {
+                return refId;
+            }
+        }
+        return currentUserId();
+    }
+
+    private String currentUserId() {
+        try {
+            String userId = tenantCapability().getCurrentUserId();
+            if (userId != null && !userId.isBlank()) {
+                return userId;
+            }
+        } catch (RuntimeException ex) {
+            log.debug("TenantCapability current user unavailable, falling back to AuthContext principal", ex);
+        }
+        Principal principal = runtimeContext.getAuthContext().getCurrentPrincipal();
+        return principal != null ? principal.getName() : "system";
     }
 }

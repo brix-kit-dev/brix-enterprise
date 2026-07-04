@@ -5,16 +5,16 @@
  */
 package io.brix.enterprise.app.identity.repository;
 
-import io.brix.enterprise.app.identity.entity.User;
-import io.brix.enterprise.app.identity.enums.UserRole;
-import io.brix.enterprise.app.identity.enums.UserStatus;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import io.brix.enterprise.app.identity.entity.User;
+import io.brix.enterprise.app.identity.enums.UserRole;
+import io.brix.enterprise.app.identity.enums.UserStatus;
 
 /**
  * 用户仓库接口
@@ -31,7 +31,6 @@ import java.util.Optional;
  * @author Brix Platform Team
  * @since 3.0.0
  */
-@Repository
 public interface UserRepository extends JpaRepository<User, String> {
 
     // ==================== 单条查询 ====================

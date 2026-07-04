@@ -51,7 +51,7 @@
 import React, { useState, useCallback } from 'react';
 
 // Runtime SDK imports - UIAdapter pattern per v3.0.8 Blueprint
-import { useNavigation, useUI, useTheme } from '@brix-sdk/runtime-sdk-react';
+import { useAuth, useNavigation, useUI, useTheme } from '@brix-sdk/runtime-sdk-react';
 
 // Internal imports
 import { useCaseList } from '../hooks/useCase';
@@ -171,6 +171,8 @@ export const CaseListPageV2: React.FC = () => {
 
   // Navigation capability from runtime
   const navigation = useNavigation();
+  const { hasAnyPermission } = useAuth();
+  const canCreateCase = hasAnyPermission(['case:create', 'case:manage']);
 
   // Local UI state
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -230,7 +232,7 @@ export const CaseListPageV2: React.FC = () => {
    * Navigate to case detail page
    */
   const handleViewCase = useCallback((caseData: CaseSummary) => {
-    navigation.navigate(`/cases/${caseData.id}`);
+    navigation.navigate(`/case/${caseData.id}`);
   }, [navigation]);
 
   /**
@@ -509,14 +511,16 @@ export const CaseListPageV2: React.FC = () => {
             </Button>
           </Tooltip>
 
-          <Button
-            variant="primary"
-            onClick={handleOpenNewCase}
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            <Icon name="add" size={18} style={{ marginRight: 6 }} />
-            New Case
-          </Button>
+          {canCreateCase && (
+            <Button
+              variant="primary"
+              onClick={handleOpenNewCase}
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              <Icon name="add" size={18} style={{ marginRight: 6 }} />
+              New Case
+            </Button>
+          )}
         </Box>
       </Box>
 

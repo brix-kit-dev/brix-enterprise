@@ -760,14 +760,14 @@ export const CaseDetailPageV2: React.FC = () => {
    * Navigate back to case list
    */
   const handleBack = useCallback(() => {
-    navigation.navigate('/cases');
+    navigation.navigate('/case');
   }, [navigation]);
 
   /**
    * Navigate to edit page
    */
   const handleEdit = useCallback(() => {
-    navigation.navigate(`/cases/${id}/edit`);
+    navigation.navigate(`/case/${id}/edit`);
   }, [navigation, id]);
 
   /**

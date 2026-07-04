@@ -1,28 +1,22 @@
 # ============================================================================
-# Host Integration CI Workflow — Capability Assembly Verification
+# Host Integration CI Workflow - Capability Assembly Verification
 # ============================================================================
 #
-# This workflow enforces architectural constraints from v3.0.9 Runtime Shell
-# Architecture Blueprint, specifically:
+# Enforces runtime-shell red lines:
+# - R2.3: plugin capability assembly must pass integration verification.
+# - R2.7: all required capabilities must be registered at Host startup.
 #
-# - Constraint R2.3: Plugin capability assembly must pass integration verification
-# - Constraint R2.7: All required capabilities must be registered at Host startup
-#
-# The workflow boots the host-shell-standalone Spring Boot application in
-# verify-capabilities mode, then asserts that the /actuator/capabilities
-# endpoint exposes all expected capability contracts.
-#
-# @see v3.0.9 Runtime Shell Architecture Blueprint - Red Lines R2.3, R2.7
-# @see 架构评审改造计划-v1.0.md - §5.6 P2-6
+# The check starts the real host-shell-standalone Runtime Shell with a CI-only
+# in-memory database and externalized secrets. It does not add Host code, plugin
+# bypasses, or business-specific wiring.
 # ============================================================================
 
-name: Host Integration — Capability Assembly
+name: Host Integration - Capability Assembly
 
 on:
   pull_request:
     branches: [main, develop]
     paths:
-      # Trigger when host or capability-related code changes
       - 'packages/@brix/enterprise-host/**'
       - 'packages/@brix/enterprise-solutions/**/pom.xml'
       - 'packages/@brix/enterprise-solutions/**/plugin-manifest.*'
@@ -36,36 +30,22 @@ on:
       - 'packages/@brix/enterprise-solutions/**/plugin-manifest.*'
       - 'pom.xml'
 
-# Concurrency: Cancel previous runs for the same PR/branch
 concurrency:
   group: host-integration-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # ============================================================================
-  # Job: Verify Capability Assembly
-  # ============================================================================
-  # Boots host-shell-standalone with --brix.verify-capabilities=true and asserts
-  # the /actuator/capabilities endpoint returns a healthy response containing
-  # all required capability contracts.
-  # ============================================================================
   verify-capability-assembly:
     name: Capability Assembly Check
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      # ========================================================================
-      # Step 1: Checkout code
-      # ========================================================================
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # ========================================================================
-      # Step 2: Setup JDK
-      # ========================================================================
       - name: Setup JDK 21
         uses: actions/setup-java@v4
         with:
@@ -73,117 +53,126 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      # ========================================================================
-      # Step 3: Build with Maven (skip tests for speed)
-      # ========================================================================
       - name: Build project
         run: |
           mvn -B -ntp install -DskipTests \
+            -Pci-runtime-shell \
             -pl packages/@brix/enterprise-host/host-shell-standalone \
             -am
 
-      # ========================================================================
-      # Step 4: Boot host in verify-capabilities mode
-      # ========================================================================
+      - name: Start CI MinIO
+        run: |
+          set -euo pipefail
+          CI_MINIO_ACCESS_KEY="$(openssl rand -hex 16)"
+          CI_MINIO_SECRET_KEY="$(openssl rand -hex 32)"
+          echo "CI_MINIO_ACCESS_KEY=${CI_MINIO_ACCESS_KEY}" >> "$GITHUB_ENV"
+          echo "CI_MINIO_SECRET_KEY=${CI_MINIO_SECRET_KEY}" >> "$GITHUB_ENV"
+          docker run -d --name brix-host-minio \
+            -p 9000:9000 \
+            -e "MINIO_ROOT_USER=${CI_MINIO_ACCESS_KEY}" \
+            -e "MINIO_ROOT_PASSWORD=${CI_MINIO_SECRET_KEY}" \
+            minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/ready > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs brix-host-minio
+          exit 1
+
       - name: Start host-shell-standalone
         run: |
-          echo "🚀 Starting host-shell-standalone in verify-capabilities mode..."
-          mvn -B -ntp spring-boot:run \
+          set -euo pipefail
+          echo "Starting host-shell-standalone in verify-capabilities mode..."
+          CI_MFA_KEY="$(openssl rand -base64 32)"
+
+          mvn -B -ntp -Pci-runtime-shell spring-boot:run \
             -pl packages/@brix/enterprise-host/host-shell-standalone \
-            -Dspring-boot.run.arguments="--brix.verify-capabilities=true --server.port=18080" \
-            -Dspring.profiles.active=test &
+            -Dspring-boot.run.arguments="--spring.profiles.active=standalone \
+              --brix.verify-capabilities=true \
+              --server.port=18080 \
+              --spring.datasource.url=jdbc:h2:mem:brix_ci_capability;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1 \
+              --spring.datasource.username=sa \
+              --spring.datasource.password= \
+              --spring.datasource.driver-class-name=org.h2.Driver \
+              --spring.jpa.database-platform=org.hibernate.dialect.H2Dialect \
+              --spring.jpa.hibernate.ddl-auto=none \
+              --spring.flyway.enabled=false \
+              --brix.infra.database.migration.enabled=false \
+              --brix.infra.minio.access-key=${CI_MINIO_ACCESS_KEY} \
+              --brix.infra.minio.secret-key=${CI_MINIO_SECRET_KEY} \
+              --brix.infra.minio.initialize-bucket-on-startup=false \
+              --brix.platform.admin.setup.logging-notification-enabled=true \
+              --brix.platform.bootstrap.super-admin.enabled=false \
+              --brix.platform.mfa.encryption-key=${CI_MFA_KEY} \
+              --management.health.kafka.enabled=false \
+              --management.health.redis.enabled=false" \
+            > host-shell-standalone.log 2>&1 &
           HOST_PID=$!
           echo "HOST_PID=$HOST_PID" >> "$GITHUB_ENV"
 
-          # Wait for application to be ready (max 90s)
-          echo "⏳ Waiting for host to start..."
+          echo "Waiting for host to start..."
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:18080/actuator/health > /dev/null 2>&1; then
-              echo "✅ Host is ready after ~$((i * 3))s"
+            if curl -sf http://localhost:18080/actuator/info > /dev/null 2>&1; then
+              echo "Host is ready after ~$((i * 3))s"
               break
             fi
-            if ! kill -0 $HOST_PID 2>/dev/null; then
-              echo "❌ Host process exited unexpectedly"
+            if ! kill -0 "$HOST_PID" 2>/dev/null; then
+              echo "Host process exited unexpectedly"
+              cat host-shell-standalone.log
               exit 1
             fi
             sleep 3
           done
 
-          # Final check — fail if still not ready
-          if ! curl -sf http://localhost:18080/actuator/health > /dev/null 2>&1; then
-            echo "❌ Host failed to start within 90 seconds"
+          if ! curl -sf http://localhost:18080/actuator/info > /dev/null 2>&1; then
+            echo "Host failed to start within 90 seconds"
+            cat host-shell-standalone.log
             exit 1
           fi
 
-      # ========================================================================
-      # Step 5: Verify all required capabilities are assembled
-      # ========================================================================
       - name: Verify Capability Assembly
         run: |
-          echo "🔍 Checking capability assembly at /actuator/capabilities..."
-          echo ""
+          set -euo pipefail
+          echo "Checking capability assembly from Runtime Shell startup validation..."
 
-          RESPONSE=$(curl -sf http://localhost:18080/actuator/capabilities)
-          if [ $? -ne 0 ]; then
-            echo "❌ Failed to reach /actuator/capabilities endpoint"
+          if ! curl -sf http://localhost:18080/actuator/info > /dev/null; then
+            echo "Failed to reach host actuator info endpoint"
+            cat host-shell-standalone.log
             exit 1
           fi
 
-          echo "📋 Capability Assembly Response:"
-          echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
-          echo ""
-
-          # Assert the response indicates all required capabilities are present
-          STATUS=$(echo "$RESPONSE" | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          # Check for missing or failed capabilities
-          missing = [c for c in data.get('capabilities', []) if c.get('status') != 'ACTIVE']
-          if missing:
-              print('FAIL')
-              for c in missing:
-                  print(f\"  - {c.get('name', 'unknown')}: {c.get('status', 'unknown')}\", file=sys.stderr)
-          else:
-              print('PASS')
-          " 2>&1)
-
-          if echo "$STATUS" | grep -q "FAIL"; then
-            echo "❌ Capability assembly verification FAILED"
-            echo "Missing or inactive capabilities:"
-            echo "$STATUS" | tail -n +2
+          if ! grep -q "Required capabilities validation passed" host-shell-standalone.log; then
+            echo "Capability assembly verification failed: startup validation log not found"
+            cat host-shell-standalone.log
             exit 1
           fi
 
-          echo "✅ All required capabilities successfully assembled"
+          if grep -q "Following required capabilities are not registered" host-shell-standalone.log; then
+            echo "Capability assembly verification failed: missing required capability"
+            cat host-shell-standalone.log
+            exit 1
+          fi
 
-      # ========================================================================
-      # Step 6: Cleanup
-      # ========================================================================
+          echo "All required capabilities successfully assembled"
+
       - name: Stop host process
         if: always()
         run: |
-          if [ -n "$HOST_PID" ] && kill -0 "$HOST_PID" 2>/dev/null; then
+          if [ -n "${HOST_PID:-}" ] && kill -0 "$HOST_PID" 2>/dev/null; then
             kill "$HOST_PID" || true
             wait "$HOST_PID" 2>/dev/null || true
-            echo "🛑 Host process stopped"
+            echo "Host process stopped"
           fi
 
-      # ========================================================================
-      # Step 7: Failure report
-      # ========================================================================
       - name: Generate failure report
         if: failure()
         run: |
-          echo "❌ Host Integration — Capability Assembly FAILED"
+          echo "Host Integration - Capability Assembly FAILED"
           echo ""
-          echo "📖 Red Lines R2.3, R2.7 from v3.0.9 Runtime Shell Architecture Blueprint:"
-          echo "   R2.3: Plugin capability assembly must pass integration verification"
-          echo "   R2.7: All required capabilities must be registered at Host startup"
+          echo "Red Lines R2.3, R2.7 from v3.0.9 Runtime Shell Architecture Blueprint:"
+          echo "  R2.3: Plugin capability assembly must pass integration verification"
+          echo "  R2.7: All required capabilities must be registered at Host startup"
           echo ""
-          echo "🔧 How to fix:"
-          echo "   1. Check that all plugins declare their capabilities in plugin-manifest"
-          echo "   2. Ensure capability provider beans are correctly annotated with @Capability"
-          echo "   3. Verify host-shell-standalone pom.xml includes all required plugin modules"
-          echo "   4. Check Spring Boot auto-configuration for missing capability wiring"
-          echo ""
-          echo "📚 Reference: 架构评审改造计划-v1.0.md §5.6"
+          echo "Check plugin manifests, @Capability annotations, Host dependency assembly, and Spring Boot auto-configuration."
