@@ -60,3 +60,6 @@ after-*.png
 final-*.png
 repro-*.png
 verified-*.png
+# Local Docker runtime/secrets
+.docker/
+docker-compose.local*.yml
