@@ -6,12 +6,31 @@
       "path": "docs/v3.0.10-运行壳架构设计蓝图.md",
       "version": "3.0.10",
       "compatibilityEpoch": 1,
-      "status": "pending-approval",
-      "effective": false,
-      "gitCommit": null,
-      "sha256": "c499fef443e273896d64cb06d4a9774d404ae12975d93244bb3e55db98988261",
-      "approvals": [],
-      "effectiveDate": null
+      "status": "architecture-frozen",
+      "effective": true,
+      "gitCommit": "38f9e9790241627517f185d5afc47d6b5ba20028",
+      "sha256": "ccd55421dc27f82c69e276fbc2009cf0b07777923b64b06725168d2b391e5e8d",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-declaration:2026-07-27:committee:jsq",
+          "approvedAt": "2026-07-27T11:55:23+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-declaration:2026-07-27:security:jsq",
+          "approvedAt": "2026-07-27T11:58:20+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-declaration:2026-07-27:sre:jsq",
+          "approvedAt": "2026-07-27T11:58:20+09:00"
+        }
+      ],
+      "effectiveDate": "2026-07-27"
     }
   ]
 }

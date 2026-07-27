@@ -8,7 +8,8 @@
 
 - 新增 `architecture-baselines.lock.yaml` 和 JSON Schema，以原始字节 SHA-256、Git commit、三方批准记录和 ISO-8601 生效日期绑定活动根基线。
 - 新增 fail-closed 校验器、单元测试和 CI；文档状态、机器元数据、lock、工作区字节和 Git 历史不一致时阻断。
-- 当前状态保持 `pending-approval`；在 Architecture Committee、Security、SRE 三方真实批准记录补齐前，不得切换为 `Architecture Frozen`。
+- 根蓝图已登记为 `Architecture Frozen`，自 2026-07-27 生效；冻结正文 commit 为 `38f9e9790241627517f185d5afc47d6b5ba20028`，raw bytes SHA-256 为 `ccd55421dc27f82c69e276fbc2009cf0b07777923b64b06725168d2b391e5e8d`。
+- Architecture Committee、Security、SRE 三个批准角色均由 `jsq` 明确批准，记录引用和批准时间见 `architecture-baselines.lock.yaml`。
 
 ---
 
