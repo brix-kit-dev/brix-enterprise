@@ -4,6 +4,14 @@
 
 ---
 
+## v3.0.10-freeze-governance（2026-07-27）— 根蓝图冻结门禁
+
+- 新增 `architecture-baselines.lock.yaml` 和 JSON Schema，以原始字节 SHA-256、Git commit、三方批准记录和 ISO-8601 生效日期绑定活动根基线。
+- 新增 fail-closed 校验器、单元测试和 CI；文档状态、机器元数据、lock、工作区字节和 Git 历史不一致时阻断。
+- 当前状态保持 `pending-approval`；在 Architecture Committee、Security、SRE 三方真实批准记录补齐前，不得切换为 `Architecture Frozen`。
+
+---
+
 ## v3.0.10-super-admin-phase5（2026-05-21）— 平台超管 v2.0 治理闭环
 
 - **Phase 5 红线自动化**：新增平台超管禁词扫描、旧平台角色码闭环扫描，并接入 `architecture-check` 质量门。

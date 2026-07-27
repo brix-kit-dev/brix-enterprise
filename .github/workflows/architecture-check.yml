@@ -2,7 +2,7 @@
 # Architecture Guard CI Workflow
 # ============================================================================
 #
-# This workflow enforces architectural constraints defined in v3.0.9 Runtime Shell
+# This workflow enforces architectural constraints defined in v3.0.10 Runtime Shell
 # Architecture Blueprint, specifically:
 #
 # - Constraint 9: BrixUI Unified Governance
@@ -18,7 +18,7 @@
 #
 # This CI gate prevents architecture violations from being merged into main branch.
 #
-# @see v3.0.9 Runtime Shell Architecture Blueprint - Constraint 9
+# @see v3.0.10 Runtime Shell Architecture Blueprint - BrixUI governance
 # @see UI设计令牌改造方�?v2.0.md - Phase 7: ESLint 治理规则
 # @see BrixUI组件扩展与治理改造计�?v1.0.md - Phase 5: ESLint 治理
 # ============================================================================
@@ -46,6 +46,12 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pom.xml'
+      - 'docs/v3.0.10-运行壳架构设计蓝图.md'
+      - 'docs/architecture-baselines.lock.yaml'
+      - 'docs/.schemas/architecture-baseline-lock.schema.json'
+      - 'scripts/validate_architecture_baseline.py'
+      - 'scripts/test_validate_architecture_baseline.py'
+      - 'scripts/requirements-architecture.txt'
       # Also trigger when ESLint config or this workflow changes
       - '.eslintrc.*'
       - 'eslint.config.*'
@@ -69,6 +75,12 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pom.xml'
+      - 'docs/v3.0.10-运行壳架构设计蓝图.md'
+      - 'docs/architecture-baselines.lock.yaml'
+      - 'docs/.schemas/architecture-baseline-lock.schema.json'
+      - 'scripts/validate_architecture_baseline.py'
+      - 'scripts/test_validate_architecture_baseline.py'
+      - 'scripts/requirements-architecture.txt'
 
 # Concurrency: Cancel previous runs for the same PR/branch
 concurrency:
@@ -76,6 +88,62 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  root-architecture-baseline:
+    name: Root Architecture Baseline Integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install baseline validator dependencies
+        run: python -m pip install --requirement scripts/requirements-architecture.txt
+
+      - name: Test baseline validator
+        run: python -m unittest scripts/test_validate_architecture_baseline.py
+
+      - name: Validate root architecture baseline
+        run: python scripts/validate_architecture_baseline.py
+
+  runtime-shell-v3-0-10-tenant-only:
+    name: Runtime Shell v3.0.10 Tenant-Only Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java (17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: app-tenant core architecture test
+        run: mvn -q -pl packages/@brix/enterprise-solutions/app-tenant/tenant-core test
+
+      - name: app-tenant must not expand v3.0.9 runtime entry points
+        run: |
+          set -euo pipefail
+          if grep -RInE 'RuntimeContext|AbstractModule' \
+            packages/@brix/enterprise-solutions/app-tenant/tenant-core/src/main/java \
+            packages/@brix/enterprise-solutions/app-tenant/tenant-server/src/main/java; then
+            echo "app-tenant Java sources must not add RuntimeContext or AbstractModule usage under the v3.0.10 migration baseline."
+            exit 1
+          fi
+
+      - name: Standalone Host v3.0.10 model profile compiles
+        run: mvn -q -pl packages/@brix/enterprise-host/host-shell-standalone -Pci-runtime-shell-3.0.10 test
+
   zero-tolerance-red-lines:
     name: Phase 0 Zero Tolerance Red Lines
     runs-on: ubuntu-latest

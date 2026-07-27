@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "baselines": [
+    {
+      "id": "runtime-shell",
+      "path": "docs/v3.0.10-运行壳架构设计蓝图.md",
+      "version": "3.0.10",
+      "compatibilityEpoch": 1,
+      "status": "pending-approval",
+      "effective": false,
+      "gitCommit": null,
+      "sha256": "c499fef443e273896d64cb06d4a9774d404ae12975d93244bb3e55db98988261",
+      "approvals": [],
+      "effectiveDate": null
+    }
+  ]
+}
