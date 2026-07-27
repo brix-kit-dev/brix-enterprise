@@ -164,7 +164,7 @@ export function useTenantCreate(): { state: TenantCreateState; actions: TenantCr
   // =========================================
   const http = useHttp();
   const eventBus = useEventBus();
-  const { requestNavigate } = useNavigation();
+  const navigation = useNavigation();
 
   // =========================================
   // Repository
@@ -234,7 +234,7 @@ export function useTenantCreate(): { state: TenantCreateState; actions: TenantCr
       };
       const tenant = await repository.createTenant(request);
       setCreatedTenant(tenant);
-      eventBus.emit({ type: TenantEvents.TENANT_CREATED, payload: { tenantId: tenant.id } });
+      eventBus.emit(TenantEvents.TENANT_CREATED, { tenantId: tenant.id });
     } catch (err) {
       const msg = err instanceof Error ? err.message : '创建租户失败';
       setSubmitError(msg);
@@ -243,6 +243,14 @@ export function useTenantCreate(): { state: TenantCreateState; actions: TenantCr
       setIsSubmitting(false);
     }
   }, [form, repository, eventBus]);
+
+  const navigateTo = useCallback((path: string) => {
+    if (navigation.requestNavigate) {
+      void navigation.requestNavigate(path);
+      return;
+    }
+    navigation.navigate(path);
+  }, [navigation]);
 
   const reset = useCallback(() => {
     setForm(initialForm);
@@ -253,14 +261,14 @@ export function useTenantCreate(): { state: TenantCreateState; actions: TenantCr
   }, []);
 
   const cancel = useCallback(() => {
-    requestNavigate('/admin/tenants');
-  }, [requestNavigate]);
+    navigateTo('/admin/tenants');
+  }, [navigateTo]);
 
   const viewCreatedTenant = useCallback(() => {
     if (createdTenant) {
-      requestNavigate(`/admin/tenants/${createdTenant.id}`);
+      navigateTo(`/admin/tenants/${createdTenant.id}`);
     }
-  }, [createdTenant, requestNavigate]);
+  }, [createdTenant, navigateTo]);
 
   // =========================================
   // Return ViewModel

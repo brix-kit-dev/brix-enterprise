@@ -159,4 +159,28 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>contract-test</id>
+            <dependencies>
+                <dependency>
+                    <groupId>io.brix.enterprise.solutions</groupId>
+                    <artifactId>tenant-server</artifactId>
+                    <version>3.2.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>tenant-only</id>
+            <dependencies>
+                <dependency>
+                    <groupId>io.brix.enterprise.solutions</groupId>
+                    <artifactId>tenant-server</artifactId>
+                    <version>3.2.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

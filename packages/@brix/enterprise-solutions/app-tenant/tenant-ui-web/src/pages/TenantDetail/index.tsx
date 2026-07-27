@@ -309,7 +309,7 @@ export function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
                   </div>
                   <Switch
                     checked={feature.enabled}
-                    onChange={(checked) => handleFeatureToggle(feature.key, checked)}
+                    onChange={(event) => handleFeatureToggle(feature.key, event.target.checked)}
                   />
                 </div>
               ))}
@@ -353,9 +353,10 @@ export function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
       <Modal
         title={t('detail.suspendModalTitle')}
         open={showSuspendModal}
-        onOk={handleSuspend}
+        onClose={() => setShowSuspendModal(false)}
+        onConfirm={handleSuspend}
         onCancel={() => setShowSuspendModal(false)}
-        okText={t('detail.suspendModalOk')}
+        confirmText={t('detail.suspendModalOk')}
         cancelText={t('detail.suspendModalCancel')}
       >
         <p dangerouslySetInnerHTML={{ __html: t('detail.suspendConfirm', { interpolation: { name: tenant.name } }) }} />
@@ -372,11 +373,12 @@ export function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
       <Modal
         title={t('detail.terminateModalTitle')}
         open={showTerminateModal}
-        onOk={handleTerminate}
+        onClose={() => setShowTerminateModal(false)}
+        onConfirm={handleTerminate}
         onCancel={() => setShowTerminateModal(false)}
-        okText={t('detail.terminateModalOk')}
+        confirmText={t('detail.terminateModalOk')}
         cancelText={t('detail.terminateModalCancel')}
-        okButtonProps={{ danger: true, disabled: !terminateReason }}
+        confirmLoading={state.isSaving}
       >
         <p style={{ color: 'red' }}>
           {t('detail.terminateWarning')}

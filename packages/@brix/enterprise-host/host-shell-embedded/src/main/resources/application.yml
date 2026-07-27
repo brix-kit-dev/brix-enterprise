@@ -32,6 +32,10 @@ spring:
 
 # ==================== 运行壳配置 ====================
 brix:
+  runtime-shell:
+    enabled: true
+    endpoint-deadline-millis: ${BRIX_RUNTIME_ENDPOINT_DEADLINE_MILLIS:30000}
+    required-plugins: []
   shell:
     embedded:
       enabled: true
@@ -81,3 +85,24 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,runtimeShellReadiness
+
+---
+# ============================================================
+# tenant-only profile — v3.0.10 Runtime Shell Bootstrap Gate
+# ============================================================
+spring:
+  config:
+    activate:
+      on-profile: tenant-only
+
+brix:
+  runtime-shell:
+    required-plugins:
+      - brix-app-tenant

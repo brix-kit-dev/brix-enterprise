@@ -4,6 +4,7 @@
   tenant-server - Tenant Module Server Layer
 
   Responsibilities:
+  - BrixPlugin ServiceLoader entry point
   - REST Controller (API endpoints)
   - Spring Boot Auto-Configuration
   - Module assembly entry point (assembled by Host)
@@ -12,7 +13,7 @@
   - Depends on tenant-core for business logic
   - Depends on tenant-api for DTOs and service interfaces
   - Provides REST API exposed via Gateway
-  - Auto-configuration class for Host assembly auto-scanning
+  - Auto-configuration class for Host assembly REST adapter registration
 
   Version: 3.2.0-SNAPSHOT
   =========================================================
@@ -33,7 +34,7 @@
     <packaging>jar</packaging>
 
     <name>Tenant Server</name>
-    <description>Tenant module server layer - REST Controller, auto-configuration</description>
+    <description>Tenant module server layer - BrixPlugin entrypoint, REST Controller, auto-configuration</description>
 
     <dependencies>
         <!-- Module internal dependencies -->
@@ -44,16 +45,6 @@
         <dependency>
             <groupId>io.brix.enterprise.solutions</groupId>
             <artifactId>tenant-core</artifactId>
-        </dependency>
-
-        <!-- P2-8: Platform auth annotations for @RequirePermission on management endpoints.
-             platform-auth is provided at runtime by platform-auth-servlet (host assembly);
-             declared here for compile-time access to RequirePermission / PlatformPermissions. -->
-        <dependency>
-            <groupId>io.brix.platform</groupId>
-            <artifactId>platform-auth</artifactId>
-            <version>3.2.0</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Spring Web -->

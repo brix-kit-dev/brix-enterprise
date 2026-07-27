@@ -1,0 +1,117 @@
+请根据已经完成的“平台超管开通流程复用调查报告”，设计并实现统一的租户管理员邀请能力。
+
+一、核心原则
+
+1. 不修改、不重复开发现有平台超管创建、认证、MFA 和登录流程。
+2. 复用调查报告确认可复用的内容。
+3. 平台超管授权与租户成员授权必须完全隔离。
+4. 创建租户与首位管理员接管分离：
+   - 创建租户后状态为 PENDING_ACTIVATION；
+   - 不自动创建 OWNER；
+   - 平台超管在“租户详情 → 租户管理员”区域发送首位 OWNER 邀请。
+5. v3.1.3 文档中“创建租户时自动创建 ACTIVE OWNER”的 T-28 旧设计，以本次最新裁决为准。
+
+二、统一邀请模型
+
+首位 OWNER 和后续租户成员共用邀请基础设施，但使用不同接受策略：
+
+- FIRST_OWNER：
+  - 由平台超管发起；
+  - 角色固定为 OWNER；
+  - 接受后激活租户并正式占用租户配额。
+
+- TENANT_MEMBER：
+  - 由该租户 ACTIVE OWNER 发起；
+  - 可邀请 OWNER、ADMIN、MEMBER；
+  - 接受后加入现有租户；
+  - 不改变租户状态和租户数量配额。
+
+邀请记录必须明确保存：
+
+- invitation_purpose：FIRST_OWNER / TENANT_MEMBER
+- inviter_type：PLATFORM_ADMIN / TENANT_MEMBER
+- platform_admin_id 或 tenant_member_id，二者互斥
+- tenant_id、target_role、invited_email
+- token_hash、status、expires_at、used_at
+
+不得根据“租户是否已有 OWNER”动态推断邀请用途，也不得把平台超管伪装成租户 Member。
+
+三、邀请流程
+
+已有 Identity：
+
+发送邀请 → 用户使用原账号登录 → 验证邀请邮箱一致 → 接受邀请。
+
+没有 Identity：
+
+发送一次性邀请 → 用户验证邮箱 → 自行设置密码 → 激活 Identity → 接受邀请。
+
+平台超管不得设置、查看或发送用户密码。邀请 Token 必须一次性、带有效期、数据库仅保存 Hash；重发后旧 Token 失效，API 不返回明文 Token，链接只能通过 NotificationCapability 发送。
+
+四、首位 OWNER 接管事务
+
+接受 FIRST_OWNER 邀请时，必须在同一事务中：
+
+1. 锁定并校验邀请、Token Hash、状态、有效期和邮箱。
+2. 确认租户仍为 PENDING_ACTIVATION，且不存在 ACTIVE OWNER。
+3. 锁定并重新校验 License 和租户配额。
+4. 创建 ACTIVE OWNER 的 sys_tenant_member。
+5. 创建或确认 biz_user_profile。
+6. 将租户改为 TRIAL 或 ACTIVE。
+7. 正式占用配额。
+8. 将邀请改为 ACCEPTED。
+9. 写入平台审计。
+
+任一步失败全部回滚，并保证重复接受不会重复创建 Member、Profile 或增加配额。
+
+五、登录与权限
+
+租户成员统一从 `/login` 登录，使用 Actor Token；不得使用 `/platform/login` 或 Platform Token。
+
+首位 OWNER 接管成功后，必须能够获得该租户上下文。Actor Token 至少包含：
+
+- tid
+- cid
+- mid
+- mtype
+- authz_version
+- aud = brix-actor
+
+OWNER 登录后可以在租户端“成员管理”页面邀请和管理 OWNER、ADMIN、MEMBER。平台超管不管理租户内部普通成员。
+
+必须保护最后一个 ACTIVE OWNER：禁止删除、停用或降级，并使用租户级锁处理并发修改。
+
+六、接口建议
+
+平台端：
+
+POST /api/platform/tenants/{tenantId}/owner-invitations
+POST /api/platform/tenants/{tenantId}/owner-invitations/{id}/resend
+POST /api/platform/tenants/{tenantId}/owner-invitations/{id}/revoke
+
+租户端：
+
+GET  /api/tenant/members
+POST /api/tenant/members/invitations
+PATCH /api/tenant/members/{memberId}/role
+PATCH /api/tenant/members/{memberId}/status
+
+公共入口：
+
+GET  /api/invitations/preview
+POST /api/invitations/accept
+
+服务端必须根据邀请记录中的 invitation_purpose 选择处理器，不能相信前端传入的邀请用途。
+
+七、执行要求
+
+1. 先阅读复用调查报告及 v3.0.10、v3.1.3 文档。
+2. 检查现有表结构、服务、接口和前端页面。
+3. 优先复用已确认的稳定基础组件，不为复用而大规模重构超管流程。
+4. 先输出数据库、后端、前端和测试的修改计划及受影响文件。
+5. 计划确认后再编码。
+6. 完成单元测试、事务回滚、幂等、并发、Token 安全和权限隔离测试。
+
+最终目标：
+
+“建立一套可复用的租户邀请基础设施，由平台超管邀请首位 OWNER 接管待激活租户；接管后由 OWNER 使用同一套基础设施管理后续租户成员，同时严格隔离平台权限与租户权限。”

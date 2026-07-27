@@ -29,9 +29,9 @@ import io.brix.platform.starter.shell.AbstractShellProperties;
  * <p>Extends {@link AbstractShellProperties} common fields (moduleId, tenantId, scheduling, lock)
  * and adds embedded-mode-specific Webhook / in-memory storage / lightweight configuration.</p>
  *
- * <h2>Package Rename (v3.0.9)</h2>
- * <p>Renamed from {@code io.host.shell.embedded.config} to
- * {@code io.brix.enterprise.host.embedded.config}.</p>
+ * <h2>Runtime Shell v3.0.10</h2>
+ * <p>These properties describe Host configuration only. Runtime bootstrap,
+ * plugin discovery, and readiness rules are owned by runtime-orchestrator.</p>
  *
  * <p>Configure the embedded mode behavior via application.yml:</p>
  * <pre>{@code

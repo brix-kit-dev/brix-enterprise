@@ -1,0 +1,128 @@
+apiVersion: brix.io/v1
+kind: Plugin
+metadata:
+  pluginId: brix-app-tenant
+  name: tenant
+  version: 3.2.0-SNAPSHOT
+  displayName: Tenant Management
+  vendor: Brix Enterprise
+  license: Commercial
+runtime:
+  compiledAgainst: 3.0.10
+  supportedRange: ">=3.0.10 <4.0.0"
+modules:
+  - groupId: io.brix.enterprise.solutions
+    artifactId: tenant-api
+    version: 3.2.0-SNAPSHOT
+    moduleKind: plugin-api
+  - groupId: io.brix.enterprise.solutions
+    artifactId: tenant-core
+    version: 3.2.0-SNAPSHOT
+    moduleKind: plugin-core
+  - groupId: io.brix.enterprise.solutions
+    artifactId: tenant-server
+    version: 3.2.0-SNAPSHOT
+    moduleKind: plugin-server
+routes:
+  - id: tenant.list
+    path: /api/v1/tenants
+    method: GET
+    handler: TenantManagementController.listTenants
+    accessPolicy: tenant:admin:read
+  - id: tenant.create
+    path: /api/v1/tenants
+    method: POST
+    handler: TenantManagementController.createTenant
+    accessPolicy: tenant:admin:create
+  - id: tenant.detail
+    path: /api/v1/tenants/{tenantId}
+    method: GET
+    handler: TenantManagementController.getTenant
+    accessPolicy: tenant:admin:read
+  - id: tenant.by-code
+    path: /api/v1/tenants/by-code/{code}
+    method: GET
+    handler: TenantManagementController.getTenantByCode
+    accessPolicy: tenant:admin:read
+  - id: tenant.activate
+    path: /api/v1/tenants/{tenantId}/activate
+    method: POST
+    handler: TenantManagementController.activateTenant
+    accessPolicy: tenant:admin:update
+  - id: tenant.suspend
+    path: /api/v1/tenants/{tenantId}/suspend
+    method: POST
+    handler: TenantManagementController.suspendTenant
+    accessPolicy: tenant:admin:suspend
+  - id: tenant.members
+    path: /api/v1/tenants/{tenantId}/members
+    method: GET
+    handler: TenantManagementController.listMembers
+    accessPolicy: tenant:admin:read
+capabilities:
+  required:
+    - id: AuthCapability
+      version: ">=3.0.10 <4.0.0"
+    - id: EventBusCapability
+      version: ">=3.0.10 <4.0.0"
+  optional:
+    - id: NotificationCapability
+      version: ">=3.0.10 <4.0.0"
+queries:
+  provides: []
+  consumes: []
+commands:
+  provides: []
+  consumes: []
+events:
+  publishes:
+    - id: brix-app-tenant.TenantCreated
+      schema: schemas/events/tenant-created.v1.json
+      version: 1.0.0
+    - id: brix-app-tenant.TenantUpdated
+      schema: schemas/events/tenant-updated.v1.json
+      version: 1.0.0
+    - id: brix-app-tenant.TenantSuspended
+      schema: schemas/events/tenant-suspended.v1.json
+      version: 1.0.0
+    - id: brix-app-tenant.TenantTerminated
+      schema: schemas/events/tenant-terminated.v1.json
+      version: 1.0.0
+  subscribes: []
+data:
+  storageId: tenant
+  schema: tenant
+  migrationLocation: classpath:db/migration/tenant
+  outbox: tenant_outbox
+  inbox: tenant_inbox
+permissions:
+  - id: tenant:admin:read
+    name: View tenants
+    description: Read tenant administration data
+  - id: tenant:admin:create
+    name: Create tenants
+    description: Provision new tenants
+  - id: tenant:admin:update
+    name: Update tenants
+    description: Update tenant administration data
+  - id: tenant:admin:suspend
+    name: Suspend tenants
+    description: Suspend or reactivate tenants
+config:
+  - key: tenant.max-tenants
+    type: integer
+    default: 1000
+    sensitivity: internal
+    description: Maximum number of tenants allowed in the deployment
+  - key: tenant.default-quota-users
+    type: integer
+    default: 100
+    sensitivity: internal
+    description: Default maximum number of users per tenant
+ui:
+  web:
+    enabled: true
+    manifestUrl: /plugins/tenant/ui-manifest.json
+    runtimeRange: ">=3.0.10 <4.0.0"
+  mobile:
+    enabled: false

@@ -20,6 +20,8 @@ import type {
 } from '@brix-sdk/tenant-shared';
 import { TenantEvents } from '@brix-sdk/tenant-shared';
 
+type TenantMemberEventPayload = { tenantId: string };
+
 /**
  * Tenant Members ViewModel State
  */
@@ -89,7 +91,7 @@ export function useTenantMembers(tenantId: string): { state: TenantMembersState;
   // =========================================
   const http = useHttp();
   const eventBus = useEventBus();
-  const { requestNavigate } = useNavigation();
+  const navigation = useNavigation();
   
   // =========================================
   // Repository
@@ -146,23 +148,40 @@ export function useTenantMembers(tenantId: string): { state: TenantMembersState;
   // Event Subscriptions
   // =========================================
   useEffect(() => {
-    const handleMemberEvent = (event: { payload: { tenantId: string } }) => {
-      if (event.payload.tenantId === tenantId) {
+    const subscribe = eventBus.on as unknown as <T>(
+      eventType: string,
+      handler: (payload: T) => void
+    ) => void | (() => void);
+    const handleMemberEvent = (payload: TenantMemberEventPayload | { payload: TenantMemberEventPayload }) => {
+      const eventPayload = 'payload' in payload ? payload.payload : payload;
+      if (eventPayload.tenantId === tenantId) {
         fetchMembers();
       }
     };
     
     const unsubscribes = [
-      eventBus.on(TenantEvents.MEMBER_INVITED, handleMemberEvent),
-      eventBus.on(TenantEvents.MEMBER_JOINED, handleMemberEvent),
-      eventBus.on(TenantEvents.MEMBER_REMOVED, handleMemberEvent),
-      eventBus.on(TenantEvents.MEMBER_ROLE_CHANGED, handleMemberEvent),
+      subscribe(TenantEvents.MEMBER_INVITED, handleMemberEvent),
+      subscribe(TenantEvents.MEMBER_JOINED, handleMemberEvent),
+      subscribe(TenantEvents.MEMBER_REMOVED, handleMemberEvent),
+      subscribe(TenantEvents.MEMBER_ROLE_CHANGED, handleMemberEvent),
     ];
     
     return () => {
-      unsubscribes.forEach((unsub) => unsub());
+      unsubscribes.forEach((unsub) => {
+        if (typeof unsub === 'function') {
+          unsub();
+        }
+      });
     };
   }, [eventBus, tenantId, fetchMembers]);
+
+  const navigateTo = useCallback((path: string) => {
+    if (navigation.requestNavigate) {
+      void navigation.requestNavigate(path);
+      return;
+    }
+    navigation.navigate(path);
+  }, [navigation]);
   
   // =========================================
   // Actions
@@ -195,7 +214,7 @@ export function useTenantMembers(tenantId: string): { state: TenantMembersState;
       setIsInviting(true);
       try {
         await repository.inviteMember(tenantId, request);
-        eventBus.emit({ type: TenantEvents.MEMBER_INVITED, payload: { tenantId, email: request.email } });
+        eventBus.emit(TenantEvents.MEMBER_INVITED, { tenantId, email: request.email });
         setIsInviteDialogOpen(false);
       } finally {
         setIsInviting(false);
@@ -206,7 +225,7 @@ export function useTenantMembers(tenantId: string): { state: TenantMembersState;
       try {
         await repository.updateMember(tenantId, memberId, request);
         if (request.roles) {
-          eventBus.emit({ type: TenantEvents.MEMBER_ROLE_CHANGED, payload: { tenantId, memberId } });
+          eventBus.emit(TenantEvents.MEMBER_ROLE_CHANGED, { tenantId, memberId });
         }
       } catch (err) {
         throw err;
@@ -216,7 +235,7 @@ export function useTenantMembers(tenantId: string): { state: TenantMembersState;
     removeMember: async (memberId: string) => {
       try {
         await repository.removeMember(tenantId, memberId);
-        eventBus.emit({ type: TenantEvents.MEMBER_REMOVED, payload: { tenantId, memberId } });
+        eventBus.emit(TenantEvents.MEMBER_REMOVED, { tenantId, memberId });
       } catch (err) {
         throw err;
       }
@@ -231,9 +250,9 @@ export function useTenantMembers(tenantId: string): { state: TenantMembersState;
     },
     
     goBack: () => {
-      requestNavigate(`/admin/tenants/${tenantId}`);
+      navigateTo(`/admin/tenants/${tenantId}`);
     },
-  }), [fetchMembers, repository, tenantId, eventBus, requestNavigate]);
+  }), [fetchMembers, repository, tenantId, eventBus, navigateTo]);
   
   // =========================================
   // Return ViewModel

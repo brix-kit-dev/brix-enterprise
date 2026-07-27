@@ -16,6 +16,8 @@ package io.brix.enterprise.host.embedded;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
+
 /**
  * Brix Enterprise embedded mode shell entry point.
  *
@@ -31,9 +33,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * server modules are assembled through Maven dependencies, Spring Boot
  * auto-configuration imports, plugin manifests, and YAML configuration.</p>
  *
- * <h2>Package Rename (v3.0.9)</h2>
- * <p>Package renamed from {@code io.host.shell.embedded} to
- * {@code io.brix.enterprise.host.embedded}.</p>
+ * <h2>Runtime Bootstrap</h2>
+ * <p>After Spring has assembled the Host classpath, this entry point delegates
+ * plugin discovery, lifecycle start, and readiness aggregation to the v3.0.10
+ * Runtime Shell bootstrap API. The Host does not import plugin implementation
+ * classes or lifecycle internals.</p>
  *
  * <h2>Use Cases</h2>
  * <ul>
@@ -55,6 +59,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ShellApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ShellApplication.class, args);
+        RuntimeShellBootstrap.start(SpringApplication.run(ShellApplication.class, args));
     }
 }

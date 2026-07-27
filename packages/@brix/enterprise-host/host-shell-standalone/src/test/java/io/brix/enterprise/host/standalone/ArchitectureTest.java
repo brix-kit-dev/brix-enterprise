@@ -16,7 +16,14 @@ package io.brix.enterprise.host.standalone;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.junit.ArchTests;
+import com.tngtech.archunit.lang.ArchRule;
 import io.brix.architecture.guard.BrixArchitectureRules;
+import org.junit.jupiter.api.Test;
+
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
  * Architecture red-line guard tests for the Host ultra-thin shell layer.
@@ -33,12 +40,8 @@ import io.brix.architecture.guard.BrixArchitectureRules;
  * <p>If this test fails, the code violates architecture red lines and must be corrected
  * before submission.</p>
  *
- * <h3>Package Rename (v3.0.9)</h3>
- * <p>Package renamed from {@code io.host.shell.standalone} to
- * {@code io.brix.enterprise.host.standalone}.</p>
- *
  * @see BrixArchitectureRules#hostProfile()
- * @see <a href="docs/v3.0.9-运行壳架构设计蓝图.md">v3.0.9 Runtime Shell Architecture Blueprint</a>
+ * @see <a href="docs/v3.0.10-运行壳架构设计蓝图.md">v3.0.10 Runtime Shell Architecture Blueprint</a>
  */
 @AnalyzeClasses(packages = "io.brix.enterprise.host.standalone")
 public class ArchitectureTest {
@@ -51,4 +54,20 @@ public class ArchitectureTest {
      */
     @ArchTest
     static final ArchTests rules = BrixArchitectureRules.hostProfile();
+
+    /**
+     * Host source must not import commercial plugin business implementation types.
+     */
+    @ArchTest
+    static final ArchRule hostDoesNotDependOnEnterpriseBusinessTypes = noClasses()
+        .that().resideInAPackage("io.brix.enterprise.host..")
+        .should().dependOnClassesThat().resideInAPackage("io.brix.enterprise.app..")
+        .because("Host may assemble plugin artifacts in the POM but source code must only call Runtime Bootstrap API");
+
+    @Test
+    void hostSourceDoesNotDependOnEnterpriseBusinessTypes() {
+        hostDoesNotDependOnEnterpriseBusinessTypes.check(new ClassFileImporter()
+            .withImportOption(new ImportOption.DoNotIncludeTests())
+            .importPackages("io.brix.enterprise.host.standalone"));
+    }
 }

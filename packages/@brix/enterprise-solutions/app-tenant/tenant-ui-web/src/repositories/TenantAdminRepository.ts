@@ -6,8 +6,8 @@
  * 
  * @fileoverview TenantAdminRepository - Data access layer for tenant management
  * 
- * Follows the Repository pattern defined in v3.0.9 Architecture Blueprint
- * Section 7.5 (Frontend Three-Layer Separation - Repository Layer)
+ * Follows the Repository pattern defined in the v3.0.10 Runtime Shell
+ * UI boundary: Page -> Hook -> Repository -> HttpCapability.
  */
 
 import type { HttpCapability } from '@brix-sdk/runtime-sdk-api-web';
@@ -103,19 +103,26 @@ export interface TenantAdminRepository {
  * Note: '/api' prefix is provided by HttpCapability baseURL (VITE_API_BASE).
  */
 const API_ENDPOINTS = {
-  TENANTS: '/admin/tenants',
-  TENANT: (id: string) => `/admin/tenants/${id}`,
-  TENANT_ACTIVATE: (id: string) => `/admin/tenants/${id}/activate`,
-  TENANT_SUSPEND: (id: string) => `/admin/tenants/${id}/suspend`,
-  TENANT_TERMINATE: (id: string) => `/admin/tenants/${id}/terminate`,
-  MEMBERS: (tenantId: string) => `/admin/tenants/${tenantId}/members`,
-  MEMBER: (tenantId: string, memberId: string) => `/admin/tenants/${tenantId}/members/${memberId}`,
-  MEMBER_RESEND: (tenantId: string, memberId: string) => `/admin/tenants/${tenantId}/members/${memberId}/resend`,
-  FEATURES: (tenantId: string) => `/admin/tenants/${tenantId}/features`,
-  FEATURE: (tenantId: string, key: string) => `/admin/tenants/${tenantId}/features/${key}`,
-  STATISTICS: '/admin/tenants/statistics',
-  AUDIT_LOGS: (tenantId: string) => `/admin/tenants/${tenantId}/audit-logs`,
+  TENANTS: '/v1/tenants',
+  TENANT: (id: string) => `/v1/tenants/${id}`,
+  TENANT_ACTIVATE: (id: string) => `/v1/tenants/${id}/activate`,
+  TENANT_SUSPEND: (id: string) => `/v1/tenants/${id}/suspend`,
+  TENANT_TERMINATE: (id: string) => `/v1/tenants/${id}/terminate`,
+  MEMBERS: (tenantId: string) => `/v1/tenants/${tenantId}/members`,
+  MEMBER: (tenantId: string, memberId: string) => `/v1/tenants/${tenantId}/members/${memberId}`,
+  MEMBER_RESEND: (tenantId: string, memberId: string) => `/v1/tenants/${tenantId}/members/${memberId}/resend`,
+  FEATURES: (tenantId: string) => `/v1/tenants/${tenantId}/features`,
+  FEATURE: (tenantId: string, key: string) => `/v1/tenants/${tenantId}/features/${key}`,
+  STATISTICS: '/v1/tenants/statistics',
+  AUDIT_LOGS: (tenantId: string) => `/v1/tenants/${tenantId}/audit-logs`,
 } as const;
+
+function toQueryParams<T extends object>(query: T | undefined): Record<string, unknown> | undefined {
+  if (!query) {
+    return undefined;
+  }
+  return Object.fromEntries(Object.entries(query));
+}
 
 /**
  * Create TenantAdminRepository with HttpCapability injection
@@ -134,7 +141,7 @@ export function createTenantAdminRepository(http: HttpCapability): TenantAdminRe
     // =========================================
 
     async getTenants(query?: TenantListQuery): Promise<PagedResponse<TenantDTO>> {
-      return http.get<PagedResponse<TenantDTO>>(API_ENDPOINTS.TENANTS, query);
+      return http.get<PagedResponse<TenantDTO>>(API_ENDPOINTS.TENANTS, toQueryParams(query));
     },
 
     async getTenant(tenantId: string): Promise<TenantDTO> {
@@ -166,7 +173,7 @@ export function createTenantAdminRepository(http: HttpCapability): TenantAdminRe
     // =========================================
 
     async getMembers(tenantId: string, query?: MemberListQuery): Promise<PagedResponse<TenantMemberDTO>> {
-      return http.get<PagedResponse<TenantMemberDTO>>(API_ENDPOINTS.MEMBERS(tenantId), query);
+      return http.get<PagedResponse<TenantMemberDTO>>(API_ENDPOINTS.MEMBERS(tenantId), toQueryParams(query));
     },
 
     async inviteMember(tenantId: string, request: InviteMemberRequest): Promise<TenantMemberDTO> {

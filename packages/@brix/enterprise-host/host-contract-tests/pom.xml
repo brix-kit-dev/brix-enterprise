@@ -43,6 +43,12 @@
             <artifactId>runtime-sdk-api</artifactId>
             <version>${runtime-sdk.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-orchestrator</artifactId>
+            <version>${runtime-sdk.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Standalone adapters (Kafka, Redis) -->
         <dependency>
@@ -63,6 +69,14 @@
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-webhook</artifactId>
             <version>${infra-adapters.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- tenant-only Runtime Shell composition provider -->
+        <dependency>
+            <groupId>io.brix.enterprise.solutions</groupId>
+            <artifactId>tenant-server</artifactId>
+            <version>3.2.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 

@@ -150,7 +150,7 @@
           ========== Platform Admin（平台超管能力 — Layer 2C）==========
           Provides /api/platform/** endpoints (auth, admins, tenants view, audit logs).
           Per SSoT v1.0-平台超管最小实现-唯一真相来源.md §13 (P-2 Maven module) and
-          v3.0.9 蓝图 约束 6 (Host 极薄原则): capability assembled by dependency declaration
+          v3.0.10 蓝图 Host 极薄原则: capability assembled by dependency declaration
           only; no host-side code/wiring. AutoConfiguration:
           io.brix.platform.admin.config.PlatformAdminAutoConfiguration.
         -->
@@ -325,6 +325,49 @@
                     <groupId>com.h2database</groupId>
                     <artifactId>h2</artifactId>
                     <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>ci-runtime-shell-3.0.10</id>
+            <properties>
+                <brix.runtime-shell.model>3.0.10</brix.runtime-shell.model>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>io.brix.enterprise.solutions</groupId>
+                    <artifactId>tenant-server</artifactId>
+                    <version>3.2.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <brix.runtime-shell.model>${brix.runtime-shell.model}</brix.runtime-shell.model>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>tenant-only</id>
+            <dependencies>
+                <dependency>
+                    <groupId>io.brix.enterprise.solutions</groupId>
+                    <artifactId>tenant-server</artifactId>
+                    <version>3.2.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>
         </profile>

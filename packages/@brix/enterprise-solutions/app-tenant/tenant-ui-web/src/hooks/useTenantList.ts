@@ -96,7 +96,7 @@ export function useTenantList(): { state: TenantListState; actions: TenantListAc
   // =========================================
   const http = useHttp();
   const eventBus = useEventBus();
-  const { requestNavigate } = useNavigation();
+  const navigation = useNavigation();
   
   // =========================================
   // Repository (injected via factory)
@@ -156,18 +156,34 @@ export function useTenantList(): { state: TenantListState; actions: TenantListAc
   // Event Subscriptions
   // =========================================
   useEffect(() => {
+    const subscribe = eventBus.on as unknown as (
+      eventType: string,
+      handler: (payload?: unknown) => void
+    ) => void | (() => void);
     // Refresh list when tenant events occur
     const unsubscribes = [
-      eventBus.on(TenantEvents.TENANT_CREATED, fetchTenants),
-      eventBus.on(TenantEvents.TENANT_ACTIVATED, fetchTenants),
-      eventBus.on(TenantEvents.TENANT_SUSPENDED, fetchTenants),
-      eventBus.on(TenantEvents.TENANT_TERMINATED, fetchTenants),
+      subscribe(TenantEvents.TENANT_CREATED, fetchTenants),
+      subscribe(TenantEvents.TENANT_ACTIVATED, fetchTenants),
+      subscribe(TenantEvents.TENANT_SUSPENDED, fetchTenants),
+      subscribe(TenantEvents.TENANT_TERMINATED, fetchTenants),
     ];
     
     return () => {
-      unsubscribes.forEach((unsub) => unsub());
+      unsubscribes.forEach((unsub) => {
+        if (typeof unsub === 'function') {
+          unsub();
+        }
+      });
     };
   }, [eventBus, fetchTenants]);
+
+  const navigateTo = useCallback((path: string) => {
+    if (navigation.requestNavigate) {
+      void navigation.requestNavigate(path);
+      return;
+    }
+    navigation.navigate(path);
+  }, [navigation]);
   
   // =========================================
   // Actions
@@ -200,17 +216,17 @@ export function useTenantList(): { state: TenantListState; actions: TenantListAc
     },
     
     viewTenant: (tenantId: string) => {
-      requestNavigate(`/admin/tenants/${tenantId}`);
+      navigateTo(`/admin/tenants/${tenantId}`);
     },
     
     createTenant: () => {
-      requestNavigate('/admin/tenants/create');
+      navigateTo('/admin/tenants/create');
     },
     
     activateTenant: async (tenantId: string) => {
       try {
         await repository.activateTenant(tenantId);
-        eventBus.emit({ type: TenantEvents.TENANT_ACTIVATED, payload: { tenantId } });
+        eventBus.emit(TenantEvents.TENANT_ACTIVATED, { tenantId });
       } catch (err) {
         throw err;
       }
@@ -219,7 +235,7 @@ export function useTenantList(): { state: TenantListState; actions: TenantListAc
     suspendTenant: async (tenantId: string, reason?: string) => {
       try {
         await repository.suspendTenant(tenantId, reason);
-        eventBus.emit({ type: TenantEvents.TENANT_SUSPENDED, payload: { tenantId, reason } });
+        eventBus.emit(TenantEvents.TENANT_SUSPENDED, { tenantId, reason });
       } catch (err) {
         throw err;
       }
@@ -228,12 +244,12 @@ export function useTenantList(): { state: TenantListState; actions: TenantListAc
     terminateTenant: async (tenantId: string, reason: string) => {
       try {
         await repository.terminateTenant(tenantId, reason);
-        eventBus.emit({ type: TenantEvents.TENANT_TERMINATED, payload: { tenantId, reason } });
+        eventBus.emit(TenantEvents.TENANT_TERMINATED, { tenantId, reason });
       } catch (err) {
         throw err;
       }
     },
-  }), [fetchTenants, requestNavigate, repository, eventBus]);
+  }), [fetchTenants, navigateTo, repository, eventBus]);
   
   // =========================================
   // Return ViewModel

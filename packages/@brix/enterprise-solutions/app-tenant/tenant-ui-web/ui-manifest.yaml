@@ -1,10 +1,10 @@
 # UI Manifest for Tenant Management Plugin
-# Based on v3.0.9 Architecture Blueprint Section 7.2.5
+# Aligned with v3.0.10 Runtime Shell UI manifest boundaries
 
 plugin:
-  id: tenant
+  id: brix-app-tenant
   name: 租户管理
-  version: 3.0.0
+  version: 3.2.0-SNAPSHOT
   description: Platform-level tenant management module
 
 platforms:
@@ -45,16 +45,6 @@ menus:
         icon: add_business
         order: 2
         permission: tenant:admin:create
-
-      - id: tenant:statistics
-        title:
-          zh-CN: 租户统计
-          en-US: Tenant Statistics
-          ja-JP: テナント統計
-        pageId: tenant:statistics
-        icon: insights
-        order: 3
-        permission: tenant:admin:read
 
 # ═════════════════════════════════════════════════════════════════
 # Page Definitions
@@ -98,36 +88,6 @@ pages:
     platforms:
       web:
         suggestedPath: /admin/tenants/:tenantId/members
-    permission: tenant:member:manage
-
-  - pageId: tenant:features
-    title:
-      zh-CN: 功能配置
-      en-US: Feature Configuration
-    component: ./pages/TenantFeatures
-    platforms:
-      web:
-        suggestedPath: /admin/tenants/:tenantId/features
-    permission: tenant:feature:configure
-
-  - pageId: tenant:audit
-    title:
-      zh-CN: 审计日志
-      en-US: Audit Logs
-    component: ./pages/TenantAudit
-    platforms:
-      web:
-        suggestedPath: /admin/tenants/:tenantId/audit
-    permission: tenant:admin:read
-
-  - pageId: tenant:statistics
-    title:
-      zh-CN: 租户统计
-      en-US: Tenant Statistics
-    component: ./pages/TenantStatistics
-    platforms:
-      web:
-        suggestedPath: /admin/tenants/statistics
     permission: tenant:admin:read
 
 # ═════════════════════════════════════════════════════════════════

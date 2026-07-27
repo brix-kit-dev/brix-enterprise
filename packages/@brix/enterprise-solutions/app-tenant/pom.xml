@@ -8,7 +8,7 @@
   架构约束：
   - 仅依赖 runtime-sdk-api 能力契约
   - 不直接依赖 Kafka/Redis 等基础设施
-  - 通过 RuntimeContext 获取所有能力
+  - 通过 PluginContext 获取 Manifest 声明的能力
 
   版本: 3.2.0-SNAPSHOT
   日期: 2026-06-10
@@ -36,7 +36,7 @@
         Sub-modules:
         - tenant-api: API layer (DTOs, events, request objects, service interfaces)
         - tenant-core: Core layer (domain model, business logic, ArchUnit guard)
-        - tenant-server: Server layer (Spring Boot auto-configuration, controllers)
+        - tenant-server: Server layer (BrixPlugin entrypoint, Spring Boot auto-configuration, controllers)
     </description>
 
     <!-- ==================== Sub-modules ==================== -->

@@ -6,32 +6,29 @@
 package io.brix.enterprise.app.tenant.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import io.brix.enterprise.app.tenant.domain.TenantRecord;
+import io.brix.enterprise.app.tenant.repository.TenantRecordRepository;
+import io.brix.enterprise.app.tenant.service.TenantManagementServiceImpl;
 
 /**
- * Tenant Module Auto-Configuration.
+ * Tenant plugin auto-configuration.
  *
- * <p>Spring Boot auto-configuration class that automatically discovers
- * and registers tenant module components when included in a Host assembly.</p>
- *
- * <h3>Auto-configured Components</h3>
- * <ul>
- *   <li>TenantManagementController — REST API endpoints</li>
- *   <li>TenantManagementService implementation (from tenant-core)</li>
- * </ul>
- *
- * <h3>Usage</h3>
- * <p>Include {@code tenant-server} as a dependency in the Host assembly.
- * The auto-configuration will be picked up via
- * {@code META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports}.</p>
+ * <p>Registers app-tenant owned service, entity, and repository components.
+ * Runtime Shell owns plugin discovery, lifecycle, capability resolution,
+ * readiness, and HTTP endpoint publication through
+ * {@link io.brix.enterprise.app.tenant.TenantPlugin}; this class does not
+ * publish Spring MVC business controllers.</p>
  *
  * @author Brix Platform Team
- * @since 3.0.0
+ * @since 3.0.10
  */
 @AutoConfiguration
-@ComponentScan(basePackages = {
-    "io.brix.enterprise.app.tenant.controller",
-    "io.brix.enterprise.app.tenant.service"
-})
+@ComponentScan(basePackageClasses = TenantManagementServiceImpl.class)
+@EntityScan(basePackageClasses = TenantRecord.class)
+@EnableJpaRepositories(basePackageClasses = TenantRecordRepository.class)
 public class TenantAutoConfiguration {
 }

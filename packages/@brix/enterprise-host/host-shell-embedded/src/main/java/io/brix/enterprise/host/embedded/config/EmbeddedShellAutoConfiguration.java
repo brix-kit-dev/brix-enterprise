@@ -20,12 +20,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import io.runtime.sdk.context.RuntimeContext;
+import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
 
 /**
  * Embedded mode Runtime Shell auto-configuration.
  *
- * <h2>Architecture Position (v3.0.4 Host Ultra-Thin Refactoring)</h2>
+ * <h2>Architecture Position (v3.0.10 Runtime Shell)</h2>
  * <p>
  * This class follows the <b>Host Ultra-Thin</b> principle and is solely responsible for:
  * </p>
@@ -34,11 +34,10 @@ import io.runtime.sdk.context.RuntimeContext;
  * </ul>
  *
  * <p>
- * All capability scanning, registration, and validation logic has been extracted to
- * {@code CapabilityAutoConfiguration}, which is discovered automatically via
- * {@code META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports}
- * in the runtime-orchestrator module. No explicit {@code @Import} is needed.
- * The Host layer contains no business code.
+ * Runtime bootstrap, plugin discovery, capability validation, lifecycle
+ * orchestration, and readiness aggregation are provided by runtime-orchestrator
+ * auto-configuration. No explicit {@code @Import} is needed. The Host layer
+ * contains no business code.
  * </p>
  *
  * <h2>Blueprint Red-Line Verification</h2>
@@ -49,13 +48,9 @@ import io.runtime.sdk.context.RuntimeContext;
  *   <li>Red Line 3 (Host Ultra-Thin): No private methods ✓</li>
  * </ul>
  *
- * <h2>Package Rename (v3.0.9)</h2>
- * <p>Renamed from {@code io.host.shell.embedded.config} to
- * {@code io.brix.enterprise.host.embedded.config}.</p>
- *
  * <h2>Auto-configuration Conditions</h2>
  * <ul>
- *   <li>Classpath contains RuntimeContext</li>
+ *   <li>Classpath contains RuntimeShellBootstrap</li>
  *   <li>brix.shell.embedded.enabled=true</li>
  * </ul>
  *
@@ -75,11 +70,10 @@ import io.runtime.sdk.context.RuntimeContext;
  * @see EmbeddedShellProperties
  */
 @AutoConfiguration
-@ConditionalOnClass(RuntimeContext.class)
+@ConditionalOnClass(RuntimeShellBootstrap.class)
 @ConditionalOnProperty(prefix = "brix.shell.embedded", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties(EmbeddedShellProperties.class)
 public class EmbeddedShellAutoConfiguration {
     // EMPTY — ultra-thin Host
-    // CapabilityAutoConfiguration is discovered via META-INF/spring/AutoConfiguration.imports
-    // in runtime-orchestrator (R6.9: no @Import needed)
+    // RuntimeShellBootstrapAutoConfiguration is discovered from runtime-orchestrator.
 }

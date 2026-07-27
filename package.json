@@ -21,6 +21,7 @@
     "test": "pnpm -r run test",
     "lint": "node scripts/check-banned-tokens.mjs && pnpm -r run lint",
     "lint:banned-tokens": "node scripts/check-banned-tokens.mjs",
+    "architecture:validate": "python3 scripts/validate_architecture_baseline.py --require-active --check-instructions",
     "clean": "pnpm -r run clean && rimraf node_modules",
     "typecheck": "pnpm -r run typecheck",
     "changeset": "changeset",

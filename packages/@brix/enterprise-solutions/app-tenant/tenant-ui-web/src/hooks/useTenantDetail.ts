@@ -17,6 +17,8 @@ import type {
 } from '@brix-sdk/tenant-shared';
 import { TenantEvents, TenantStatus } from '@brix-sdk/tenant-shared';
 
+type TenantEventPayload = { tenantId: string };
+
 /**
  * Tenant Detail ViewModel State
  */
@@ -87,7 +89,7 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
   // =========================================
   const http = useHttp();
   const eventBus = useEventBus();
-  const { requestNavigate } = useNavigation();
+  const navigation = useNavigation();
   
   // =========================================
   // Repository
@@ -134,22 +136,39 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
   // Event Subscriptions
   // =========================================
   useEffect(() => {
-    const handleTenantUpdate = (event: { payload: { tenantId: string } }) => {
-      if (event.payload.tenantId === tenantId) {
+    const subscribe = eventBus.on as unknown as <T>(
+      eventType: string,
+      handler: (payload: T) => void
+    ) => void | (() => void);
+    const handleTenantUpdate = (payload: TenantEventPayload | { payload: TenantEventPayload }) => {
+      const eventPayload = 'payload' in payload ? payload.payload : payload;
+      if (eventPayload.tenantId === tenantId) {
         fetchTenant();
       }
     };
     
     const unsubscribes = [
-      eventBus.on(TenantEvents.TENANT_UPDATED, handleTenantUpdate),
-      eventBus.on(TenantEvents.TENANT_ACTIVATED, handleTenantUpdate),
-      eventBus.on(TenantEvents.TENANT_SUSPENDED, handleTenantUpdate),
+      subscribe(TenantEvents.TENANT_UPDATED, handleTenantUpdate),
+      subscribe(TenantEvents.TENANT_ACTIVATED, handleTenantUpdate),
+      subscribe(TenantEvents.TENANT_SUSPENDED, handleTenantUpdate),
     ];
     
     return () => {
-      unsubscribes.forEach((unsub) => unsub());
+      unsubscribes.forEach((unsub) => {
+        if (typeof unsub === 'function') {
+          unsub();
+        }
+      });
     };
   }, [eventBus, tenantId, fetchTenant]);
+
+  const navigateTo = useCallback((path: string) => {
+    if (navigation.requestNavigate) {
+      void navigation.requestNavigate(path);
+      return;
+    }
+    navigation.navigate(path);
+  }, [navigation]);
   
   // =========================================
   // Actions
@@ -162,7 +181,7 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
       try {
         const updated = await repository.updateTenant(tenantId, request);
         setTenant(updated);
-        eventBus.emit({ type: TenantEvents.TENANT_UPDATED, payload: { tenantId } });
+        eventBus.emit(TenantEvents.TENANT_UPDATED, { tenantId });
       } finally {
         setIsSaving(false);
       }
@@ -173,7 +192,7 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
       try {
         await repository.activateTenant(tenantId);
         setTenant((prev) => prev ? { ...prev, status: TenantStatus.ACTIVE } : null);
-        eventBus.emit({ type: TenantEvents.TENANT_ACTIVATED, payload: { tenantId } });
+        eventBus.emit(TenantEvents.TENANT_ACTIVATED, { tenantId });
       } finally {
         setIsSaving(false);
       }
@@ -184,7 +203,7 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
       try {
         await repository.suspendTenant(tenantId, reason);
         setTenant((prev) => prev ? { ...prev, status: TenantStatus.SUSPENDED } : null);
-        eventBus.emit({ type: TenantEvents.TENANT_SUSPENDED, payload: { tenantId, reason } });
+        eventBus.emit(TenantEvents.TENANT_SUSPENDED, { tenantId, reason });
       } finally {
         setIsSaving(false);
       }
@@ -194,9 +213,9 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
       setIsSaving(true);
       try {
         await repository.terminateTenant(tenantId, reason);
-        eventBus.emit({ type: TenantEvents.TENANT_TERMINATED, payload: { tenantId, reason } });
+        eventBus.emit(TenantEvents.TENANT_TERMINATED, { tenantId, reason });
         // Navigate back to list after termination
-        requestNavigate('/admin/tenants');
+        navigateTo('/admin/tenants');
       } finally {
         setIsSaving(false);
       }
@@ -216,13 +235,13 @@ export function useTenantDetail(tenantId: string): { state: TenantDetailState; a
     setActiveTab,
     
     viewMembers: () => {
-      requestNavigate(`/admin/tenants/${tenantId}/members`);
+      navigateTo(`/admin/tenants/${tenantId}/members`);
     },
     
     goBack: () => {
-      requestNavigate('/admin/tenants');
+      navigateTo('/admin/tenants');
     },
-  }), [fetchTenant, repository, tenantId, eventBus, requestNavigate]);
+  }), [fetchTenant, repository, tenantId, eventBus, navigateTo]);
   
   // =========================================
   // Return ViewModel

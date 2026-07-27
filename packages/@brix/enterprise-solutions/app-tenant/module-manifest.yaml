@@ -1,5 +1,6 @@
 # ===========================================================================================
 # Tenant Management Module Manifest
+# Legacy compatibility document. Not an active Runtime Shell manifest.
 # ===========================================================================================
 #
 # This file defines the capabilities, lifecycle configuration, and event relationships

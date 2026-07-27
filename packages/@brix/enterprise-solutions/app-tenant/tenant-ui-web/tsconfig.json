@@ -11,7 +11,6 @@
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "strict": true,
-    "//noUnusedLocals": "Disabled to mirror identity-ui-web — linked source files frequently produce false positives.",
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
