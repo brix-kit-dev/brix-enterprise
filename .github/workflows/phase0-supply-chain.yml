@@ -1,0 +1,196 @@
+name: Phase 0 supply-chain evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      brix_commit:
+        description: Exact 40-character commit of brix used by this enterprise build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  attest-host:
+    name: Build, inventory, attest, and verify standalone Host
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject a non-immutable brix revision
+        env:
+          BRIX_COMMIT: ${{ inputs.brix_commit }}
+        run: |
+          if [[ ! "$BRIX_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "brix_commit must be an exact lowercase 40-character commit." >&2
+            exit 2
+          fi
+
+      - name: Check out brix-enterprise
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: brix-enterprise
+          persist-credentials: false
+
+      - name: Check out the exact brix commit
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: brix-kit-dev/brix
+          ref: ${{ inputs.brix_commit }}
+          path: brix
+          token: ${{ secrets.BRIX_READ_TOKEN || github.token }}
+          persist-credentials: false
+
+      - name: Set up Java 17
+        # actions/setup-java v4.7.1
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Validate active architecture baseline
+        working-directory: brix-enterprise
+        run: |
+          python3 scripts/validate_architecture_baseline.py \
+            --repo-root . \
+            --require-active \
+            --check-instructions
+
+      - name: Test Phase 0 evidence tooling
+        working-directory: brix-enterprise
+        run: |
+          python3 -m unittest scripts/test_phase0_evidence.py
+          bash -n scripts/collect_phase0_flyway_history.sh
+
+      - name: Install the exact brix commit
+        working-directory: brix
+        run: mvn -B -DskipTests clean install
+
+      - name: Build the enterprise standalone Host
+        working-directory: brix-enterprise
+        run: |
+          mvn -B -DskipTests \
+            -pl packages/@brix/enterprise-host/host-shell-standalone \
+            -am clean package
+          mkdir -p ../phase0-dist
+          cp packages/@brix/enterprise-host/host-shell-standalone/target/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar \
+            ../phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar
+
+      - name: Generate SPDX JSON SBOM
+        # anchore/sbom-action v0.24.0, powered by the explicitly pinned Syft release
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+        with:
+          path: phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar
+          format: spdx-json
+          output-file: phase0-dist/host-shell-standalone.spdx.json
+          upload-artifact: false
+          dependency-snapshot: false
+          syft-version: v1.44.0
+
+      - name: Create signed SLSA provenance
+        id: provenance
+        # actions/attest v4.1.0
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26
+        with:
+          subject-path: phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar
+
+      - name: Create signed SBOM attestation
+        id: sbom-attestation
+        # actions/attest v4.1.0
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26
+        with:
+          subject-path: phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar
+          sbom-path: phase0-dist/host-shell-standalone.spdx.json
+
+      - name: Preserve and cryptographically verify both attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom-attestation.outputs.bundle-path }}
+          SOURCE_DIGEST: ${{ github.sha }}
+        run: |
+          cp "$PROVENANCE_BUNDLE" phase0-dist/provenance.sigstore.json
+          cp "$SBOM_BUNDLE" phase0-dist/sbom-attestation.sigstore.json
+          gh attestation verify \
+            phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar \
+            --repo brix-kit-dev/brix-enterprise \
+            --bundle phase0-dist/provenance.sigstore.json \
+            --predicate-type https://slsa.dev/provenance/v1 \
+            --source-digest "$SOURCE_DIGEST" \
+            --signer-workflow brix-kit-dev/brix-enterprise/.github/workflows/phase0-supply-chain.yml \
+            --deny-self-hosted-runners \
+            --format json \
+            > phase0-dist/provenance-verification.json
+          gh attestation verify \
+            phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar \
+            --repo brix-kit-dev/brix-enterprise \
+            --bundle phase0-dist/sbom-attestation.sigstore.json \
+            --predicate-type https://spdx.dev/Document/v2.3 \
+            --source-digest "$SOURCE_DIGEST" \
+            --signer-workflow brix-kit-dev/brix-enterprise/.github/workflows/phase0-supply-chain.yml \
+            --deny-self-hosted-runners \
+            --format json \
+            > phase0-dist/sbom-verification.json
+
+      - name: Create commit and BOM binding record
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 brix-enterprise/scripts/phase0_evidence.py create-binding \
+            --artifact phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar \
+            --sbom phase0-dist/host-shell-standalone.spdx.json \
+            --attestation provenance=phase0-dist/provenance.sigstore.json \
+            --attestation sbom=phase0-dist/sbom-attestation.sigstore.json \
+            --verification provenance=phase0-dist/provenance-verification.json \
+            --verification sbom=phase0-dist/sbom-verification.json \
+            --repository brix=brix \
+            --repository brix-enterprise=brix-enterprise \
+            --ci-repository brix-kit-dev/brix-enterprise \
+            --workflow-ref brix-kit-dev/brix-enterprise/.github/workflows/phase0-supply-chain.yml \
+            --run-id "$RUN_ID" \
+            --run-attempt "$RUN_ATTEMPT" \
+            --output phase0-dist/artifact-binding.json
+
+      - name: Sign the artifact, commit, and BOM binding
+        id: binding-attestation
+        # actions/attest v4.1.0
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26
+        with:
+          subject-path: phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar
+          predicate-type: https://brix.dev/attestations/artifact-binding/v1
+          predicate-path: phase0-dist/artifact-binding.json
+
+      - name: Preserve and verify the signed binding
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BINDING_BUNDLE: ${{ steps.binding-attestation.outputs.bundle-path }}
+          SOURCE_DIGEST: ${{ github.sha }}
+        run: |
+          cp "$BINDING_BUNDLE" phase0-dist/artifact-binding.sigstore.json
+          gh attestation verify \
+            phase0-dist/host-shell-standalone-3.2.0-SNAPSHOT-exec.jar \
+            --repo brix-kit-dev/brix-enterprise \
+            --bundle phase0-dist/artifact-binding.sigstore.json \
+            --predicate-type https://brix.dev/attestations/artifact-binding/v1 \
+            --source-digest "$SOURCE_DIGEST" \
+            --signer-workflow brix-kit-dev/brix-enterprise/.github/workflows/phase0-supply-chain.yml \
+            --deny-self-hosted-runners \
+            --format json \
+            > phase0-dist/artifact-binding-verification.json
+          sha256sum phase0-dist/* > phase0-dist/SHA256SUMS
+
+      - name: Upload immutable Phase 0 evidence pack
+        # actions/upload-artifact v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: phase0-host-${{ github.sha }}
+          path: phase0-dist/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
