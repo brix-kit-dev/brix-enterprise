@@ -96,14 +96,14 @@
       "id": "multi-tenant-3.1.3",
       "domain": "multi-tenant",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
+      "status": "SUPERSEDED",
       "path": "docs/v3.1.3-多租户功能最小实现-设计蓝图（冻结）.md",
       "version": "3.1.3",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": true,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.0.10",
         "version": "3.0.10"
@@ -223,24 +223,43 @@
       "id": "multi-tenant-4.0",
       "domain": "multi-tenant",
       "kind": "SPECIALIZED",
-      "status": "CANDIDATE",
-      "path": "docs/v4.0-多租户功能最小实现-设计蓝图（Freeze Candidate）.md",
+      "status": "ACTIVE",
+      "path": "docs/v4.0-多租户功能最小实现-设计蓝图（冻结）.md",
       "version": "4.0",
       "compatibilityEpoch": 2,
-      "architectureState": "freeze-candidate",
+      "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": false,
-      "effective": false,
+      "effective": true,
       "inherits": {
         "id": "runtime-shell-3.0.10",
         "version": "3.0.10"
       },
-      "sha256": "9b24b6df352b568b0f75ec9eb2266190de8613d75a5817412b3c9dab64556985",
-      "gitBlob": "2b1d8b744b312d9914420025959ef455bf655ebf",
-      "gitCommit": null,
-      "decisionRef": "user-direction:2026-07-27:root-3.0.10-alignment",
-      "approvals": [],
-      "effectiveDate": null
+      "sha256": "70a68b4fde9825dc810df392dbca16aa87d019e99e3561ac12f3333214f84439",
+      "gitBlob": "7021d98d7c28fb7560385facc48d83f1dd7f67bf",
+      "gitCommit": "2eff43cde17797eb34f5e99e17f55ef5b7126dad",
+      "decisionRef": "user-authorization:2026-07-27:multi-tenant-4.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:multi-tenant-4.0:architecture-committee",
+          "approvedAt": "2026-07-27T14:58:38+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:multi-tenant-4.0:security",
+          "approvedAt": "2026-07-27T14:58:38+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:multi-tenant-4.0:sre",
+          "approvedAt": "2026-07-27T14:58:38+09:00"
+        }
+      ],
+      "effectiveDate": "2026-07-27"
     }
   ]
 }

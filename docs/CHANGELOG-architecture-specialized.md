@@ -28,12 +28,16 @@
 - Locked at commit `5eb15aad06607ca6d5f44a7b0f920e4d399ff0e7`, SHA-256 `22d677432aa456cee3de372389ecff306b8718127ad9c3f0a175c208a75baaf6`, Git blob `a88d703389c11dc146ec95d1756175eb336537e1`, effective 2026-07-27.
 - Registered as the unique ACTIVE super-admin blueprint; super-admin 2.0 is SUPERSEDED and its historical bytes remain unchanged.
 
-### Multi Tenant 4.0 Freeze Candidate
+### Multi Tenant 4.0 Architecture Frozen
 
 - Supersession target: `multi-tenant-3.1.3`.
 - Compatibility epoch changes from `1` to `2` because unregistered platform Capabilities and the private event envelope are removed.
-- Freezes OSS `platform-tenant` as the sole Data Owner for platform tenant/identity/member/invitation data, retains only Catalog-registered `TenantContextCapability`, and adopts the root canonical Event Envelope and Outbox/Relay semantics.
-- Registered as non-guiding `CANDIDATE`; the ACTIVE 3.1.3 record remains unchanged until formal review and atomic transition.
+- Rebuilt from the complete 1,392-line v3.1.3 base into a 1,463-line integrated blueprint; preserves detailed DDL, Actor/Subject token flows, context selection, isolation, FIRST_OWNER concurrency, roadmap and terminology rather than retaining the former summary-only Candidate.
+- Freezes OSS `platform-tenant` as the sole Data Owner for the platform tenant directory, retains only Catalog-registered `TenantContextCapability`, replaces directory/quota/config/business-object platform Capabilities with typed Plugin contracts, and adopts the root canonical Event Envelope and Outbox/Inbox/Relay semantics.
+- Freezes `platform-admin OperationalContext -> brix.internal.tenant.administration -> platform-tenant local transaction`, Runtime Entry/Manifest/ServiceLoader boundaries, monotonic Flyway governance, frontend 1.1 Page/Hook/Repository/HttpCapability rules, and explicit audit/Timeline ownership.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-07-27:multi-tenant-4.0-freeze`.
+- Locked at commit `2eff43cde17797eb34f5e99e17f55ef5b7126dad`, SHA-256 `70a68b4fde9825dc810df392dbca16aa87d019e99e3561ac12f3333214f84439`, Git blob `7021d98d7c28fb7560385facc48d83f1dd7f67bf`, effective 2026-07-27.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 3.1.3 is SUPERSEDED and remains byte-for-byte unchanged.
 
 ### Notification Plan 3.2.1 Draft
 
