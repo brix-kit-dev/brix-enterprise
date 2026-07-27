@@ -1,15 +1,29 @@
 {
-  "schemaVersion": 1,
-  "baselines": [
+  "schemaVersion": 2,
+  "requiredActiveDomains": [
+    "runtime-shell",
+    "frontend",
+    "super-admin",
+    "multi-tenant"
+  ],
+  "blueprints": [
     {
-      "id": "runtime-shell",
+      "id": "runtime-shell-3.0.10",
+      "domain": "runtime-shell",
+      "kind": "ROOT",
+      "status": "ACTIVE",
       "path": "docs/v3.0.10-运行壳架构设计蓝图.md",
       "version": "3.0.10",
       "compatibilityEpoch": 1,
-      "status": "architecture-frozen",
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "non-conformant",
+      "rebaseRequired": false,
       "effective": true,
-      "gitCommit": "38f9e9790241627517f185d5afc47d6b5ba20028",
+      "inherits": null,
       "sha256": "ccd55421dc27f82c69e276fbc2009cf0b07777923b64b06725168d2b391e5e8d",
+      "gitBlob": "24d88cdf5e7554cbb190f36038975e9f41b47f46",
+      "gitCommit": "38f9e9790241627517f185d5afc47d6b5ba20028",
+      "decisionRef": "user-declaration:2026-07-27:runtime-shell-3.0.10",
       "approvals": [
         {
           "role": "architecture-committee",
@@ -31,6 +45,202 @@
         }
       ],
       "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "frontend-1.0",
+      "domain": "frontend",
+      "kind": "SPECIALIZED",
+      "status": "SUPERSEDED",
+      "path": "docs/v1.0-前端架构-设计蓝图（冻结）.md",
+      "version": "1.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": true,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.0.10",
+        "version": "3.0.10"
+      },
+      "sha256": "cf8b496a3766b5adc3bce8e45b89f0a429d2f00d81f6017be4909970e5dbac70",
+      "gitBlob": "d1f930574dc4d27b490190e26f95ecdcf8a0d044",
+      "gitCommit": null,
+      "decisionRef": "user-confirmation:2026-07-27:frontend-1.0",
+      "approvals": [],
+      "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "super-admin-2.0",
+      "domain": "super-admin",
+      "kind": "SPECIALIZED",
+      "status": "SUPERSEDED",
+      "path": "docs/v2.0-平台超管功能最小实现-设计蓝图（冻结）.md",
+      "version": "2.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": true,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.0.10",
+        "version": "3.0.10"
+      },
+      "sha256": "5efdfe29402ba43348201e4b8457c5311e6ee3c71088351bbf81f52362c8d653",
+      "gitBlob": "6040b0f04721dc44509845815840676f36c6aa58",
+      "gitCommit": null,
+      "decisionRef": "user-confirmation:2026-07-27:super-admin-2.0",
+      "approvals": [],
+      "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "multi-tenant-3.1.3",
+      "domain": "multi-tenant",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v3.1.3-多租户功能最小实现-设计蓝图（冻结）.md",
+      "version": "3.1.3",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "pending",
+      "rebaseRequired": true,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.0.10",
+        "version": "3.0.10"
+      },
+      "sha256": "ecc59583ac7bac48bd5903f358f5f23199df1b098cf9f8ab2e88cd120a4999c6",
+      "gitBlob": "b3d2df867f3783f8d8220bc18a53e9296a0fd853",
+      "gitCommit": null,
+      "decisionRef": "user-confirmation:2026-07-27:multi-tenant-3.1.3",
+      "approvals": [],
+      "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "runtime-shell-3.0.11",
+      "domain": "runtime-shell",
+      "kind": "ROOT",
+      "status": "CANDIDATE",
+      "path": "docs/archived/v3.0.11-运行壳架构设计蓝图（Freeze Candidate）.md",
+      "version": "3.0.11",
+      "compatibilityEpoch": 1,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "non-conformant",
+      "rebaseRequired": false,
+      "effective": false,
+      "inherits": null,
+      "sha256": "a1b1bb1fe5dc7bad1f0a1f9cb28976980382724838b57f95dbfe37ca83f9d315",
+      "gitBlob": "ef9ecdcc0c21005e3a5c3eb13ec1d9644a54680d",
+      "gitCommit": null,
+      "decisionRef": "candidate-document:2026-07-27:runtime-shell-3.0.11",
+      "approvals": [],
+      "effectiveDate": null
+    },
+    {
+      "id": "frontend-1.1",
+      "domain": "frontend",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v1.1-前端架构-设计蓝图（冻结）.md",
+      "version": "1.1",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": false,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.0.10",
+        "version": "3.0.10"
+      },
+      "sha256": "1ba8246c70bb4417cc6b826ca76bcea369b7f6f11a868b65ba0a2599c4d900c2",
+      "gitBlob": "6208231fbbee7abd927727083512d84b3cbfad5b",
+      "gitCommit": "55c6e13d42d60bd09a481c6cbee2c0a57f878de1",
+      "decisionRef": "user-authorization:2026-07-27:frontend-1.1-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:frontend-1.1:architecture-committee",
+          "approvedAt": "2026-07-27T13:49:24+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:frontend-1.1:security",
+          "approvedAt": "2026-07-27T13:49:24+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:frontend-1.1:sre",
+          "approvedAt": "2026-07-27T13:49:24+09:00"
+        }
+      ],
+      "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "super-admin-3.0",
+      "domain": "super-admin",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v3.0-平台超管功能最小实现-设计蓝图（冻结）.md",
+      "version": "3.0",
+      "compatibilityEpoch": 2,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": false,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.0.10",
+        "version": "3.0.10"
+      },
+      "sha256": "22d677432aa456cee3de372389ecff306b8718127ad9c3f0a175c208a75baaf6",
+      "gitBlob": "a88d703389c11dc146ec95d1756175eb336537e1",
+      "gitCommit": "5eb15aad06607ca6d5f44a7b0f920e4d399ff0e7",
+      "decisionRef": "user-authorization:2026-07-27:super-admin-3.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:super-admin-3.0:architecture-committee",
+          "approvedAt": "2026-07-27T14:23:49+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:super-admin-3.0:security",
+          "approvedAt": "2026-07-27T14:23:49+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-07-27:super-admin-3.0:sre",
+          "approvedAt": "2026-07-27T14:23:49+09:00"
+        }
+      ],
+      "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "multi-tenant-4.0",
+      "domain": "multi-tenant",
+      "kind": "SPECIALIZED",
+      "status": "CANDIDATE",
+      "path": "docs/v4.0-多租户功能最小实现-设计蓝图（Freeze Candidate）.md",
+      "version": "4.0",
+      "compatibilityEpoch": 2,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "pending",
+      "rebaseRequired": false,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.0.10",
+        "version": "3.0.10"
+      },
+      "sha256": "9b24b6df352b568b0f75ec9eb2266190de8613d75a5817412b3c9dab64556985",
+      "gitBlob": "2b1d8b744b312d9914420025959ef455bf655ebf",
+      "gitCommit": null,
+      "decisionRef": "user-direction:2026-07-27:root-3.0.10-alignment",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }
