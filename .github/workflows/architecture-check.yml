@@ -46,7 +46,9 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pom.xml'
-      - 'docs/v3.0.10-运行壳架构设计蓝图.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'docs/**/*.md'
       - 'docs/architecture-baselines.lock.yaml'
       - 'docs/.schemas/architecture-baseline-lock.schema.json'
       - 'scripts/validate_architecture_baseline.py'
@@ -75,12 +77,15 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pom.xml'
-      - 'docs/v3.0.10-运行壳架构设计蓝图.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'docs/**/*.md'
       - 'docs/architecture-baselines.lock.yaml'
       - 'docs/.schemas/architecture-baseline-lock.schema.json'
       - 'scripts/validate_architecture_baseline.py'
       - 'scripts/test_validate_architecture_baseline.py'
       - 'scripts/requirements-architecture.txt'
+      - '.github/workflows/architecture-check.yml'
 
 # Concurrency: Cancel previous runs for the same PR/branch
 concurrency:
@@ -89,7 +94,7 @@ concurrency:
 
 jobs:
   root-architecture-baseline:
-    name: Root Architecture Baseline Integrity
+    name: Architecture Context Control Plane
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -110,8 +115,16 @@ jobs:
       - name: Test baseline validator
         run: python -m unittest scripts/test_validate_architecture_baseline.py
 
-      - name: Validate root architecture baseline
-        run: python scripts/validate_architecture_baseline.py
+      - name: Validate active architecture context and AI instructions
+        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions
+
+      - name: Validate pull request baseline transition
+        if: github.event_name == 'pull_request'
+        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions --base-ref "${{ github.event.pull_request.base.sha }}"
+
+      - name: Validate pushed baseline transition
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions --base-ref "${{ github.event.before }}"
 
   runtime-shell-v3-0-10-tenant-only:
     name: Runtime Shell v3.0.10 Tenant-Only Guard

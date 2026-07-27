@@ -1,20 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://brix.io/schemas/architecture-baseline-lock.schema.json",
-  "title": "Brix Architecture Baseline Lock",
+  "title": "Brix Architecture Context Control Plane",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "baselines"],
+  "required": ["schemaVersion", "requiredActiveDomains", "blueprints"],
   "properties": {
-    "schemaVersion": {
-      "const": 1
-    },
-    "baselines": {
+    "schemaVersion": { "const": 2 },
+    "requiredActiveDomains": {
       "type": "array",
       "minItems": 1,
-      "items": {
-        "$ref": "#/$defs/baseline"
-      }
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
+    },
+    "blueprints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/blueprint" }
     }
   },
   "$defs": {
@@ -42,51 +44,99 @@
         }
       }
     },
-    "baseline": {
+    "inheritance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9.-]*$" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$" }
+      }
+    },
+    "blueprint": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "id",
+        "domain",
+        "kind",
+        "status",
         "path",
         "version",
         "compatibilityEpoch",
-        "status",
+        "architectureState",
+        "implementationStatus",
+        "rebaseRequired",
         "effective",
-        "gitCommit",
+        "inherits",
         "sha256",
+        "gitBlob",
+        "gitCommit",
+        "decisionRef",
         "approvals",
         "effectiveDate"
       ],
       "properties": {
         "id": {
           "type": "string",
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
+        "domain": {
+          "type": "string",
           "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "kind": {
+          "enum": ["ROOT", "SPECIALIZED"]
+        },
+        "status": {
+          "enum": ["ACTIVE", "CANDIDATE", "SUPERSEDED", "ARCHIVED"]
         },
         "path": {
           "type": "string",
-          "pattern": "^docs/[^/]+\\.md$"
+          "pattern": "^docs/(?:archived/)?[^/]+\\.md$"
         },
         "version": {
           "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+          "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$"
         },
         "compatibilityEpoch": {
           "type": "integer",
           "minimum": 1
         },
-        "status": {
-          "enum": ["pending-approval", "architecture-frozen"]
+        "architectureState": {
+          "enum": ["architecture-frozen", "freeze-candidate", "historical"]
+        },
+        "implementationStatus": {
+          "enum": ["not-assessed", "pending", "non-conformant", "accepted", "ga"]
+        },
+        "rebaseRequired": {
+          "type": "boolean"
         },
         "effective": {
           "type": "boolean"
+        },
+        "inherits": {
+          "oneOf": [
+            { "$ref": "#/$defs/inheritance" },
+            { "type": "null" }
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "gitBlob": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
         },
         "gitCommit": {
           "type": ["string", "null"],
           "pattern": "^[0-9a-f]{40}$"
         },
-        "sha256": {
+        "decisionRef": {
           "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
+          "minLength": 1,
+          "pattern": "^(?!.*(?:CHANGE-ME|TBD|TODO|PLACEHOLDER)).+$"
         },
         "approvals": {
           "type": "array",
@@ -102,43 +152,40 @@
       "allOf": [
         {
           "if": {
-            "properties": {
-              "status": {
-                "const": "architecture-frozen"
-              }
-            }
+            "properties": { "kind": { "const": "ROOT" } }
+          },
+          "then": {
+            "properties": { "inherits": { "type": "null" } }
+          },
+          "else": {
+            "properties": { "inherits": { "$ref": "#/$defs/inheritance" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "ACTIVE" } }
           },
           "then": {
             "properties": {
-              "effective": {
-                "const": true
-              },
-              "gitCommit": {
-                "type": "string"
-              },
-              "effectiveDate": {
-                "type": "string"
-              },
-              "approvals": {
-                "minItems": 3,
-                "maxItems": 3
-              }
+              "architectureState": { "const": "architecture-frozen" },
+              "effective": { "const": true },
+              "effectiveDate": { "type": "string" }
             }
           },
           "else": {
             "properties": {
-              "effective": {
-                "const": false
-              },
-              "gitCommit": {
-                "const": null
-              },
-              "effectiveDate": {
-                "const": null
-              },
-              "approvals": {
-                "maxItems": 2
-              }
+              "effective": { "const": false }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "status": { "const": "CANDIDATE" } }
+          },
+          "then": {
+            "properties": {
+              "architectureState": { "const": "freeze-candidate" },
+              "effectiveDate": { "type": "null" }
             }
           }
         }
