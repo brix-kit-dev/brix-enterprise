@@ -107,7 +107,7 @@ class TenantPluginEndpointHandlerTest {
         }
 
         @Override
-        public void bindCommandHandler(String manifestCommandId, CommandHandler<?, ?> handler) {
+        public void bindCommandHandler(String manifestCommandId, CommandHandler<?> handler) {
         }
 
         @Override

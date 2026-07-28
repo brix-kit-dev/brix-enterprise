@@ -47,7 +47,7 @@ Examples:
 
 SMTP behavior:
   - Without --dev-smtp, .env must configure setup-link notification delivery:
-      SPRING_MAIL_HOST + BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM
+      SPRING_MAIL_HOST + BRIX_INFRA_EMAIL_SMTP_FROM
     or set BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=true.
   - With --dev-smtp, Mailpit is started and the app receives:
       SPRING_MAIL_HOST=mailpit, SPRING_MAIL_PORT=1025
@@ -230,19 +230,31 @@ check_notification_environment() {
     exit 1
   fi
 
-  local mail_host mail_from logging
+  local mail_host setup_base_url setup_mail_from smtp_from logging
   mail_host="$(get_env_value SPRING_MAIL_HOST)"
-  mail_from="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM)"
+  setup_base_url="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_BASE_URL)"
+  setup_mail_from="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM)"
+  smtp_from="$(get_env_value BRIX_INFRA_EMAIL_SMTP_FROM)"
   logging="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED)"
 
-  if [[ -z "$mail_host" && "$logging" != "true" ]]; then
-    fail "No setup-link notification adapter is configured in .env."
-    fail "Use --dev-smtp for Mailpit, or set SPRING_MAIL_HOST and BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM."
+  if [[ -z "$setup_base_url" ]]; then
+    fail "BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty in .env."
     exit 1
   fi
 
-  if [[ -n "$mail_host" && -z "$mail_from" ]]; then
-    fail "SPRING_MAIL_HOST is set but BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM is empty in .env."
+  if [[ -z "$mail_host" && "$logging" != "true" ]]; then
+    fail "No setup-link notification adapter is configured in .env."
+    fail "Use --dev-smtp for Mailpit, or set SPRING_MAIL_HOST and BRIX_INFRA_EMAIL_SMTP_FROM."
+    exit 1
+  fi
+
+  if [[ -n "$mail_host" && -z "$smtp_from" ]]; then
+    fail "SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty in .env."
+    exit 1
+  fi
+
+  if [[ -n "$smtp_from" && -z "$setup_mail_from" ]]; then
+    fail "BRIX_INFRA_EMAIL_SMTP_FROM is set but BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM is empty in .env."
     exit 1
   fi
 

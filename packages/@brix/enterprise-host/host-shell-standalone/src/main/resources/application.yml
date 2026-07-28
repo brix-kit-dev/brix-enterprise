@@ -100,6 +100,21 @@ spring:
 
 # ==================== 运行壳配置 ====================
 brix:
+  capability:
+    enabled: true
+    module-id: ${BRIX_MODULE_ID:enterprise-shell}
+    tenant-id: ${BRIX_TENANT_ID:default}
+    auto-discovery: true
+    validate-on-startup: true
+    required:
+      - io.runtime.sdk.capability.EventBusCapability
+      - io.runtime.sdk.capability.StateStoreCapability
+      - io.runtime.sdk.capability.AuthCapability
+      - io.runtime.sdk.capability.ObservabilityCapability
+      - io.runtime.sdk.capability.ConfigStoreCapability
+      - io.brix.platform.tenant.internal.TenantAdministration
+      - io.brix.platform.tenant.internal.PlatformBootstrapAdministration
+      - io.brix.platform.tenant.internal.PlatformIdentityAdministration
   runtime-shell:
     enabled: true
     runtime-version: ${BRIX_RUNTIME_SHELL_VERSION:3.2.0}
@@ -196,6 +211,7 @@ brix:
         email: ${BRIX_BOOTSTRAP_SUPER_ADMIN_EMAIL:}
         username: ${BRIX_BOOTSTRAP_SUPER_ADMIN_USERNAME:Super Admin}
         setup-code: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE:}
+        setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}
         setup-code-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS:900}
         bootstrap-session-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS:300}
   shell:

@@ -35,15 +35,39 @@ if (-not $DevSmtp) {
 cd $RemoteDir
 test -f .env || exit 2
 MAIL_HOST=`$(grep -E '^SPRING_MAIL_HOST=' .env | tail -n 1 | cut -d= -f2-)
+SMTP_FROM=`$(grep -E '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env | tail -n 1 | cut -d= -f2-)
+SETUP_BASE_URL=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=' .env | tail -n 1 | cut -d= -f2-)
+SETUP_MAIL_FROM=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=' .env | tail -n 1 | cut -d= -f2-)
 LOGGING=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=' .env | tail -n 1 | cut -d= -f2-)
+if [ -z "`$SETUP_BASE_URL" ]; then
+  exit 5
+fi
 if [ -z "`$MAIL_HOST" ] && [ "`$LOGGING" != "true" ]; then
   exit 1
+fi
+if [ -n "`$MAIL_HOST" ] && [ -z "`$SMTP_FROM" ]; then
+  exit 3
+fi
+if [ -n "`$SMTP_FROM" ] && [ -z "`$SETUP_MAIL_FROM" ]; then
+  exit 4
 fi
 "@
     ssh $SshTarget $NotificationEnvCheck
     if ($LASTEXITCODE -eq 1) {
         Write-Host "ERROR: No setup-link notification adapter is configured." -ForegroundColor Red
-        Write-Host "Use -DevSmtp for Mailpit, or set SPRING_MAIL_HOST and BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM in the remote .env." -ForegroundColor Red
+        Write-Host "Use -DevSmtp for Mailpit, or set SPRING_MAIL_HOST and BRIX_INFRA_EMAIL_SMTP_FROM in the remote .env." -ForegroundColor Red
+        exit 1
+    }
+    if ($LASTEXITCODE -eq 3) {
+        Write-Host "ERROR: SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty in the remote .env." -ForegroundColor Red
+        exit 1
+    }
+    if ($LASTEXITCODE -eq 4) {
+        Write-Host "ERROR: BRIX_INFRA_EMAIL_SMTP_FROM is set but BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM is empty in the remote .env." -ForegroundColor Red
+        exit 1
+    }
+    if ($LASTEXITCODE -eq 5) {
+        Write-Host "ERROR: BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty in the remote .env." -ForegroundColor Red
         exit 1
     }
     if ($LASTEXITCODE -ne 0) {

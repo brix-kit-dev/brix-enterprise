@@ -44,6 +44,8 @@ class Phase8HostCompositionContractTest {
     void standaloneHostAssemblesRequiredOperationalDataOwnerNotificationAndTenantPlugin() throws IOException {
         String pom = read(STANDALONE_DIR.resolve("pom.xml"));
         String yaml = read(STANDALONE_DIR.resolve("src/main/resources/application.yml"));
+        String autoConfiguration = read(STANDALONE_DIR.resolve(
+            "src/main/java/io/brix/enterprise/host/standalone/config/StandaloneShellAutoConfiguration.java"));
 
         assertThat(pom)
             .contains("<artifactId>platform-admin</artifactId>")
@@ -52,13 +54,23 @@ class Phase8HostCompositionContractTest {
             .contains("<artifactId>infra-adapter-email-smtp</artifactId>")
             .contains("<artifactId>tenant-server</artifactId>");
         assertThat(yaml)
+            .contains("capability:")
+            .contains("validate-on-startup: true")
+            .contains("- io.runtime.sdk.capability.EventBusCapability")
             .contains("host-mode: STANDALONE")
             .contains("required-operational-modules:")
             .contains("- platform-admin")
             .contains("required-plugins:")
             .contains("- platform-tenant")
             .contains("- brix-app-tenant")
+            .contains("setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}")
             .contains("include: readinessState,runtimeShellReadiness");
+        assertThat(autoConfiguration)
+            .contains("RuntimeShellFatalAction")
+            .contains("System.exit(properties.getFatalExitCode())")
+            .doesNotContain("TenantPlugin")
+            .doesNotContain("TenantManagementService")
+            .doesNotContain("Repository");
     }
 
     @Test
@@ -68,14 +80,17 @@ class Phase8HostCompositionContractTest {
 
         assertThat(compose)
             .contains("BRIX_PLATFORM_NOTIFICATION_ENABLED")
+            .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL")
             .contains("BRIX_INFRA_EMAIL_SMTP_ENABLED")
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
             .contains("BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED")
             .contains("BRIX_INFRA_EMAIL_SMTP_CERTIFICATE_HOSTNAME_VALIDATION");
         assertThat(mailpit)
             .contains("SPRING_MAIL_HOST: mailpit")
-            .contains("BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED: \"false\"")
-            .contains("BRIX_INFRA_EMAIL_SMTP_CERTIFICATE_HOSTNAME_VALIDATION: \"false\"");
+            .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
+            .contains("SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: \"false\"")
+            .doesNotContain("BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED: \"false\"")
+            .doesNotContain("BRIX_INFRA_EMAIL_SMTP_CERTIFICATE_HOSTNAME_VALIDATION: \"false\"");
     }
 
     @Test
@@ -98,6 +113,36 @@ class Phase8HostCompositionContractTest {
             .contains("redact()")
             .doesNotContain("SELECT id, email")
             .doesNotContain("SELECT id, identity_id");
+    }
+
+    @Test
+    void dockerScriptsGenerateAndValidateSmtpAdapterEnvironment() throws IOException {
+        Path scriptsDir = MODULE_DIR.resolve("../../../../scripts").normalize();
+        String rebuild = read(scriptsDir.resolve("docker-rebuild.sh"));
+        String start = read(scriptsDir.resolve("docker-start.sh"));
+        String remoteDeploy = read(REMOTE_DEPLOY_DIR.resolve("deploy-to-remote.ps1"));
+        String remoteStart = read(REMOTE_DEPLOY_DIR.resolve("remote-docker-start.ps1"));
+        String remoteRebuild = read(REMOTE_DEPLOY_DIR.resolve("remote-docker-rebuild.ps1"));
+
+        assertThat(rebuild)
+            .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup")
+            .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local")
+            .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
+        assertThat(start)
+            .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
+        assertThat(remoteDeploy)
+            .contains("\"BRIX_INFRA_EMAIL_SMTP_FROM\"")
+            .contains("BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local");
+        assertThat(remoteStart)
+            .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
+            .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
+        assertThat(remoteRebuild)
+            .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
+            .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
     }
 
     private static String read(Path path) throws IOException {

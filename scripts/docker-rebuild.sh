@@ -42,7 +42,7 @@ Examples:
 
 SMTP behavior:
   - Production mode requires .env notification delivery configuration:
-      SPRING_MAIL_HOST + BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM
+      SPRING_MAIL_HOST + BRIX_INFRA_EMAIL_SMTP_FROM
     or explicit BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=true.
   - --dev-smtp loads Mailpit and verifies the host-shell container receives:
       SPRING_MAIL_HOST=mailpit, SPRING_MAIL_PORT=1025
@@ -201,7 +201,20 @@ check_prerequisites() {
 
 create_dev_env_if_needed() {
   [[ "$INIT_ENV" == "true" ]] || return 0
-  [[ -f .env ]] && { info ".env already exists; keeping existing values."; return 0; }
+  if [[ -f .env ]]; then
+    info ".env already exists; keeping existing values."
+    if ! grep -Eq '^BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=' .env; then
+      printf '\nBRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup\n' >> .env
+      chmod 600 .env
+      success "Added missing BRIX_PLATFORM_ADMIN_SETUP_BASE_URL to existing .env"
+    fi
+    if ! grep -Eq '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env; then
+      printf '\nBRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local\n' >> .env
+      chmod 600 .env
+      success "Added missing BRIX_INFRA_EMAIL_SMTP_FROM to existing .env"
+    fi
+    return 0
+  fi
 
   step "Creating local development .env..."
   local db_password minio_secret google_secret token_key mfa_key setup_code
@@ -228,6 +241,7 @@ BRIX_PLATFORM_MFA_ISSUER=Brix
 BRIX_PLATFORM_MFA_ENCRYPTION_KEY=${mfa_key}
 BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup
 BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=platform-admin@brix.local
+BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local
 BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS=86400
 BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY=false
 BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=false
@@ -303,19 +317,31 @@ check_notification_environment() {
     exit 1
   fi
 
-  local mail_host mail_from logging
+  local mail_host setup_base_url setup_mail_from smtp_from logging
   mail_host="$(get_env_value SPRING_MAIL_HOST)"
-  mail_from="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM)"
+  setup_base_url="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_BASE_URL)"
+  setup_mail_from="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM)"
+  smtp_from="$(get_env_value BRIX_INFRA_EMAIL_SMTP_FROM)"
   logging="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED)"
 
-  if [[ -z "$mail_host" && "$logging" != "true" ]]; then
-    fail "No setup-link notification adapter is configured in .env."
-    fail "Use --dev-smtp for Mailpit, or set SPRING_MAIL_HOST and BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM."
+  if [[ -z "$setup_base_url" ]]; then
+    fail "BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty in .env."
     exit 1
   fi
 
-  if [[ -n "$mail_host" && -z "$mail_from" ]]; then
-    fail "SPRING_MAIL_HOST is set but BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM is empty in .env."
+  if [[ -z "$mail_host" && "$logging" != "true" ]]; then
+    fail "No setup-link notification adapter is configured in .env."
+    fail "Use --dev-smtp for Mailpit, or set SPRING_MAIL_HOST and BRIX_INFRA_EMAIL_SMTP_FROM."
+    exit 1
+  fi
+
+  if [[ -n "$mail_host" && -z "$smtp_from" ]]; then
+    fail "SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty in .env."
+    exit 1
+  fi
+
+  if [[ -n "$smtp_from" && -z "$setup_mail_from" ]]; then
+    fail "BRIX_INFRA_EMAIL_SMTP_FROM is set but BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM is empty in .env."
     exit 1
   fi
 

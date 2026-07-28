@@ -17,10 +17,14 @@ package io.brix.enterprise.host.standalone.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 
 import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
+import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrapProperties;
+import io.runtime.orchestrator.bootstrap.RuntimeShellFatalAction;
 
 /**
  * Standalone mode Runtime Shell auto-configuration.
@@ -31,6 +35,7 @@ import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
  * </p>
  * <ul>
  *   <li>Declaring configuration property class ({@link StandaloneShellProperties})</li>
+ *   <li>Declaring the Host-owned Runtime Shell terminal action for standalone process mode</li>
  * </ul>
  *
  * <p>
@@ -42,8 +47,8 @@ import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
  *
  * <h2>Blueprint Red-Line Verification</h2>
  * <ul>
- *   <li>Red Line 3 (Host Ultra-Thin): Class line count &lt; 50 lines ✓</li>
- *   <li>Red Line 3 (Host Ultra-Thin): No @Bean definitions ✓</li>
+ *   <li>Red Line 3 (Host Ultra-Thin): No business handlers</li>
+ *   <li>Red Line 3 (Host Ultra-Thin): Only Host-owned terminal action bean</li>
  *   <li>Red Line 3 (Host Ultra-Thin): No if/else/for/try-catch control flow ✓</li>
  *   <li>Red Line 3 (Host Ultra-Thin): No private methods ✓</li>
  *   <li>Host source imports only Runtime Shell bootstrap API, never plugin business types</li>
@@ -72,6 +77,16 @@ import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
 @ConditionalOnProperty(prefix = "brix.shell.standalone", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(StandaloneShellProperties.class)
 public class StandaloneShellAutoConfiguration {
-    // EMPTY — ultra-thin Host
-    // RuntimeShellBootstrapAutoConfiguration is discovered from runtime-orchestrator.
+
+    /**
+     * Provides the Host-owned terminal action required by standalone Runtime Shell mode.
+     *
+     * @param properties Runtime Shell bootstrap properties assembled by the Host
+     * @return terminal action that exits the standalone process with the configured code
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RuntimeShellFatalAction runtimeShellFatalAction(RuntimeShellBootstrapProperties properties) {
+        return reason -> System.exit(properties.getFatalExitCode());
+    }
 }
