@@ -79,15 +79,19 @@ events:
     - id: brix-app-tenant.TenantCreated
       schema: schemas/events/tenant-created.v1.json
       version: 1.0.0
+      reliability: STANDARD
     - id: brix-app-tenant.TenantUpdated
       schema: schemas/events/tenant-updated.v1.json
       version: 1.0.0
+      reliability: STANDARD
     - id: brix-app-tenant.TenantSuspended
       schema: schemas/events/tenant-suspended.v1.json
       version: 1.0.0
+      reliability: STANDARD
     - id: brix-app-tenant.TenantTerminated
       schema: schemas/events/tenant-terminated.v1.json
       version: 1.0.0
+      reliability: STANDARD
   subscribes: []
 data:
   storageId: tenant

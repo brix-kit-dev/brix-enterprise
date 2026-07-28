@@ -178,6 +178,11 @@
                 <artifactId>infra-adapter-minio</artifactId>
                 <version>${infra-adapters.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-email-smtp</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
             <!-- Kafka Outbox 模块（事务性事件发布，作为 Kafka 的子模块） -->
             <dependency>
                 <groupId>io.brix</groupId>
@@ -189,6 +194,11 @@
             <dependency>
                 <groupId>io.brix.platform</groupId>
                 <artifactId>platform-common-starter</artifactId>
+                <version>${platform-commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix.platform</groupId>
+                <artifactId>platform-notification</artifactId>
                 <version>${platform-commons.version}</version>
             </dependency>
 

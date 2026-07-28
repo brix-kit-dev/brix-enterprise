@@ -83,7 +83,7 @@ services:
       # Fallback Auth 配置（standalone 模式下启用 fallback 认证能力）
       - BRIX_FALLBACK_AUTH_ENABLED=true
       # =====================================================
-      # Platform Admin Setup + Bootstrap (Layer 2C)
+      # Platform Admin setup-link delivery and Bootstrap configuration
       # =====================================================
       # SECURITY: setup links are delivered by NotificationCapability only.
       # Bootstrap uses a setup code to open a short-lived BOOTSTRAP_SETUP
@@ -96,9 +96,15 @@ services:
       - BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS=${BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS:-86400}
       - BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY=${BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY:-false}
       - BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=${BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED:-false}
+      - BRIX_PLATFORM_NOTIFICATION_ENABLED=${BRIX_PLATFORM_NOTIFICATION_ENABLED:-true}
+      - BRIX_PLATFORM_NOTIFICATION_DEFAULT_LOCALE=${BRIX_PLATFORM_NOTIFICATION_DEFAULT_LOCALE:-en-US}
       # SMTP is the production NotificationCapability adapter for setup links.
       # Leave these unset when using docker-compose.dev-smtp.yml (Mailpit) or
       # when another NotificationCapability bean is provided by the runtime.
+      - BRIX_INFRA_EMAIL_SMTP_ENABLED=${BRIX_INFRA_EMAIL_SMTP_ENABLED:-true}
+      - BRIX_INFRA_EMAIL_SMTP_FROM=${BRIX_INFRA_EMAIL_SMTP_FROM:?BRIX_INFRA_EMAIL_SMTP_FROM is required}
+      - BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED=${BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED:-true}
+      - BRIX_INFRA_EMAIL_SMTP_CERTIFICATE_HOSTNAME_VALIDATION=${BRIX_INFRA_EMAIL_SMTP_CERTIFICATE_HOSTNAME_VALIDATION:-true}
       - SPRING_MAIL_HOST=${SPRING_MAIL_HOST:-}
       - SPRING_MAIL_PORT=${SPRING_MAIL_PORT:-}
       - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME:-}

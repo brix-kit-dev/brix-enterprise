@@ -102,8 +102,15 @@ spring:
 brix:
   runtime-shell:
     enabled: true
+    runtime-version: ${BRIX_RUNTIME_SHELL_VERSION:3.2.0}
+    host-mode: STANDALONE
+    fatal-exit-code: ${BRIX_RUNTIME_SHELL_FATAL_EXIT_CODE:70}
     endpoint-deadline-millis: ${BRIX_RUNTIME_ENDPOINT_DEADLINE_MILLIS:30000}
-    required-plugins: []
+    required-operational-modules:
+      - platform-admin
+    required-plugins:
+      - platform-tenant
+      - brix-app-tenant
   # Fallback Adapter — provides dev/test stand-ins for required capabilities that
   # have no production-grade Adapter wired yet (auth, observability, etc.).
   # Triple-gated by infra-adapter-fallback (Profile != production AND explicit
@@ -151,10 +158,20 @@ brix:
           - app-intake
           - app-compliance
           - app-tenant
-  # ==================== Platform Admin Setup Links (Layer 2C) ====================
+    email:
+      smtp:
+        enabled: ${BRIX_INFRA_EMAIL_SMTP_ENABLED:true}
+        from: ${BRIX_INFRA_EMAIL_SMTP_FROM:}
+        tls-enabled: ${BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED:true}
+        certificate-hostname-validation: ${BRIX_INFRA_EMAIL_SMTP_CERTIFICATE_HOSTNAME_VALIDATION:true}
+  # ==================== Platform Admin Setup Links ====================
   # Host only supplies externalized delivery metadata. The setup token is created
-  # and delivered by platform-admin via NotificationCapability.
+  # by the Data Owner and delivered through NotificationCapability.
   platform:
+    notification:
+      enabled: ${BRIX_PLATFORM_NOTIFICATION_ENABLED:true}
+      default-locale: ${BRIX_PLATFORM_NOTIFICATION_DEFAULT_LOCALE:en-US}
+
     mfa:
       issuer: ${BRIX_PLATFORM_MFA_ISSUER:Brix}
       encryption-key: ${BRIX_PLATFORM_MFA_ENCRYPTION_KEY:}
@@ -167,7 +184,7 @@ brix:
         return-url-for-dev-only: ${BRIX_PLATFORM_ADMIN_SETUP_RETURN_URL_FOR_DEV_ONLY:false}
         logging-notification-enabled: ${BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED:false}
 
-    # ==================== Super-Admin Bootstrap (Layer 2C) ====================
+    # ==================== Super-Admin Bootstrap ====================
     # v2.0 bootstrap creates only a passwordless BOOTSTRAP anchor in
     # IdentityStatus.PENDING_SETUP. It never seeds a formal admin password.
     # The setup code opens a short-lived Bootstrap Setup session, then
@@ -332,6 +349,7 @@ spring:
 brix:
   runtime-shell:
     required-plugins:
+      - platform-tenant
       - brix-app-tenant
 
 ---

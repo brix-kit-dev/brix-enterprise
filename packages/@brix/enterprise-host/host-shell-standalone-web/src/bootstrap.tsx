@@ -87,7 +87,8 @@ export async function bootstrap(): Promise<void> {
 
   const { authService } = registerAuth(runtime);
 
-  const tenantCapability = registerTenant(runtime, () => authService.getToken());
+  const tenantRegistration = registerTenant(runtime, () => authService.getToken());
+  const { tenantCapability } = tenantRegistration;
 
   // EventBus must be registered before HTTP so the latter can publish
   // `system.http.error` events for the centralised toaster (Stability v1.0 C-2).
@@ -105,6 +106,8 @@ export async function bootstrap(): Promise<void> {
     },
     eventBus: eventBusCapability,
   });
+  tenantRegistration.bindHttpCapability(httpCapability);
+  tenantRegistration.refreshAvailableTenants();
 
   // Phase 2 / C-4 — ViewMode capability depends on auth storage and uses the
   // canonical HttpCapability for switch requests, keeping Host inside the

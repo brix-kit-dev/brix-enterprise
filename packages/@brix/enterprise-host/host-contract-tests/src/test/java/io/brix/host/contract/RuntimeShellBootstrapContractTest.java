@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
+import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrapHandle;
 import io.runtime.orchestrator.capability.DefaultCapabilityRegistry;
 import io.runtime.orchestrator.endpoint.DefaultPluginEndpointDispatcher;
 import io.runtime.orchestrator.plugin.ClasspathPluginRuntimeDescriptorResolver;
@@ -68,9 +69,11 @@ class RuntimeShellBootstrapContractTest {
             List.of(TENANT_PLUGIN_ID),
             dispatcher));
 
-        List<PluginRuntimeState> states = bootstrap.start();
+        RuntimeShellBootstrapHandle handle = bootstrap.start();
+        List<PluginRuntimeState> states = bootstrap.pluginStates();
 
         assertThat(bootstrap.ready()).isTrue();
+        assertThat(handle.ready()).isTrue();
         assertThat(states)
             .anySatisfy(state -> {
                 assertThat(state.identity().pluginId()).isEqualTo(TENANT_PLUGIN_ID);

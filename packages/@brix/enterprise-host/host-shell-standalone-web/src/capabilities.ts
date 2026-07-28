@@ -76,7 +76,7 @@ import {
   TenantCapabilityImpl,
   type TenantCapabilityConfig,
   TenantRepository,
-  DefaultTenantHttpClient,
+  type TenantHttpClient,
   ViewModeCapabilityImpl,
   type ViewModeCapabilityConfig,
 } from '@brix-sdk/platform-tenant-web';
@@ -439,7 +439,21 @@ function getJwtClaim(token: string | null, claim: string): string | null {
  * @returns the registered tenant capability for downstream use (e.g., HTTP header injection)
  */
 export function registerTenant(runtime: WebUIRuntime, tokenProvider: () => string | null) {
-  const httpClient = new DefaultTenantHttpClient(tokenProvider);
+  let boundHttpCapability: HttpCapability | null = null;
+  const httpClient: TenantHttpClient = {
+    get: <T,>(url: string) => {
+      if (!boundHttpCapability) {
+        throw new Error('Tenant HttpCapability is not bound.');
+      }
+      return boundHttpCapability.get<T>(url);
+    },
+    post: <T,>(url: string, data?: unknown) => {
+      if (!boundHttpCapability) {
+        throw new Error('Tenant HttpCapability is not bound.');
+      }
+      return boundHttpCapability.post<T>(url, data);
+    },
+  };
   const tenantRepo = new TenantRepository(httpClient);
 
   // Mutable cache for available tenants, seeded from JWT and refreshed asynchronously
@@ -464,8 +478,8 @@ export function registerTenant(runtime: WebUIRuntime, tokenProvider: () => strin
           status: t.status,
         }));
       })
-      .catch(() => {
-        // Silent catch — tenant list refresh is non-critical
+      .catch(error => {
+        console.warn('[host] Tenant list refresh failed', error);
       });
   };
 
@@ -493,11 +507,14 @@ export function registerTenant(runtime: WebUIRuntime, tokenProvider: () => strin
 
   const tenantCapability = new TenantCapabilityImpl(config);
 
-  // Kick off background refresh to populate cache with real server data
-  refreshAvailableTenants();
-
   runtime.registerCapability(TenantCapabilityType, { provide: () => tenantCapability });
-  return tenantCapability;
+  return {
+    tenantCapability,
+    bindHttpCapability: (httpCapability: HttpCapability) => {
+      boundHttpCapability = httpCapability;
+    },
+    refreshAvailableTenants,
+  };
 }
 
 // ============================================================================

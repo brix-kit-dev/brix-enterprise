@@ -9,7 +9,7 @@ MFA_BLOCK = (
     '      - BRIX_PLATFORM_MFA_ENCRYPTION_KEY=${BRIX_PLATFORM_MFA_ENCRYPTION_KEY:?BRIX_PLATFORM_MFA_ENCRYPTION_KEY is required. Create .env file with a base64-encoded 32-byte random value.}\n'
 )
 BLOCK = (
-    '      # Platform Admin setup-link delivery + Bootstrap v2 (Layer 2C)\n'
+    '      # Platform Admin setup-link delivery and Bootstrap configuration\n'
     + MFA_BLOCK
     '      - BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:-}\n'
     '      - BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=${BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM:-}\n'
