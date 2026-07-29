@@ -366,10 +366,17 @@ export default defineConfig({
     static: false,
     historyApiFallback: {
       index: '/index.html',
-      disableDotRule: true,
+      // Keep SPA fallback for route URLs such as /platform/login, but never
+      // turn missing chunks or sourcemaps into index.html with HTTP 200.
+      disableDotRule: false,
     },
     headers: {
       'Access-Control-Allow-Origin': '*',
+      // Local dev/preview rebuilds emit new chunk hashes. Prevent browsers
+      // from reusing an old app shell that points at removed assets.
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
     },
     // Environment-driven proxy configuration (v3.0.7 Constraint 8)
     // Controlled by VITE_LOCAL_PLUGINS and VITE_REMOTE_BACKEND in .env

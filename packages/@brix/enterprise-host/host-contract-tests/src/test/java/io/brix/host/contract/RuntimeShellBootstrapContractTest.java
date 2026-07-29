@@ -19,22 +19,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.security.Principal;
 import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
+import io.brix.platform.tenant.internal.PlatformBootstrapAdministration;
+import io.brix.platform.tenant.internal.PlatformIdentityAdministration;
+import io.brix.platform.tenant.internal.TenantAdministration;
+import io.runtime.orchestrator.bootstrap.HostBootstrapCoordinator;
+import io.runtime.orchestrator.bootstrap.HostRuntimeOperationalView;
 import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
 import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrapHandle;
 import io.runtime.orchestrator.capability.DefaultCapabilityRegistry;
 import io.runtime.orchestrator.endpoint.DefaultPluginEndpointDispatcher;
+import io.runtime.orchestrator.internalcontract.InternalContractBinder;
+import io.runtime.orchestrator.internalcontract.ServiceLoaderInternalContractProviderDiscovery;
+import io.runtime.orchestrator.operational.OperationalModuleRuntimeManager;
+import io.runtime.orchestrator.operational.OperationalRuntimeException;
+import io.runtime.orchestrator.operational.ServiceLoaderOperationalModuleDiscovery;
 import io.runtime.orchestrator.plugin.ClasspathPluginRuntimeDescriptorResolver;
 import io.runtime.orchestrator.plugin.PluginRuntimeException;
 import io.runtime.orchestrator.plugin.PluginRuntimeManager;
@@ -43,31 +50,35 @@ import io.runtime.orchestrator.plugin.ServiceLoaderPluginDiscovery;
 import io.runtime.sdk.capability.AuthCapability;
 import io.runtime.sdk.capability.DataScope;
 import io.runtime.sdk.capability.EventBusCapability;
+import io.runtime.sdk.internalcontract.InternalContractProvider;
 import io.runtime.sdk.plugin.BrixHealth;
+import io.runtime.sdk.plugin.BrixPlugin;
 import io.runtime.sdk.plugin.PluginLifecycleState;
 
 /**
  * Contract tests for v3.0.10 Host to Runtime Shell bootstrap integration.
  *
- * <p>The test module assembles the tenant plugin artifact as a test dependency,
- * then verifies discovery and readiness through Runtime Shell APIs only. Test
- * source does not import tenant plugin implementation, controller, service,
- * entity, repository, or mapper types.</p>
+ * <p>The test module assembles platform-admin, platform-tenant, and app-booking
+ * as test dependencies, then verifies discovery and readiness through Runtime
+ * Shell APIs only. Test source does not import plugin implementation,
+ * controller, service, entity, repository, or mapper types.</p>
  *
  * @author Brix Architecture Team
  * @since 3.0.10
  */
 class RuntimeShellBootstrapContractTest {
 
-    private static final String TENANT_PLUGIN_ID = "brix-app-tenant";
+    private static final String PLATFORM_ADMIN_MODULE_ID = "platform-admin";
+    private static final String PLATFORM_TENANT_PLUGIN_ID = "platform-tenant";
+    private static final String APP_BOOKING_PLUGIN_ID = "app-booking";
 
     @Test
-    void tenantOnlyRuntimeBootstrapDiscoversAndStartsRequiredTenantProvider() {
+    void phase1RuntimeHostBootstrapDiscoversAndStartsRequiredComposition() {
         DefaultPluginEndpointDispatcher dispatcher = new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30));
-        RuntimeShellBootstrap bootstrap = new RuntimeShellBootstrap(runtimeManager(
-            registryWithTenantRequiredCapabilities(),
-            List.of(TENANT_PLUGIN_ID),
-            dispatcher));
+        RuntimeShellBootstrap bootstrap = hostBootstrap(
+            dispatcher,
+            List.of(PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
+            List.of(PLATFORM_ADMIN_MODULE_ID));
 
         RuntimeShellBootstrapHandle handle = bootstrap.start();
         List<PluginRuntimeState> states = bootstrap.pluginStates();
@@ -76,36 +87,44 @@ class RuntimeShellBootstrapContractTest {
         assertThat(handle.ready()).isTrue();
         assertThat(states)
             .anySatisfy(state -> {
-                assertThat(state.identity().pluginId()).isEqualTo(TENANT_PLUGIN_ID);
+                assertThat(state.identity().pluginId()).isEqualTo(PLATFORM_TENANT_PLUGIN_ID);
                 assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
                 assertThat(state.ready()).isTrue();
-                assertThat(state.health().status()).isIn(BrixHealth.Status.UP, BrixHealth.Status.DEGRADED);
+            })
+            .anySatisfy(state -> {
+                assertThat(state.identity().pluginId()).isEqualTo(APP_BOOKING_PLUGIN_ID);
+                assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
+                assertThat(state.ready()).isTrue();
+                assertThat(state.health().status()).isEqualTo(BrixHealth.Status.UP);
             });
-        assertThat(dispatcher.invoke("GET", "/api/v1/tenants", null, Map.of(), permissionHeaders()))
-            .extracting(RuntimeShellBootstrapContractTest::responseStatus)
-            .isEqualTo(200);
-        Object created = dispatcher.invoke("POST", "/api/v1/tenants", Map.of(
-            "code", "acme-corp",
-            "name", "Acme Corporation",
-            "ownerIdentityId", 1001L,
-            "contactEmail", "owner@example.com"), Map.of(), permissionHeaders());
-        assertThat(responseStatus(created)).isEqualTo(201);
-        assertThat(responseBody(created))
-            .extracting(RuntimeShellBootstrapContractTest::tenantCode)
-            .isEqualTo("acme-corp");
-        assertThat(dispatcher.invoke("GET", "/api/v1/tenants/7", null, Map.of(), permissionHeaders()))
-            .extracting(RuntimeShellBootstrapContractTest::responseBody)
-            .extracting(RuntimeShellBootstrapContractTest::tenantId)
-            .isEqualTo(7L);
+        assertThat(bootstrap.operationalStates())
+            .anySatisfy(state -> {
+                assertThat(state.identity().moduleId()).isEqualTo(PLATFORM_ADMIN_MODULE_ID);
+                assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
+                assertThat(state.ready()).isTrue();
+                assertThat(state.entriesPublished()).isTrue();
+            });
+        assertThat(dispatcher.routes())
+            .anySatisfy(route -> {
+                assertThat(route.pluginId()).isEqualTo(PLATFORM_ADMIN_MODULE_ID);
+                assertThat(route.path()).startsWith("/api/platform/");
+            })
+            .anySatisfy(route -> {
+                assertThat(route.pluginId()).isEqualTo(APP_BOOKING_PLUGIN_ID);
+                assertThat(route.endpointId()).isEqualTo("app-booking.template.status.v1");
+                assertThat(route.path()).isEqualTo("/api/app-booking/v1/template/status");
+            })
+            .allSatisfy(route -> assertThat(route.pluginId()).isNotEqualTo("host-shell-standalone"));
         bootstrap.stop();
     }
 
     @Test
     void requiredTenantProviderMissingFromCompositionFailsFast() {
         RuntimeShellBootstrap bootstrap = new RuntimeShellBootstrap(runtimeManager(
-            registryWithTenantRequiredCapabilities(),
+            registryWithHostRequiredCapabilities(),
             List.of("missing-required-plugin"),
-            new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30))));
+            new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30)),
+            null));
 
         assertThatThrownBy(bootstrap::start)
             .isInstanceOf(PluginRuntimeException.class)
@@ -113,117 +132,142 @@ class RuntimeShellBootstrapContractTest {
         assertThat(bootstrap.ready()).isFalse();
     }
 
+    @Test
+    void requiredPlatformAdminOperationalModuleMissingFailsFast() {
+        OperationalModuleRuntimeManager manager = operationalManager(
+            registryWithHostRequiredCapabilities(),
+            List::of,
+            List.of(PLATFORM_ADMIN_MODULE_ID));
+
+        assertThatThrownBy(manager::prepare)
+            .isInstanceOf(OperationalRuntimeException.class)
+            .hasMessageContaining("Required operational provider(s) missing");
+        assertThat(manager.ready()).isFalse();
+    }
+
+    @Test
+    void platformAdminOperationalProviderIsServiceLoaderDiscovered() {
+        var discovered = new ServiceLoaderOperationalModuleDiscovery().discover();
+
+        assertThat(discovered)
+            .anySatisfy(module -> {
+                assertThat(module.descriptor().identity().moduleId()).isEqualTo(PLATFORM_ADMIN_MODULE_ID);
+                assertThat(module.descriptor().endpoints().values())
+                    .isNotEmpty()
+                    .allSatisfy(endpoint -> assertThat(endpoint.path()).startsWith("/api/platform/"));
+            });
+    }
+
+    private static RuntimeShellBootstrap hostBootstrap(
+            DefaultPluginEndpointDispatcher dispatcher,
+            List<String> requiredPlugins,
+            List<String> requiredOperationalModules) {
+        DefaultCapabilityRegistry registry = registryWithHostRequiredCapabilities();
+        InternalContractBinder internalContracts =
+            new InternalContractBinder(registry, registry, RuntimeShellBootstrapContractTest.class.getClassLoader());
+        HostRuntimeOperationalView runtimeView = new HostRuntimeOperationalView(requiredModules(
+            requiredPlugins,
+            requiredOperationalModules));
+        return new RuntimeShellBootstrap(new HostBootstrapCoordinator(
+            runtimeManager(registry, requiredPlugins, dispatcher, internalContracts),
+            operationalManager(
+                registry,
+                new ServiceLoaderOperationalModuleDiscovery()::discover,
+                requiredOperationalModules,
+                internalContracts,
+                runtimeView),
+            dispatcher,
+            runtimeView,
+            ignored -> { }));
+    }
+
     private static PluginRuntimeManager runtimeManager(
             DefaultCapabilityRegistry registry,
             List<String> requiredPlugins,
-            DefaultPluginEndpointDispatcher dispatcher) {
+            DefaultPluginEndpointDispatcher dispatcher,
+            InternalContractBinder internalContracts) {
         return new PluginRuntimeManager(
             new ServiceLoaderPluginDiscovery()::discover,
             new ClasspathPluginRuntimeDescriptorResolver(),
             registry,
             requiredPlugins,
             dispatcher,
-            RuntimeShellBootstrapContractTest::initializeTenantEndpointServices);
+            ignored -> { },
+            RuntimeShellBootstrapContractTest::internalContractProviders,
+            internalContracts);
     }
 
-    private static DefaultCapabilityRegistry registryWithTenantRequiredCapabilities() {
+    private static OperationalModuleRuntimeManager operationalManager(
+            DefaultCapabilityRegistry registry,
+            java.util.function.Supplier<List<ServiceLoaderOperationalModuleDiscovery.DiscoveredOperationalModule>>
+                discovery,
+            List<String> requiredOperationalModules) {
+        return operationalManager(
+            registry,
+            discovery,
+            requiredOperationalModules,
+            new InternalContractBinder(
+                registry,
+                registry,
+                RuntimeShellBootstrapContractTest.class.getClassLoader()),
+            new HostRuntimeOperationalView(requiredOperationalModules));
+    }
+
+    private static OperationalModuleRuntimeManager operationalManager(
+            DefaultCapabilityRegistry registry,
+            java.util.function.Supplier<List<ServiceLoaderOperationalModuleDiscovery.DiscoveredOperationalModule>>
+                discovery,
+            List<String> requiredOperationalModules,
+            InternalContractBinder internalContracts,
+            HostRuntimeOperationalView runtimeView) {
+        return new OperationalModuleRuntimeManager(
+            discovery,
+            RuntimeShellBootstrapContractTest::internalContractProviders,
+            internalContracts,
+            runtimeView,
+            requiredOperationalModules,
+            "3.2.0");
+    }
+
+    private static DefaultCapabilityRegistry registryWithHostRequiredCapabilities() {
         DefaultCapabilityRegistry registry = new DefaultCapabilityRegistry();
         registry.register(AuthCapability.class, new ContractAuthCapability());
         registry.register(EventBusCapability.class, EventBusTestFactory.allImplementations()
             .findFirst()
             .orElseThrow());
+        registry.register(TenantAdministration.class, throwingProxy(TenantAdministration.class));
+        registry.register(PlatformBootstrapAdministration.class, throwingProxy(PlatformBootstrapAdministration.class));
+        registry.register(PlatformIdentityAdministration.class, throwingProxy(PlatformIdentityAdministration.class));
         return registry;
     }
 
-    private static Map<String, List<String>> permissionHeaders() {
-        return Map.of(
-            "x-actor-id", List.of("runtime-shell-contract"),
-            "x-tenant-id", List.of("system"));
+    private static List<InternalContractProvider> internalContractProviders() {
+        return new ServiceLoaderInternalContractProviderDiscovery(
+            RuntimeShellBootstrapContractTest.class.getClassLoader()).discover().stream()
+            .map(ServiceLoaderInternalContractProviderDiscovery.DiscoveredInternalContractProvider::provider)
+            .toList();
     }
 
-    private static Object responseBody(Object response) {
-        return invokeNoArg(response, "body");
+    private static List<String> requiredModules(
+            List<String> requiredPlugins,
+            List<String> requiredOperationalModules) {
+        List<String> required = new ArrayList<>();
+        required.addAll(requiredPlugins);
+        required.addAll(requiredOperationalModules);
+        return List.copyOf(required);
     }
 
-    private static Object responseStatus(Object response) {
-        return invokeNoArg(response, "status");
-    }
-
-    private static Object tenantId(Object tenant) {
-        return invokeNoArg(tenant, "getId");
-    }
-
-    private static Object tenantCode(Object tenant) {
-        return invokeNoArg(tenant, "getCode");
-    }
-
-    private static Object invokeNoArg(Object target, String methodName) {
-        try {
-            return target.getClass().getMethod(methodName).invoke(target);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Unable to invoke " + methodName + " on " + target.getClass().getName(), e);
-        }
-    }
-
-    private static void initializeTenantEndpointServices(io.runtime.sdk.plugin.BrixPlugin plugin) {
-        if (!"io.brix.enterprise.app.tenant.TenantPlugin".equals(plugin.getClass().getName())) {
-            return;
-        }
-        try {
-            Class<?> serviceType = Class.forName("io.brix.enterprise.app.tenant.service.TenantManagementService");
-            Method setter = plugin.getClass().getMethod("setTenantServices", serviceType, ObjectMapper.class);
-            Object service = Proxy.newProxyInstance(
-                RuntimeShellBootstrapContractTest.class.getClassLoader(),
-                new Class<?>[] {serviceType},
-                new ContractTenantServiceHandler());
-            setter.invoke(plugin, service, new ObjectMapper());
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Unable to initialize tenant endpoint contract service", e);
-        }
-    }
-
-    private static final class ContractTenantServiceHandler implements InvocationHandler {
-
-        @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws ReflectiveOperationException {
-            return switch (method.getName()) {
-                case "createTenant" -> tenant(
-                    7L,
-                    text(args[0], "getCode"),
-                    text(args[0], "getName"),
-                    text(args[0], "getContactEmail"));
-                case "getTenantById" -> tenant((Long) args[0], "acme-corp", "Acme Corporation", "owner@example.com");
-                case "getTenantByCode" -> tenant(7L, (String) args[0], "Acme Corporation", "owner@example.com");
-                case "listTenants" -> List.of(tenant(7L, "acme-corp", "Acme Corporation", "owner@example.com"));
-                case "activateTenant", "suspendTenant" -> tenant(
-                    (Long) args[0],
-                    "acme-corp",
-                    "Acme Corporation",
-                    "owner@example.com");
-                case "listMembers" -> List.of();
-                default -> throw new UnsupportedOperationException("Unsupported tenant contract method: "
-                    + method.getName());
-            };
-        }
-
-        private static String text(Object target, String methodName) throws ReflectiveOperationException {
-            Object value = target.getClass().getMethod(methodName).invoke(target);
-            return value == null ? null : value.toString();
-        }
-
-        private static Object tenant(Long id, String code, String name, String contactEmail)
-                throws ReflectiveOperationException {
-            Class<?> dtoType = Class.forName("io.brix.enterprise.app.tenant.dto.TenantDTO");
-            return dtoType.getConstructor(
-                Long.class,
-                String.class,
-                String.class,
-                String.class,
-                String.class,
-                OffsetDateTime.class,
-                OffsetDateTime.class)
-                .newInstance(id, code, name, "ACTIVE", contactEmail, OffsetDateTime.now(), OffsetDateTime.now());
-        }
+    private static <T> T throwingProxy(Class<T> contractType) {
+        Object proxy = Proxy.newProxyInstance(
+            RuntimeShellBootstrapContractTest.class.getClassLoader(),
+            new Class<?>[] {contractType},
+            (target, method, args) -> {
+                if (method.getDeclaringClass() == Object.class) {
+                    return method.invoke(target, args);
+                }
+                throw new UnsupportedOperationException("Contract method is not invoked by Phase 1 bootstrap tests");
+            });
+        return contractType.cast(proxy);
     }
 
     private static final class ContractAuthCapability implements AuthCapability {

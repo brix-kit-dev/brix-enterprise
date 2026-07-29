@@ -30,7 +30,7 @@ async function initializeDefaultShareScope(): Promise<void> {
 // imports React and other shared modules; loading it before share-scope setup
 // can fail with "factory is undefined" on a cold browser cache.
 initializeDefaultShareScope().then(() => import('./bootstrap')).then(({ bootstrap }) => {
-  bootstrap();
+  return bootstrap();
 }).catch((error) => {
 
   const root = document.getElementById('root');

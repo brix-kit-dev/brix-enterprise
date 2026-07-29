@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   =========================================================
-  booking-api - 预约模块 API 层
+  booking-api - commercial template API layer
   
   职责：
-  - DTO（数据传输对象）
-  - Request/Response 对象
-  - 事件定义（IntegrationEvent）
-  - 服务接口声明
+  - Template response DTOs
   
   设计原则：
   - 本模块为纯 API 定义，供其他模块依赖
-  - 只依赖 runtime-sdk-api（用于事件基类）
+  - Does not depend on platform implementation or infrastructure
   - 不包含任何业务实现逻辑
   
   版本: 3.2.0-SNAPSHOT
@@ -34,34 +31,5 @@
     <packaging>jar</packaging>
 
     <name>Booking API</name>
-    <description>预约模块 API 层 - DTO、Request、Response、事件定义</description>
-
-    <dependencies>
-        <!--
-            【核心依赖】Runtime SDK API
-            用于事件基类（IntegrationEvent）的继承
-        -->
-        <dependency>
-            <groupId>io.brix</groupId>
-            <artifactId>runtime-sdk-api</artifactId>
-        </dependency>
-
-        <!-- Jakarta Validation API（用于参数校验注解） -->
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-        </dependency>
-
-        <!-- Jackson Annotations（用于 JSON 序列化注解） -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-        
-        <!-- OpenAPI Schema 注解（Phase 5: OpenAPI 驱动的前后端契约自动化） -->
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-        </dependency>
-    </dependencies>
+    <description>Commercial booking template API - response DTOs</description>
 </project>

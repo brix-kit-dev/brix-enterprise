@@ -48,6 +48,11 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       # Brix Kafka EventBus 配置（brix.infra.kafka.bootstrap-servers）
       - BRIX_INFRA_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      # Canonical Outbox Relay (Layer 2B Runtime + Layer 2C JDBC/Kafka adapters).
+      - BRIX_OUTBOX_RELAY_ENABLED=${BRIX_OUTBOX_RELAY_ENABLED:-true}
+      - BRIX_OUTBOX_RELAY_OWNER=${BRIX_OUTBOX_RELAY_OWNER:-enterprise-shell}
+      - BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED=${BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED:-true}
+      - BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=${BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE:-platform_tenant_outbox}
       # MinIO 文件存储能力 (Layer 2C Adapter — provides FileStorageCapability contract,
       # required by brix-app-storage plugin per its plugin-manifest.json)
       - BRIX_INFRA_MINIO_ENABLED=true

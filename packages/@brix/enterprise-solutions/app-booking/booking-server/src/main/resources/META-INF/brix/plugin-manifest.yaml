@@ -1,0 +1,103 @@
+apiVersion: brix.io/v1
+kind: Plugin
+metadata:
+  pluginId: app-booking
+  name: app-booking
+  version: 3.2.0-SNAPSHOT
+  displayName: App Booking Template
+  vendor: Brix Enterprise Solutions
+  license: Commercial
+runtime:
+  compiledAgainst: 3.2.0
+  supportedRange: ">=3.0.10 <4.0.0"
+modules:
+  - groupId: io.brix.enterprise.solutions
+    artifactId: booking-api
+    version: 3.2.0-SNAPSHOT
+    moduleKind: plugin-api
+  - groupId: io.brix.enterprise.solutions
+    artifactId: booking-core
+    version: 3.2.0-SNAPSHOT
+    moduleKind: plugin-core
+  - groupId: io.brix.enterprise.solutions
+    artifactId: booking-server
+    version: 3.2.0-SNAPSHOT
+    moduleKind: plugin-server
+endpoints:
+  provides:
+    - endpointId: app-booking.template.status.v1
+      transport: http
+      method: GET
+      path: /api/app-booking/v1/template/status
+      request:
+        schemaRef: brix://schemas/app-booking/template-status-request/1.0.0
+      response:
+        schemaRef: brix://schemas/app-booking/template-status-response/1.0.0
+      handlerId: app-booking.template.status.v1
+      authentication:
+        mode: required
+        policyRef: authenticated-user
+      authorization:
+        permissions:
+          - app-booking:template:read
+        decision: all
+        resourcePolicyRef: app-booking-template-read
+      tenantContext:
+        mode: optional
+        source: runtime
+      timeout:
+        policyRef: endpoint-default
+      idempotency:
+        mode: not-applicable
+      accessPolicy: app-booking-template-read
+    - endpointId: app-booking.template.features.v1
+      transport: http
+      method: GET
+      path: /api/app-booking/v1/template/features
+      request:
+        schemaRef: brix://schemas/app-booking/template-features-request/1.0.0
+      response:
+        schemaRef: brix://schemas/app-booking/template-features-response/1.0.0
+      handlerId: app-booking.template.features.v1
+      authentication:
+        mode: required
+        policyRef: authenticated-user
+      authorization:
+        permissions:
+          - app-booking:template:read
+        decision: all
+        resourcePolicyRef: app-booking-template-read
+      tenantContext:
+        mode: optional
+        source: runtime
+      timeout:
+        policyRef: endpoint-default
+      idempotency:
+        mode: not-applicable
+      accessPolicy: app-booking-template-read
+capabilities:
+  required: []
+  optional: []
+queries:
+  provides: []
+  consumes: []
+commands:
+  provides: []
+  consumes: []
+events:
+  publishes: []
+  subscribes: []
+internalContracts:
+  provides: []
+  requires: []
+externalServices: []
+permissions:
+  - id: app-booking:template:read
+    name: Read booking template status
+    description: Allows reading commercial booking template assembly status.
+config: []
+ui:
+  web:
+    enabled: false
+  mobile:
+    enabled: false

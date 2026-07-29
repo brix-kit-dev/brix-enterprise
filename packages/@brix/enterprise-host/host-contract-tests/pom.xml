@@ -72,11 +72,23 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- tenant-only Runtime Shell composition provider -->
+        <!-- app-booking commercial template Runtime Shell composition provider -->
         <dependency>
             <groupId>io.brix.enterprise.solutions</groupId>
-            <artifactId>tenant-server</artifactId>
+            <artifactId>booking-server</artifactId>
             <version>3.2.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-tenant</artifactId>
+            <version>${platform-commons.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-admin</artifactId>
+            <version>${platform-commons.version}</version>
             <scope>test</scope>
         </dependency>
 

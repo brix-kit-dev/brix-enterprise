@@ -25,6 +25,6 @@ echo
 
 echo "=== runtime bootstrap log summary ==="
 docker logs brix-host-shell-standalone 2>&1 \
-  | grep -iE 'runtime shell|bootstrap|readiness|platform-admin|platform-tenant|brix-app-tenant|fatal' \
+  | grep -iE 'runtime shell|bootstrap|readiness|platform-admin|platform-tenant|app-booking|fatal' \
   | tail -40 \
   | redact

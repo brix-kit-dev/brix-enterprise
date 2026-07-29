@@ -84,10 +84,10 @@
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-kafka-core</artifactId>
         </dependency>
-        <!-- Kafka Outbox 模式增强（事务性事件发布） -->
+        <!-- Broker-neutral canonical Outbox persistence used by the Runtime Relay. -->
         <dependency>
             <groupId>io.brix</groupId>
-            <artifactId>infra-adapter-kafka-outbox</artifactId>
+            <artifactId>infra-adapter-outbox</artifactId>
         </dependency>
         <dependency>
             <groupId>io.brix</groupId>
@@ -238,13 +238,6 @@
             <version>3.2.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Enterprise tenant-facing plugin; approved product composition item for Phase 8 E2E. -->
-        <dependency>
-            <groupId>io.brix.enterprise.solutions</groupId>
-            <artifactId>tenant-server</artifactId>
-            <version>3.2.0-SNAPSHOT</version>
-        </dependency>
-
         <!-- 进件管理 (待集成：需调整 Maven 构建顺序后启用)
         <dependency>
             <groupId>io.brix.enterprise.solutions</groupId>
@@ -356,11 +349,6 @@
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>io.brix.enterprise.solutions</groupId>
-                    <artifactId>tenant-server</artifactId>
-                    <version>3.2.0-SNAPSHOT</version>
-                </dependency>
-                <dependency>
                     <groupId>com.h2database</groupId>
                     <artifactId>h2</artifactId>
                     <scope>runtime</scope>
@@ -382,11 +370,11 @@
         </profile>
 
         <profile>
-            <id>tenant-only</id>
+            <id>booking-template</id>
             <dependencies>
                 <dependency>
                     <groupId>io.brix.enterprise.solutions</groupId>
-                    <artifactId>tenant-server</artifactId>
+                    <artifactId>booking-server</artifactId>
                     <version>3.2.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>

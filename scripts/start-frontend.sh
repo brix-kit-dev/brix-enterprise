@@ -271,6 +271,48 @@ stop_port_if_forced() {
   fi
 }
 
+print_log_tail() {
+  local label="$1"
+  local file="$2"
+
+  [[ -f "$file" ]] || return 0
+  info "${label}: ${file}"
+  tail -n 40 "$file" || true
+}
+
+wait_for_frontend_ready() {
+  local name="$1"
+  local port="$2"
+  local pid="$3"
+  local stdout="$4"
+  local stderr="$5"
+  local attempts=60
+  local attempt
+
+  for ((attempt = 1; attempt <= attempts; attempt++)); do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      fail "${name} exited before port ${port} became ready (PID=${pid})."
+      print_log_tail "${name} stdout tail" "$stdout"
+      print_log_tail "${name} stderr tail" "$stderr"
+      exit 1
+    fi
+
+    if (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+      exec 3<&-
+      exec 3>&-
+      success "${name} is ready on port ${port}."
+      return 0
+    fi
+
+    sleep 0.5
+  done
+
+  fail "${name} did not become ready on port ${port} within 30 seconds (PID=${pid})."
+  print_log_tail "${name} stdout tail" "$stdout"
+  print_log_tail "${name} stderr tail" "$stderr"
+  exit 1
+}
+
 add_app() {
   APPS_NAME+=("$1")
   APPS_PATH+=("$2")
@@ -294,7 +336,6 @@ init_apps() {
   add_app "plugin-messenger" "${SOLUTIONS_ROOT}/app-messenger/messenger-ui-web" 3006 "run dev" "exec rspack serve --mode production" "messenger"
   add_app "plugin-identity" "${SOLUTIONS_ROOT}/app-identity/identity-ui-web" 3016 "run start" "exec rspack serve --mode production" "identity"
   add_app "plugin-carousel" "${SOLUTIONS_ROOT}/app-carousel/carousel-ui-web" 3007 "run dev" "exec rspack serve --mode production" "carousel"
-  add_app "plugin-booking" "${SOLUTIONS_ROOT}/app-booking/booking-ui-web" 3015 "run start" "exec rspack serve --mode production" "booking"
   add_app "plugin-case" "${SOLUTIONS_ROOT}/app-case/case-ui-web" 3050 "run dev" "run preview" "case"
   add_app "plugin-contracts" "${SOLUTIONS_ROOT}/app-contracts/contracts-ui-web" 3051 "run dev" "run preview" "contracts"
   add_app "plugin-intake" "${SOLUTIONS_ROOT}/app-intake/intake-ui-web" 3056 "run dev" "run preview" "intake"
@@ -430,7 +471,7 @@ start_frontend_process() {
   STARTED_LOG_ERR+=("$stderr")
   STARTED_COMMAND+=("${PNPM_LABEL} ${command_args}")
 
-  sleep 0.5
+  wait_for_frontend_ready "$name" "$port" "$pid" "$stdout" "$stderr"
 }
 
 write_state_file() {

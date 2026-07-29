@@ -95,14 +95,14 @@ management:
 
 ---
 # ============================================================
-# tenant-only profile — v3.0.10 Runtime Shell Bootstrap Gate
+# booking-template profile — v3.0.10 Runtime Shell Bootstrap Gate
 # ============================================================
 spring:
   config:
     activate:
-      on-profile: tenant-only
+      on-profile: booking-template
 
 brix:
   runtime-shell:
     required-plugins:
-      - brix-app-tenant
+      - app-booking

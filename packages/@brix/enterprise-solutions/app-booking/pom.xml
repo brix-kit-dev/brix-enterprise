@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   =========================================================
-  app-booking - 预约管理模块（P0 试点）
+  app-booking - commercial plugin template
   
-  职责：提供资源预约的完整业务能力
-  - 可预约资源管理
-  - 时间槽配置与查询
-  - 预约创建/确认/取消/完成
-  - 预约日历展示
+  Responsibility: provide a Runtime Shell 3.0.10 commercial plugin template
+  that can be declared, assembled, discovered, and started by a Host.
   
   架构约束：
   - 仅依赖 runtime-sdk-api 能力契约
   - 不直接依赖 Kafka/Redis 等基础设施
-  - 通过 RuntimeContext 获取所有能力
+  - Uses BrixPlugin + PluginContext + ServiceLoader + Manifest
   
   版本: 3.2.0-SNAPSHOT
   日期: 2026-01-28
@@ -35,17 +32,15 @@
 
     <name>Brix Enterprise App - Booking</name>
     <description>
-        预约管理业务模块
+        Commercial booking plugin template
         
         子模块：
-        - booking-api: API 层（DTO、Request、Response、事件定义）
-        - booking-core: Core 层（领域模型、业务逻辑、仓库接口）
-        - booking-server: Server 层（Spring Boot 自动配置、控制器）
+        - booking-api: public template DTOs
+        - booking-core: template application service
+        - booking-server: Runtime Shell plugin provider and manifest bindings
         
-        本模块是 v3.0 架构改造的 P0 试点模块，演示：
-        1. 模块仅依赖 runtime-sdk-api
-        2. 通过 RuntimeContext 获取能力
-        3. 事件驱动的模块间通信
+        Phase 5 intentionally exposes no booking business workflow, tables,
+        repositories, or integration events.
     </description>
 
     <!-- ==================== 子模块 ==================== -->

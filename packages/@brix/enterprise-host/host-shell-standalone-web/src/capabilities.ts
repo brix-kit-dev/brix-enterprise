@@ -91,7 +91,6 @@ import { registerIdentityI18n } from '../../../enterprise-solutions/app-identity
 import { registerIntakeI18n } from '../../../enterprise-solutions/app-intake/intake-ui-web/src/i18n';
 import { registerMessengerI18n } from '../../../enterprise-solutions/app-messenger/messenger-ui-web/src/i18n';
 import { registerStorageI18n } from '../../../enterprise-solutions/app-storage/storage-ui-web/src/i18n';
-import { registerBookingI18n } from '../../../enterprise-solutions/app-booking/booking-ui-web/src/i18n';
 import { registerProductsI18n } from '../../../enterprise-solutions/app-products/products-ui-web/src/i18n';
 import { registerPartnersI18n } from '../../../enterprise-solutions/app-partners/partners-ui-web/src/i18n';
 import { registerTenantI18n } from '../../../enterprise-solutions/app-tenant/tenant-ui-web/src/i18n';
@@ -343,7 +342,6 @@ export function registerI18n(runtime: WebUIRuntime): void {
   registerIntakeI18n(i18nCapability);
   registerMessengerI18n(i18nCapability);
   registerStorageI18n(i18nCapability);
-  registerBookingI18n(i18nCapability);
   registerProductsI18n(i18nCapability);
   registerPartnersI18n(i18nCapability);
   registerTenantI18n(i18nCapability);
@@ -454,7 +452,7 @@ export function registerTenant(runtime: WebUIRuntime, tokenProvider: () => strin
       return boundHttpCapability.post<T>(url, data);
     },
   };
-  const tenantRepo = new TenantRepository(httpClient);
+  const tenantRepo = new TenantRepository(httpClient, '/v1/tenant');
 
   // Mutable cache for available tenants, seeded from JWT and refreshed asynchronously
   let availableTenantsCache: readonly TenantInfo[] = [];

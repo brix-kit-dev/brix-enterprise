@@ -32,14 +32,6 @@ export const governanceConfig: GovernanceConfig = {
       'plugin-state',
       'layout',
     ],
-    'booking': [
-      'navigation',
-      'auth',
-      'menu',
-      'plugin-state',
-      'layout',
-      'event-bus',
-    ],
     'identity': [
       'navigation',
       'auth',
@@ -53,7 +45,6 @@ export const governanceConfig: GovernanceConfig = {
   eventRouting: {
     'user:*': { scope: 'global' },
     'system:*': { scope: 'global' },
-    'booking:*': { scope: 'plugin', target: 'booking' },
     'identity:*': { scope: 'plugin', target: 'identity' },
   },
 

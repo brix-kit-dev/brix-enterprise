@@ -125,7 +125,20 @@ brix:
       - platform-admin
     required-plugins:
       - platform-tenant
-      - brix-app-tenant
+      - app-booking
+  outbox:
+    relay:
+      enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}
+      owner: ${BRIX_OUTBOX_RELAY_OWNER:enterprise-shell}
+      batch-size: ${BRIX_OUTBOX_RELAY_BATCH_SIZE:25}
+      max-attempts: ${BRIX_OUTBOX_RELAY_MAX_ATTEMPTS:6}
+      lease-duration: ${BRIX_OUTBOX_RELAY_LEASE_DURATION:30s}
+      retry-backoff-base: ${BRIX_OUTBOX_RELAY_RETRY_BACKOFF_BASE:5s}
+      retry-jitter-max: ${BRIX_OUTBOX_RELAY_RETRY_JITTER_MAX:5s}
+      poll-delay: ${BRIX_OUTBOX_RELAY_POLL_DELAY:1s}
+      persistence:
+        enabled: ${BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED:true}
+        table-name: ${BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE:platform_tenant_outbox}
   # Fallback Adapter — provides dev/test stand-ins for required capabilities that
   # have no production-grade Adapter wired yet (auth, observability, etc.).
   # Triple-gated by infra-adapter-fallback (Profile != production AND explicit
@@ -141,6 +154,12 @@ brix:
   # JAR runs locally / Docker / production without code change. Set BRIX_INFRA_MINIO_ENABLED=false
   # only when intentionally disabling the storage plugin in a slimmed deployment.
   infra:
+    kafka:
+      enabled: ${BRIX_INFRA_KAFKA_ENABLED:true}
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      topic-prefix: ${BRIX_INFRA_KAFKA_TOPIC_PREFIX:}
+      outbox:
+        publish-timeout-ms: ${BRIX_INFRA_KAFKA_OUTBOX_PUBLISH_TIMEOUT_MS:30000}
     minio:
       enabled: ${BRIX_INFRA_MINIO_ENABLED:true}
       endpoint: ${BRIX_INFRA_MINIO_ENDPOINT:http://localhost:9000}
@@ -162,7 +181,6 @@ brix:
           - platform-tenant      # creates sys_tenant / sys_identity / sys_tenant_member etc.
           # Application modules
           - app-identity
-          - app-booking
           - app-products
           - app-partners
           - app-messenger
@@ -355,18 +373,18 @@ otel:
 
 ---
 # ============================================================
-# tenant-only profile — v3.0.10 Runtime Shell Bootstrap Gate
+# booking-template profile — v3.0.10 Runtime Shell Bootstrap Gate
 # ============================================================
 spring:
   config:
     activate:
-      on-profile: tenant-only
+      on-profile: booking-template
 
 brix:
   runtime-shell:
     required-plugins:
       - platform-tenant
-      - brix-app-tenant
+      - app-booking
 
 ---
 # ============================================================

@@ -52,7 +52,10 @@ class Phase8HostCompositionContractTest {
             .contains("<artifactId>platform-tenant</artifactId>")
             .contains("<artifactId>platform-notification</artifactId>")
             .contains("<artifactId>infra-adapter-email-smtp</artifactId>")
-            .contains("<artifactId>tenant-server</artifactId>");
+            .contains("<artifactId>infra-adapter-outbox</artifactId>")
+            .doesNotContain("<artifactId>infra-adapter-kafka-outbox</artifactId>")
+            .contains("<artifactId>booking-server</artifactId>")
+            .doesNotContain("<artifactId>tenant-server</artifactId>");
         assertThat(yaml)
             .contains("capability:")
             .contains("validate-on-startup: true")
@@ -62,7 +65,14 @@ class Phase8HostCompositionContractTest {
             .contains("- platform-admin")
             .contains("required-plugins:")
             .contains("- platform-tenant")
-            .contains("- brix-app-tenant")
+            .contains("- app-booking")
+            .contains("relay:")
+            .contains("enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}")
+            .contains("owner: ${BRIX_OUTBOX_RELAY_OWNER:enterprise-shell}")
+            .contains("persistence:")
+            .contains("enabled: ${BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED:true}")
+            .contains("table-name: ${BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE:platform_tenant_outbox}")
+            .contains("publish-timeout-ms: ${BRIX_INFRA_KAFKA_OUTBOX_PUBLISH_TIMEOUT_MS:30000}")
             .contains("setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}")
             .contains("include: readinessState,runtimeShellReadiness");
         assertThat(autoConfiguration)
@@ -81,6 +91,10 @@ class Phase8HostCompositionContractTest {
         assertThat(compose)
             .contains("BRIX_PLATFORM_NOTIFICATION_ENABLED")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL")
+            .contains("BRIX_OUTBOX_RELAY_ENABLED")
+            .contains("BRIX_OUTBOX_RELAY_OWNER")
+            .contains("BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED")
+            .contains("BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE")
             .contains("BRIX_INFRA_EMAIL_SMTP_ENABLED")
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
             .contains("BRIX_INFRA_EMAIL_SMTP_TLS_ENABLED")
@@ -125,11 +139,15 @@ class Phase8HostCompositionContractTest {
         String remoteRebuild = read(REMOTE_DEPLOY_DIR.resolve("remote-docker-rebuild.ps1"));
 
         assertThat(rebuild)
+            .contains("BRIX_OUTBOX_RELAY_ENABLED=true")
+            .contains("BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=platform_tenant_outbox")
+            .contains("Verifying canonical Outbox Relay reached host-shell container")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local")
             .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
         assertThat(start)
+            .contains("Verifying canonical Outbox Relay reached host-shell container")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
             .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
         assertThat(remoteDeploy)
