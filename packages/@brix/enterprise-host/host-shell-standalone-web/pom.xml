@@ -14,21 +14,6 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!--
-    host-standalone-web pom.xml
-    
-    【模块说明】
-    这是前端 UI Host 层的 Maven 构建配置。
-    使用 frontend-maven-plugin 进行 Node.js/pnpm 构建。
-    
-    【构建流程】
-    1. install-node-and-pnpm: 安装 Node.js 和 pnpm
-    2. pnpm-install: 安装依赖
-    3. pnpm-build: 构建前端项目
-    
-    【输出目录】
-    构建产物输出到 target/dist 目录
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -46,53 +31,28 @@
 
     <name>Brix Host Standalone Web</name>
     <description>
-        Host Standalone Web - 前端 UI Host 层
-        
-        【职责说明】
-        1. 组装 platform-commons 中的能力实现
-        2. 提供治理配置（能力白名单、事件路由、功能开关等）
-        3. 通过 Module Federation 加载插件
-        4. 渲染主布局和 Host 页面
-        
-        【架构原则】
-        Host 只做组装，不实现任何能力。
-        能力实现来自 @brix/platform-* 包。
+        Standalone frontend Host. This module contains only dependency assembly,
+        profile composition, build configuration, entry HTML, and the Runtime
+        mount.
     </description>
 
     <properties>
-        <!-- Node.js 版本 -->
         <node.version>v20.11.0</node.version>
-        <!-- pnpm 版本 -->
         <pnpm.version>8.14.0</pnpm.version>
-        <!-- frontend-maven-plugin 版本 -->
         <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
     </properties>
 
     <build>
         <plugins>
-            <!--
-                frontend-maven-plugin
-                
-                用于在 Maven 构建过程中执行 Node.js/pnpm 命令。
-                支持安装 Node.js、pnpm，以及执行 npm scripts。
-            -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>${frontend-maven-plugin.version}</version>
-                
                 <configuration>
                     <workingDirectory>${project.basedir}</workingDirectory>
                     <installDirectory>${project.build.directory}</installDirectory>
                 </configuration>
-                
                 <executions>
-                    <!--
-                        阶段 1: 安装 Node.js 和 pnpm
-                        
-                        将 Node.js 和 pnpm 安装到 target 目录，
-                        避免污染全局环境。
-                    -->
                     <execution>
                         <id>install-node-and-pnpm</id>
                         <goals>
@@ -104,12 +64,6 @@
                             <pnpmVersion>${pnpm.version}</pnpmVersion>
                         </configuration>
                     </execution>
-                    
-                    <!--
-                        阶段 2: 安装依赖
-                        
-                        使用 pnpm install 安装项目依赖。
-                    -->
                     <execution>
                         <id>pnpm-install</id>
                         <goals>
@@ -120,13 +74,6 @@
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
-                    
-                    <!--
-                        阶段 3: 构建项目
-                        
-                        执行 pnpm run build 构建前端项目。
-                        输出到 dist 目录。
-                    -->
                     <execution>
                         <id>pnpm-build</id>
                         <goals>
@@ -139,12 +86,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
-            <!--
-                maven-clean-plugin
-                
-                清理时同时清理 node_modules 和 dist 目录。
-            -->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -160,12 +102,7 @@
                     </filesets>
                 </configuration>
             </plugin>
-            
-            <!--
-                maven-resources-plugin
-                
-                将构建产物复制到 target 目录。
-            -->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -193,36 +130,6 @@
     </build>
 
     <profiles>
-        <!--
-            开发模式 Profile
-            
-            跳过构建，只安装依赖。
-            用于本地开发时快速验证 Maven 配置。
-        -->
-        <profile>
-            <id>dev</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>pnpm-build</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        
-        <!--
-            跳过前端 Profile
-            
-            完全跳过前端构建。
-            用于只需要构建后端时。
-        -->
         <profile>
             <id>skip-frontend</id>
             <build>

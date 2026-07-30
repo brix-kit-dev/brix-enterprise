@@ -5,33 +5,25 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-
-    /* Paths — resolve link: dependencies for IDE type checking */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@brix-sdk/platform-frame-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/dist/index.d.ts"],
-      "@brix-sdk/platform-auth-service-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-service-web/dist/index.d.ts"],
-      "@brix-sdk/platform-auth-web": ["../../platform-commons/packages/client/platform-auth-web/dist/index.d.ts"],
-      "@brix-sdk/platform-router-web": ["../../platform-commons/packages/client/platform-router-web/dist/index.d.ts"],
-      "@brix-sdk/platform-navigation-web": ["../../platform-commons/packages/client/platform-navigation-web/dist/index.d.ts"],
-      "@brix-sdk/platform-eventbus-web": ["../../platform-commons/packages/client/platform-eventbus-web/dist/index.d.ts"],
-      "@brix-sdk/runtime-sdk-api-web": ["../../runtime-sdk/runtime-sdk-api-web/dist/index.d.ts"],
-      "@brix-sdk/runtime-sdk-react": ["../../runtime-sdk/runtime-sdk-react/dist/index.d.ts"]
+      "@brix-sdk/runtime-orchestrator-web": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web/src/index.ts"],
+      "@brix-sdk/runtime-sdk-api-web": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web/src/index.ts"],
+      "@brix-sdk/runtime-sdk-react": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-react/src/index.ts"],
+      "@brix-sdk/platform-admin-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web/src/index.ts"],
+      "@brix-sdk/shared-runtime-web/react": ["../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web/src/react.ts"],
+      "@brix-sdk/shared-runtime-web/router": ["../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web/src/router.ts"]
     }
   },
   "include": ["src"],

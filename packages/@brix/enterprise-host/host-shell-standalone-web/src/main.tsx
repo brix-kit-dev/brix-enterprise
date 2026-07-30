@@ -1,51 +1,55 @@
-﻿/**
- * Copyright 2026 Brix Platform Authors
- *
- * PROPRIETARY AND CONFIDENTIAL
- *
- * This software is proprietary to Brix Platform and is protected by
- * copyright laws and international treaty provisions. Unauthorized
- * reproduction or distribution of this software, or any portion of it,
- * may result in severe civil and criminal penalties.
- *
- * Commercial use requires a valid Brix Enterprise license.
- * See LICENSE-ENTERPRISE for terms and conditions.
- */
-/**
- * @file Main entry point
- * @description Host Standalone Web application entry
- * @module host-standalone-web/main
- * @version 3.0.0
- *
- * Architecture: Uses async bootstrap pattern for Module Federation initialization.
- */
-
 async function initializeDefaultShareScope(): Promise<void> {
   if (typeof __webpack_init_sharing__ === 'function') {
     await __webpack_init_sharing__('default');
   }
 }
 
-// Initialize MF shared scope before loading bootstrap. The bootstrap chunk
-// imports React and other shared modules; loading it before share-scope setup
-// can fail with "factory is undefined" on a cold browser cache.
-initializeDefaultShareScope().then(() => import('./bootstrap')).then(({ bootstrap }) => {
-  return bootstrap();
-}).catch((error) => {
-
+function renderStartupError(): void {
   const root = document.getElementById('root');
-  if (root) {
-    root.innerHTML = `
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center;">
-        <h1 style="color: #dc2626; margin-bottom: 16px;">Application startup failed</h1>
-        <p style="color: #666; margin-bottom: 24px;">Please refresh the page. If the problem persists, contact technical support.</p>
-        <button onclick="location.reload()" style="padding: 12px 24px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
-          Refresh
-        </button>
-        <pre style="margin-top: 24px; padding: 16px; background: #f3f4f6; border-radius: 8px; text-align: left; max-width: 600px; overflow: auto; font-size: 12px;">
-${error?.stack || error?.message || error}
-        </pre>
-      </div>
-    `;
+  if (!root) {
+    return;
   }
-});
+
+  const shell = document.createElement('main');
+  shell.style.boxSizing = 'border-box';
+  shell.style.display = 'grid';
+  shell.style.minHeight = '100%';
+  shell.style.placeItems = 'center';
+  shell.style.padding = '24px';
+
+  const panel = document.createElement('section');
+  panel.setAttribute('role', 'alert');
+  panel.style.background = '#ffffff';
+  panel.style.border = '1px solid #d1d5db';
+  panel.style.borderRadius = '8px';
+  panel.style.boxShadow = '0 1px 3px rgb(17 24 39 / 0.08)';
+  panel.style.padding = '20px';
+  panel.style.width = 'min(420px, 100%)';
+
+  const title = document.createElement('h1');
+  title.textContent = 'Application startup failed';
+  title.style.color = '#991b1b';
+  title.style.fontSize = '18px';
+  title.style.fontWeight = '700';
+  title.style.letterSpacing = '0';
+  title.style.margin = '0 0 8px';
+
+  const message = document.createElement('p');
+  message.textContent = 'Refresh the page. If the problem persists, contact technical support.';
+  message.style.color = '#4b5563';
+  message.style.fontSize = '14px';
+  message.style.letterSpacing = '0';
+  message.style.lineHeight = '1.5';
+  message.style.margin = '0';
+
+  panel.append(title, message);
+  shell.append(panel);
+  root.replaceChildren(shell);
+}
+
+initializeDefaultShareScope()
+  .then(() => import('./bootstrap'))
+  .then(({ bootstrap }) => bootstrap())
+  .catch(() => {
+    renderStartupError();
+  });

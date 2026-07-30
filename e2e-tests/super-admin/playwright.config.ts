@@ -61,7 +61,7 @@ export default defineConfig({
 
   // Frontend dev-server only — the Java backend is managed by `stack:up`.
   webServer: {
-    command: `pnpm --filter host-shell-standalone-web run dev`,
+    command: `pnpm --filter @brix-sdk/enterprise-host-standalone-web run dev`,
     cwd: '../..',
     url: BASE_URL,
     reuseExistingServer: !isCI,

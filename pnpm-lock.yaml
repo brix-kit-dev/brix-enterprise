@@ -50,51 +50,9 @@ importers:
 
   packages/@brix/enterprise-host/host-shell-standalone-web:
     dependencies:
-      '@brix-sdk/infra-adapter-http-web':
-        specifier: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-http-web
-        version: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-http-web
-      '@brix-sdk/infra-adapter-mf-web':
-        specifier: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-mf-web
-        version: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-mf-web
-      '@brix-sdk/infra-adapter-ui-mui':
-        specifier: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-mui
-        version: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-mui
-      '@brix-sdk/infra-adapter-ui-native':
-        specifier: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native
-        version: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native
       '@brix-sdk/platform-admin-web':
         specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web
         version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web
-      '@brix-sdk/platform-auth-service-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-service-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-service-web
-      '@brix-sdk/platform-auth-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web
-      '@brix-sdk/platform-config-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-config-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-config-web
-      '@brix-sdk/platform-design-tokens':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-design-tokens
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-design-tokens
-      '@brix-sdk/platform-eventbus-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-eventbus-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-eventbus-web
-      '@brix-sdk/platform-frame-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web
-      '@brix-sdk/platform-i18n-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-i18n-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-i18n-web
-      '@brix-sdk/platform-navigation-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-navigation-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-navigation-web
-      '@brix-sdk/platform-router-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-router-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-router-web
-      '@brix-sdk/platform-tenant-web':
-        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web
-        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web
       '@brix-sdk/runtime-orchestrator-web':
         specifier: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web
         version: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web
@@ -108,9 +66,6 @@ importers:
         specifier: link:../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web
         version: link:../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web
     devDependencies:
-      '@brix-sdk/eslint-config-architecture':
-        specifier: link:../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture
-        version: link:../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture
       '@rspack/cli':
         specifier: ^1.6.8
         version: 1.7.10(@rspack/core@1.7.10)(tslib@2.8.1)
