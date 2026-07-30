@@ -75,6 +75,7 @@ class BrixFrontendReleaseArtifactPlugin {
 export default defineConfig({
   mode,
   context: __dirname,
+  lazyCompilation: false,
   entry: {
     main: './src/main.tsx',
   },

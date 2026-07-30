@@ -50,6 +50,9 @@ importers:
 
   packages/@brix/enterprise-host/host-shell-standalone-web:
     dependencies:
+      '@brix-sdk/enterprise-standalone-web-runtime-profile':
+        specifier: link:../standalone-web-runtime-profile
+        version: link:../standalone-web-runtime-profile
       '@brix-sdk/platform-admin-web':
         specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web
         version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web
@@ -93,6 +96,33 @@ importers:
       typescript:
         specifier: ^5.3.0
         version: 5.7.3
+
+  packages/@brix/enterprise-host/standalone-web-runtime-profile:
+    dependencies:
+      '@brix-sdk/infra-adapter-http-web':
+        specifier: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-http-web
+        version: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-http-web
+      '@brix-sdk/infra-adapter-ui-native':
+        specifier: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native
+        version: link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native
+      '@brix-sdk/platform-auth-web':
+        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web
+        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web
+      '@brix-sdk/platform-frame-web':
+        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web
+        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web
+      '@brix-sdk/platform-i18n-web':
+        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-i18n-web
+        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-i18n-web
+      '@brix-sdk/platform-navigation-web':
+        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-navigation-web
+        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-navigation-web
+      '@brix-sdk/runtime-orchestrator-web':
+        specifier: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web
+        version: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web
+      '@brix-sdk/runtime-sdk-api-web':
+        specifier: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web
+        version: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web
 
   packages/@brix/enterprise-solutions/app-carousel: {}
 

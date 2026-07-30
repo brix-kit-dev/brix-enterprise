@@ -10,9 +10,16 @@ import {
   ThemeCapabilityType,
   UICapabilityType,
   type AuthChangeHandler,
+  type AuthSessionInstallCredentials,
+  AuthSessionInstallProvider,
+  type AuthCapabilityConfig,
+  type AuthState,
   type InternalAuthState,
+  type LoginCredentials,
+  type LoginResult,
   type RouterServiceLike,
-  type Unsubscribe,
+  type User,
+  type VerifiedAuthContext,
 } from '@brix-sdk/runtime-sdk-api-web';
 import { AuthCapabilityImpl } from '@brix-sdk/platform-auth-web/AuthCapabilityImpl';
 import { I18nCapabilityImpl } from '@brix-sdk/platform-i18n-web';
@@ -107,10 +114,7 @@ export function createStandaloneWebRuntimeCapabilityBindings(
   ];
 }
 
-function createStandaloneAuthState(): {
-  getAuthState: () => InternalAuthState;
-  subscribeAuthChange: (handler: AuthChangeHandler) => Unsubscribe;
-} {
+function createStandaloneAuthState(): AuthCapabilityConfig {
   let state: InternalAuthState = {
     user: null,
     token: null,
@@ -122,6 +126,23 @@ function createStandaloneAuthState(): {
     sessionState: 'anonymous',
   };
   const handlers = new Set<AuthChangeHandler>();
+  let refreshToken: string | null = null;
+
+  function publish(next: InternalAuthState, type: 'login' | 'logout'): void {
+    const previousState = toAuthState(state);
+    state = next;
+    const event = {
+      type,
+      user: state.user,
+      state: toAuthState(state),
+      previousState,
+      timestamp: Date.now(),
+    };
+    for (const handler of handlers) {
+      handler(event);
+    }
+  }
+
   return {
     getAuthState: () => state,
     subscribeAuthChange: (handler) => {
@@ -130,7 +151,176 @@ function createStandaloneAuthState(): {
         handlers.delete(handler);
       };
     },
+    login: async (credentials: LoginCredentials): Promise<LoginResult> => {
+      const session = readSessionInstallCredentials(credentials);
+      const user = toUser(session);
+      const activeContext = toVerifiedContext(session);
+      refreshToken = session.refreshToken ?? null;
+      publish({
+        ...state,
+        user,
+        token: session.token,
+        tenant: null,
+        dataScopes: [],
+        loading: false,
+        activeContext,
+        sessionState: 'authenticated',
+      }, 'login');
+      return {
+        success: true,
+        status: 'COMPLETE',
+        user,
+        token: session.token,
+        refreshToken: refreshToken ?? undefined,
+        expiresIn: session.expiresIn,
+        identityId: session.subjectId,
+        displayName: user.displayName ?? user.username,
+        primaryRole: session.primaryRole,
+        roles: session.roles,
+        permissions: session.permissions,
+      };
+    },
+    logout: async (): Promise<void> => {
+      refreshToken = null;
+      publish({
+        ...state,
+        user: null,
+        token: null,
+        tenant: null,
+        dataScopes: [],
+        loading: false,
+        activeContext: null,
+        sessionState: 'anonymous',
+      }, 'logout');
+    },
   };
+}
+
+function readSessionInstallCredentials(
+  credentials: LoginCredentials,
+): AuthSessionInstallCredentials {
+  if (credentials.provider !== AuthSessionInstallProvider) {
+    throw new Error('Unsupported auth login provider for standalone runtime profile');
+  }
+  const token = readText(credentials.token);
+  const subjectId = readText(credentials.subjectId);
+  if (!token || !subjectId) {
+    throw new Error('Auth session install credentials require token and subjectId');
+  }
+  const contextKind = credentials.contextKind;
+  if (contextKind !== 'platform' && contextKind !== 'actor' && contextKind !== 'subject') {
+    throw new Error('Auth session install credentials require a supported contextKind');
+  }
+  if ((contextKind === 'actor' || contextKind === 'subject') && !readText(credentials.tenantId)) {
+    throw new Error('Tenant auth session install credentials require tenantId');
+  }
+  return {
+    provider: AuthSessionInstallProvider,
+    token,
+    refreshToken: readText(credentials.refreshToken),
+    contextKind,
+    subjectId,
+    actorId: readText(credentials.actorId),
+    tenantId: readText(credentials.tenantId),
+    memberId: readText(credentials.memberId),
+    principalId: readText(credentials.principalId),
+    username: readText(credentials.username),
+    email: readText(credentials.email),
+    displayName: readText(credentials.displayName),
+    primaryRole: readText(credentials.primaryRole),
+    roles: readStringArray(credentials.roles),
+    permissions: readStringArray(credentials.permissions),
+    expiresIn: readPositiveNumber(credentials.expiresIn),
+    expiresAt: readText(credentials.expiresAt),
+  };
+}
+
+function toUser(session: AuthSessionInstallCredentials): User {
+  const username = session.username
+    ?? session.email
+    ?? session.displayName
+    ?? session.subjectId;
+  return {
+    id: session.subjectId,
+    username,
+    email: session.email,
+    displayName: session.displayName ?? username,
+    roles: [...(session.roles ?? [])],
+    permissions: [...(session.permissions ?? [])],
+  };
+}
+
+function toVerifiedContext(session: AuthSessionInstallCredentials): VerifiedAuthContext {
+  const base = {
+    subjectId: session.subjectId,
+    actorId: session.actorId,
+    sessionId: createSessionId(session.contextKind, session.subjectId),
+    permissions: [...(session.permissions ?? [])],
+    expiresAt: session.expiresAt ?? expiresAtFromTtl(session.expiresIn),
+  };
+  if (session.contextKind === 'actor') {
+    return {
+      ...base,
+      kind: 'actor',
+      tenantId: session.tenantId ?? '',
+      memberId: session.memberId,
+    };
+  }
+  if (session.contextKind === 'subject') {
+    return {
+      ...base,
+      kind: 'subject',
+      tenantId: session.tenantId ?? '',
+      principalId: session.principalId,
+    };
+  }
+  return {
+    ...base,
+    kind: 'platform',
+  };
+}
+
+function toAuthState(internal: InternalAuthState): AuthState {
+  return {
+    isAuthenticated: internal.user !== null && internal.token !== null,
+    user: internal.user,
+    tenant: internal.tenant,
+    loading: internal.loading,
+    dataScopes: internal.dataScopes,
+  };
+}
+
+function createSessionId(kind: string, subjectId: string): string {
+  const randomId = globalThis.crypto?.randomUUID?.();
+  return randomId ?? `${kind}:${subjectId}:${Date.now()}`;
+}
+
+function expiresAtFromTtl(expiresIn: number | undefined): string | undefined {
+  if (expiresIn === undefined) {
+    return undefined;
+  }
+  return new Date(Date.now() + expiresIn * 1000).toISOString();
+}
+
+function readText(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : undefined;
+}
+
+function readStringArray(value: unknown): readonly string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .map(item => item.trim());
+}
+
+function readPositiveNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
 }
 
 function createPageRegistry(

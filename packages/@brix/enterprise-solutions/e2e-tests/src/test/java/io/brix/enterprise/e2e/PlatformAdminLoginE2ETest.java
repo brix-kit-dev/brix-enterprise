@@ -14,7 +14,7 @@
  * Design notes:
  *   - @MockBean JwtValidator  : prevents classpath key loading; controls
  *     which AuthenticatedUser is placed in the security context per token.
- *   - @MockBean AuthFlowCapability : controls the login response without
+ *   - @MockBean AuthFlowCapability : controls the Runtime Entry response without
  *     requiring a seeded superadmin in the H2 test database.
  *   - The rest of the stack (SecurityContextFilter, PermissionAspect,
  *     AuthorizationExceptionAdvice, and a protected probe controller) runs
@@ -27,7 +27,7 @@
 package io.brix.enterprise.e2e;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.brix.platform.admin.controller.PlatformAuthController;
+import io.brix.platform.admin.handler.PlatformLoginHandler;
 import io.brix.platform.auth.PlatformPermissions;
 import io.brix.platform.auth.annotation.RequirePermission;
 import io.brix.platform.auth.aspect.PermissionAspect;
@@ -42,6 +42,13 @@ import io.brix.platform.auth.servlet.SimpleAuthContextCapability;
 import io.brix.platform.auth.web.advice.AuthFlowExceptionAdvice;
 import io.brix.platform.auth.web.controller.AuthController;
 import io.brix.platform.tenant.service.AuditService;
+import io.runtime.orchestrator.endpoint.DefaultPluginEndpointDispatcher;
+import io.runtime.orchestrator.endpoint.EndpointRoute;
+import io.runtime.orchestrator.endpoint.PluginEndpointDispatcher;
+import io.runtime.orchestrator.endpoint.RuntimeShellEndpointController;
+import io.runtime.orchestrator.operational.OperationalContext;
+import io.runtime.orchestrator.operational.OperationalModuleIdentity;
+import io.runtime.orchestrator.operational.RuntimeOperationalView;
 import io.runtime.sdk.capability.AuthFlowCapability;
 import io.runtime.sdk.capability.AuthFlowCapability.LoginResult;
 import io.runtime.sdk.capability.AuthFlowCapability.LoginStatus;
@@ -67,8 +74,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -96,7 +105,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(
     controllers = {
-        PlatformAuthController.class,
+        RuntimeShellEndpointController.class,
         AuthController.class,
         PlatformAdminLoginE2ETest.ProtectedAdminTenantProbeController.class
     },
@@ -109,6 +118,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     })
 @AutoConfigureMockMvc(addFilters = true)
 @Import({
+    RuntimeShellEndpointController.class,
     AuthFlowExceptionAdvice.class,
     AuthorizationExceptionAdvice.class,
     PlatformAdminLoginE2ETest.TestSecurityConfiguration.class
@@ -175,8 +185,8 @@ class PlatformAdminLoginE2ETest {
         // ── SuperAdmin: carries BYPASS_PERMISSION_CHECK (platform:bypass) ──────
         AuthenticatedUser superAdmin = new AuthenticatedUser();
         superAdmin.setUserId("sa-001");
-        superAdmin.setPlatformRole("SUPER_ADMIN");
-        superAdmin.setPermissions(PlatformPermissions.defaultPermissionsFor("SUPER_ADMIN"));
+        superAdmin.setPlatformRole("PLATFORM_SUPER_ADMIN");
+        superAdmin.setPermissions(PlatformPermissions.defaultPermissionsFor("PLATFORM_SUPER_ADMIN"));
 
         // ── Actor: tenant member with NO platform permissions ──────────────────
         AuthenticatedUser actor = new AuthenticatedUser();
@@ -204,9 +214,9 @@ class PlatformAdminLoginE2ETest {
                 /* identityId      */ 1L,
                 /* displayName     */ "Super Admin",
                 /* email           */ "superadmin@test.com",
-                /* primaryRole     */ "SUPER_ADMIN",
-                /* roles           */ List.of("SUPER_ADMIN"),
-                /* permissions     */ PlatformPermissions.defaultPermissionsFor("SUPER_ADMIN"),
+                /* primaryRole     */ "PLATFORM_SUPER_ADMIN",
+                /* roles           */ List.of("PLATFORM_SUPER_ADMIN"),
+                /* permissions     */ PlatformPermissions.defaultPermissionsFor("PLATFORM_SUPER_ADMIN"),
                 /* mustChangePwd   */ false,
                 /* mfaRequired     */ false);
         lenient().when(authFlowCapability.loginPlatformAdmin(any())).thenReturn(platformAdminLogin);
@@ -288,9 +298,9 @@ class PlatformAdminLoginE2ETest {
                 .andExpect(status().isUnauthorized());
     }
 
-        @TestConfiguration
+    @TestConfiguration
     @EnableAspectJAutoProxy
-        static class TestSecurityConfiguration {
+    static class TestSecurityConfiguration {
 
         @Bean
         SecurityContextHolder securityContextHolder() {
@@ -323,6 +333,56 @@ class PlatformAdminLoginE2ETest {
                 SecurityContextHolder securityContextHolder,
                 JwtProperties jwtProperties) {
             return new SecurityContextFilter(jwtValidator, securityContextHolder, jwtProperties);
+        }
+
+        @Bean
+        PluginEndpointDispatcher pluginEndpointDispatcher(AuthFlowCapability authFlowCapability) {
+            DefaultPluginEndpointDispatcher dispatcher =
+                    new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30));
+            dispatcher.replaceSnapshot(List.of(new EndpointRoute(
+                    "platform-admin",
+                    "platform.auth.login.v1",
+                    "POST",
+                    "/api/platform/auth/login",
+                    "platform-auth:login",
+                    new PlatformLoginHandler(new TestOperationalContext(authFlowCapability)))));
+            return dispatcher;
+        }
+    }
+
+    private record TestOperationalContext(AuthFlowCapability authFlowCapability) implements OperationalContext {
+
+        @Override
+        public OperationalModuleIdentity moduleIdentity() {
+            return new OperationalModuleIdentity("platform-admin", "3.2.0", "platform-commons");
+        }
+
+        @Override
+        public RuntimeOperationalView runtimeView() {
+            return new RuntimeOperationalView() {
+                @Override
+                public long entryGeneration() {
+                    return 1L;
+                }
+
+                @Override
+                public boolean ready() {
+                    return true;
+                }
+
+                @Override
+                public Set<String> requiredModuleIds() {
+                    return Set.of("platform-auth-flow", "platform-admin");
+                }
+            };
+        }
+
+        @Override
+        public <C> C requireInternalContract(Class<C> contractType) {
+            if (!contractType.equals(AuthFlowCapability.class)) {
+                throw new IllegalArgumentException("Unexpected contract type " + contractType.getName());
+            }
+            return contractType.cast(authFlowCapability);
         }
     }
 

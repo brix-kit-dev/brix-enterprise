@@ -122,6 +122,7 @@ brix:
     fatal-exit-code: ${BRIX_RUNTIME_SHELL_FATAL_EXIT_CODE:70}
     endpoint-deadline-millis: ${BRIX_RUNTIME_ENDPOINT_DEADLINE_MILLIS:30000}
     required-operational-modules:
+      - platform-auth-flow
       - platform-admin
     required-plugins:
       - platform-tenant
@@ -175,6 +176,7 @@ brix:
     database:
       migration:
         enabled: true
+        fail-on-error: true
         modules:
           # Platform foundation (must run first — referenced by app-* migrations)
           - platform-auth        # creates auth_user / auth_role / auth_permission (referenced by app-identity V100)

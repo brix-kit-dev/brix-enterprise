@@ -271,6 +271,12 @@ stop_port_if_forced() {
   fi
 }
 
+port_listening() {
+  local port="$1"
+
+  ss -ltn "sport = :${port}" 2>/dev/null | sed -n '2p' | grep -q .
+}
+
 print_log_tail() {
   local label="$1"
   local file="$2"
@@ -278,6 +284,23 @@ print_log_tail() {
   [[ -f "$file" ]] || return 0
   info "${label}: ${file}"
   tail -n 40 "$file" || true
+}
+
+http_ready() {
+  local port="$1"
+  local path="$2"
+  local status
+
+  status="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 2 "http://127.0.0.1:${port}${path}" 2>/dev/null || true)"
+  [[ "$status" =~ ^2[0-9][0-9]$ || "$status" =~ ^3[0-9][0-9]$ ]]
+}
+
+compiled_ready() {
+  local stdout="$1"
+  local stderr="$2"
+
+  { [[ -f "$stdout" ]] && grep -q 'Rspack compiled' "$stdout"; } ||
+    { [[ -f "$stderr" ]] && grep -q 'Rspack compiled' "$stderr"; }
 }
 
 wait_for_frontend_ready() {
@@ -297,9 +320,17 @@ wait_for_frontend_ready() {
       exit 1
     fi
 
-    if (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
-      exec 3<&-
-      exec 3>&-
+    if ! compiled_ready "$stdout" "$stderr"; then
+      sleep 0.5
+      continue
+    fi
+
+    if [[ "$name" == "host-shell" ]]; then
+      if http_ready "$port" "/" && http_ready "$port" "/remoteEntry.js"; then
+        success "${name} is ready on port ${port}."
+        return 0
+      fi
+    elif http_ready "$port" "/remoteEntry.js"; then
       success "${name} is ready on port ${port}."
       return 0
     fi
@@ -448,6 +479,12 @@ start_frontend_process() {
   stderr="${LOG_ROOT}/${name}.err.log"
 
   stop_port_if_forced "$port"
+
+  if port_listening "$port"; then
+    fail "Port ${port} is already in use and could not be cleared by this script."
+    info "Stop the existing frontend process that owns port ${port}, then run this script again."
+    exit 1
+  fi
 
   step "Starting ${name} on port ${port}..."
   info "Command: ${PNPM_LABEL} ${command_args}"

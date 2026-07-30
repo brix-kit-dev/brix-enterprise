@@ -144,6 +144,13 @@
             <version>3.2.0</version>
         </dependency>
 
+        <!-- Platform Auth Operational: publishes AuthFlow internal contract through Runtime Shell. -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth-operational</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
         <!-- ========== Platform Tenant（多租户能力）========== -->
         <dependency>
             <groupId>io.brix.platform</groupId>

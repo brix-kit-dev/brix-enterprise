@@ -160,7 +160,15 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Platform Admin — /api/platform/auth/login controller under test -->
+        <!-- Runtime Orchestrator — RuntimeShellEndpointController dispatcher under test -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>runtime-orchestrator</artifactId>
+            <version>${runtime-sdk.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Platform Admin — /api/platform/auth/login Runtime Entry handler under test -->
         <dependency>
             <groupId>io.brix.platform</groupId>
             <artifactId>platform-admin</artifactId>

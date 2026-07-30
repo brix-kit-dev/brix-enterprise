@@ -35,6 +35,10 @@ Options:
   --app-url URL             Health check base URL (default: http://localhost:8081)
   --help, -h                Show this help
 
+Behavior:
+  Rebuild resets compose-managed volumes so local Docker starts from an empty
+  database and replays the governed module migrations.
+
 Examples:
   ./scripts/docker-rebuild.sh --dev-smtp --init-env
   ./scripts/docker-rebuild.sh --dev-smtp --no-cache
@@ -370,7 +374,7 @@ rebuild_containers() {
   fi
 
   echo "=== [1/4] Stopping existing containers ==="
-  run_compose down
+  run_compose down --volumes --remove-orphans
 
   echo
   echo "=== [2/4] Rebuilding Docker images ==="
