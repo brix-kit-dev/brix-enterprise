@@ -1,0 +1,20 @@
+{
+  "name": "@brix-sdk/enterprise-standalone-web-runtime-profile",
+  "version": "3.2.0",
+  "private": true,
+  "description": "Standalone web Runtime capability provider profile for the enterprise Host.",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@brix-sdk/runtime-orchestrator-web": "link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web",
+    "@brix-sdk/runtime-sdk-api-web": "link:../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web",
+    "@brix-sdk/platform-auth-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web",
+    "@brix-sdk/platform-frame-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web",
+    "@brix-sdk/platform-i18n-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-i18n-web",
+    "@brix-sdk/platform-navigation-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-navigation-web",
+    "@brix-sdk/infra-adapter-http-web": "link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-http-web",
+    "@brix-sdk/infra-adapter-ui-native": "link:../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native"
+  }
+}

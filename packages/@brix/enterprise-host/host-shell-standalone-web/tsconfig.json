@@ -21,7 +21,17 @@
       "@brix-sdk/runtime-orchestrator-web": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web/src/index.ts"],
       "@brix-sdk/runtime-sdk-api-web": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web/src/index.ts"],
       "@brix-sdk/runtime-sdk-react": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-react/src/index.ts"],
+      "@brix-sdk/enterprise-standalone-web-runtime-profile": ["../standalone-web-runtime-profile/src/index.ts"],
       "@brix-sdk/platform-admin-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web/src/index.ts"],
+      "@brix-sdk/platform-auth-web/AuthCapabilityImpl": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web/src/AuthCapabilityImpl.ts"],
+      "@brix-sdk/platform-frame-web/theme/ThemeCapabilityImpl": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/ThemeCapabilityImpl.ts"],
+      "@brix-sdk/platform-frame-web/theme/presets/defaultPreset": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/presets/defaultPreset.ts"],
+      "@brix-sdk/platform-auth-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web/dist/index.d.ts"],
+      "@brix-sdk/platform-frame-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/dist/index.d.ts"],
+      "@brix-sdk/platform-i18n-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-i18n-web/dist/index.d.ts"],
+      "@brix-sdk/platform-navigation-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-navigation-web/dist/index.d.ts"],
+      "@brix-sdk/infra-adapter-http-web": ["../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-http-web/dist/index.d.ts"],
+      "@brix-sdk/infra-adapter-ui-native": ["../../../../../brix/packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native/dist/index.d.ts"],
       "@brix-sdk/shared-runtime-web/react": ["../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web/src/react.ts"],
       "@brix-sdk/shared-runtime-web/router": ["../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web/src/router.ts"]
     }

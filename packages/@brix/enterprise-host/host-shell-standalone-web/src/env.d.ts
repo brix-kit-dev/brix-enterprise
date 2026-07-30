@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly DEV?: boolean;
   readonly MODE?: string;
   readonly PROD?: boolean;
+  readonly VITE_API_BASE?: string;
 }
 
 interface ImportMeta {

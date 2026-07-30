@@ -7,7 +7,7 @@ export const standaloneWebComposition: FrontendHostComposition = {
   profileName: 'standalone-web',
   hostKind: 'standalone-web',
   runtime: {
-    appName: 'Brix Platform Host',
+    appName: 'Brix Platform',
     appVersion: '3.2.0',
     strictMode: true,
   },
@@ -16,14 +16,14 @@ export const standaloneWebComposition: FrontendHostComposition = {
     tenantId: 'host',
   },
   capabilities: {
-    required: ['auth', 'http', 'i18n', 'router', 'ui'],
+    required: ['auth', 'http', 'i18n', 'router', 'theme', 'ui'],
     optional: [],
   },
   routes: {
     mode: 'snapshot',
     snapshotId: 'standalone-web.routes.v1',
     defaultRouteId: 'platform-admin.dashboard',
-    hostCapabilities: ['auth', 'http', 'i18n', 'router', 'ui'],
+    hostCapabilities: ['auth', 'http', 'i18n', 'router', 'theme', 'ui'],
     sources: [createPlatformAdminRouteSnapshotSource()],
   },
 } as const;

@@ -24,6 +24,7 @@ import {
   type FrontendHostPublishedRouteSnapshot,
   type FrontendHostRouteSnapshotEntry,
 } from '@brix-sdk/runtime-orchestrator-web';
+import { createStandaloneWebRuntimeCapabilityBindings } from '@brix-sdk/enterprise-standalone-web-runtime-profile';
 import { standaloneWebComposition } from './composition/standalone-web.composition';
 
 function toRouteElement(route: FrontendHostRouteSnapshotEntry): ReactNode {
@@ -75,6 +76,10 @@ export async function bootstrap(): Promise<void> {
 
   const result = await bootstrapFrontendHost({
     composition: standaloneWebComposition,
+    capabilityBindings: createStandaloneWebRuntimeCapabilityBindings({
+      apiBaseUrl: import.meta.env.VITE_API_BASE,
+      routeSources: standaloneWebComposition.routes.sources,
+    }),
     debug: import.meta.env.DEV === true,
   });
   publishFrontendRuntimeIdentityEvidence({

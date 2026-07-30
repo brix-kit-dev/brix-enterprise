@@ -12,11 +12,13 @@ const __dirname = path.dirname(__filename);
 const brixRoot = path.resolve(__dirname, '../../../../../brix');
 const isDev = process.env.NODE_ENV !== 'production';
 const mode = isDev ? 'development' : 'production';
+const backendUrl = process.env.BACKEND_URL || 'http://localhost:8081';
 
 const importMetaEnv = {
   MODE: mode,
   DEV: isDev,
   PROD: !isDev,
+  VITE_API_BASE: process.env.VITE_API_BASE || '/api',
 };
 const hostSharedConfig = getHostSharedConfig();
 const remoteSharedConfig = getRemoteSharedConfig();
@@ -98,9 +100,49 @@ export default defineConfig({
         brixRoot,
         'packages/@brix/runtime-sdk/runtime-sdk-react/src/index.ts'
       ),
+      '@brix-sdk/enterprise-standalone-web-runtime-profile': path.resolve(
+        __dirname,
+        '../standalone-web-runtime-profile/src/index.ts'
+      ),
       '@brix-sdk/platform-admin-web': path.resolve(
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-admin-web/src/index.ts'
+      ),
+      '@brix-sdk/platform-auth-web/AuthCapabilityImpl': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-auth-web/src/AuthCapabilityImpl.ts'
+      ),
+      '@brix-sdk/platform-frame-web/theme/ThemeCapabilityImpl': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/ThemeCapabilityImpl.ts'
+      ),
+      '@brix-sdk/platform-frame-web/theme/presets/defaultPreset': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/presets/defaultPreset.ts'
+      ),
+      '@brix-sdk/platform-auth-web': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-auth-web'
+      ),
+      '@brix-sdk/platform-frame-web': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-frame-web'
+      ),
+      '@brix-sdk/platform-i18n-web': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-i18n-web'
+      ),
+      '@brix-sdk/platform-navigation-web': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-navigation-web'
+      ),
+      '@brix-sdk/infra-adapter-http-web': path.resolve(
+        brixRoot,
+        'packages/@brix/infra-adapters/packages/web/infra-adapter-http-web'
+      ),
+      '@brix-sdk/infra-adapter-ui-native': path.resolve(
+        brixRoot,
+        'packages/@brix/infra-adapters/packages/web/infra-adapter-ui-native'
       ),
       '@brix-sdk/shared-runtime-web': path.resolve(
         brixRoot,
@@ -176,10 +218,18 @@ export default defineConfig({
     new BrixFrontendReleaseArtifactPlugin(),
   ],
   devServer: {
-    port: Number.parseInt(process.env.VITE_PORT || '3002', 10),
-    hot: isDev,
-    liveReload: isDev,
+    port: Number.parseInt(process.env.VITE_PORT || '3001', 10),
+    hot: false,
+    liveReload: false,
     static: false,
+    proxy: [
+      {
+        context: ['/api'],
+        target: backendUrl,
+        changeOrigin: true,
+        secure: false,
+      },
+    ],
     historyApiFallback: {
       index: '/index.html',
       disableDotRule: false,
