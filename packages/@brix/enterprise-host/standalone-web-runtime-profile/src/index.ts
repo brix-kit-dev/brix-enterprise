@@ -41,6 +41,33 @@ export interface StandaloneWebRuntimeProfileOptions {
   readonly routeSources?: readonly FrontendHostRouteSnapshotSource[];
 }
 
+interface BrowserAuthStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+interface StoredAuthSession {
+  readonly version: 1;
+  readonly token: string;
+  readonly refreshToken?: string;
+  readonly contextKind: AuthSessionInstallCredentials['contextKind'];
+  readonly subjectId: string;
+  readonly actorId?: string;
+  readonly tenantId?: string;
+  readonly memberId?: string;
+  readonly principalId?: string;
+  readonly username?: string;
+  readonly email?: string;
+  readonly displayName?: string;
+  readonly primaryRole?: string;
+  readonly roles: readonly string[];
+  readonly permissions: readonly string[];
+  readonly expiresAt?: string;
+}
+
+const AUTH_SESSION_STORAGE_KEY = 'brix:standalone-web-runtime:auth-session:v1';
+
 export function createStandaloneWebRuntimeCapabilityBindings(
   options: StandaloneWebRuntimeProfileOptions = {},
 ): readonly FrontendHostCapabilityBinding[] {
@@ -115,18 +142,22 @@ export function createStandaloneWebRuntimeCapabilityBindings(
 }
 
 function createStandaloneAuthState(): AuthCapabilityConfig {
-  let state: InternalAuthState = {
-    user: null,
-    token: null,
-    tenant: null,
-    featureFlags: {},
-    dataScopes: [],
-    loading: false,
-    activeContext: null,
-    sessionState: 'anonymous',
-  };
+  const storage = getBrowserAuthStorage();
+  const restoredSession = readStoredAuthSession(storage);
+  let refreshToken: string | null = restoredSession?.refreshToken ?? null;
+  let state: InternalAuthState = restoredSession
+    ? internalStateFromSession(restoredSession)
+    : {
+        user: null,
+        token: null,
+        tenant: null,
+        featureFlags: {},
+        dataScopes: [],
+        loading: false,
+        activeContext: null,
+        sessionState: 'anonymous',
+      };
   const handlers = new Set<AuthChangeHandler>();
-  let refreshToken: string | null = null;
 
   function publish(next: InternalAuthState, type: 'login' | 'logout'): void {
     const previousState = toAuthState(state);
@@ -156,6 +187,8 @@ function createStandaloneAuthState(): AuthCapabilityConfig {
       const user = toUser(session);
       const activeContext = toVerifiedContext(session);
       refreshToken = session.refreshToken ?? null;
+      const storedSession = toStoredAuthSession(session, activeContext);
+      persistStoredAuthSession(storage, storedSession);
       publish({
         ...state,
         user,
@@ -182,6 +215,7 @@ function createStandaloneAuthState(): AuthCapabilityConfig {
     },
     logout: async (): Promise<void> => {
       refreshToken = null;
+      clearStoredAuthSession(storage);
       publish({
         ...state,
         user: null,
@@ -194,6 +228,163 @@ function createStandaloneAuthState(): AuthCapabilityConfig {
       }, 'logout');
     },
   };
+}
+
+function getBrowserAuthStorage(): BrowserAuthStorage | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    return window.sessionStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredAuthSession(storage: BrowserAuthStorage | null): StoredAuthSession | null {
+  if (!storage) {
+    return null;
+  }
+  const raw = storage.getItem(AUTH_SESSION_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+  const parsed = parseStoredAuthSession(raw);
+  if (!parsed || isExpired(parsed.expiresAt)) {
+    storage.removeItem(AUTH_SESSION_STORAGE_KEY);
+    return null;
+  }
+  return parsed;
+}
+
+function parseStoredAuthSession(raw: string): StoredAuthSession | null {
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  const record = value as Partial<StoredAuthSession>;
+  const contextKind = record.contextKind;
+  const token = readText(record.token);
+  const subjectId = readText(record.subjectId);
+  if (
+    record.version !== 1
+    || !token
+    || !subjectId
+    || (contextKind !== 'platform' && contextKind !== 'actor' && contextKind !== 'subject')
+  ) {
+    return null;
+  }
+  if ((contextKind === 'actor' || contextKind === 'subject') && !readText(record.tenantId)) {
+    return null;
+  }
+  return {
+    version: 1,
+    token,
+    refreshToken: readText(record.refreshToken),
+    contextKind,
+    subjectId,
+    actorId: readText(record.actorId),
+    tenantId: readText(record.tenantId),
+    memberId: readText(record.memberId),
+    principalId: readText(record.principalId),
+    username: readText(record.username),
+    email: readText(record.email),
+    displayName: readText(record.displayName),
+    primaryRole: readText(record.primaryRole),
+    roles: readStringArray(record.roles),
+    permissions: readStringArray(record.permissions),
+    expiresAt: readText(record.expiresAt),
+  };
+}
+
+function persistStoredAuthSession(
+  storage: BrowserAuthStorage | null,
+  session: StoredAuthSession,
+): void {
+  if (!storage) {
+    return;
+  }
+  storage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+function clearStoredAuthSession(storage: BrowserAuthStorage | null): void {
+  if (!storage) {
+    return;
+  }
+  storage.removeItem(AUTH_SESSION_STORAGE_KEY);
+}
+
+function internalStateFromSession(session: StoredAuthSession): InternalAuthState {
+  const credentials = storedSessionToCredentials(session);
+  const activeContext = toVerifiedContext(credentials);
+  return {
+    user: toUser(credentials),
+    token: session.token,
+    tenant: null,
+    featureFlags: {},
+    dataScopes: [],
+    loading: false,
+    activeContext,
+    sessionState: 'authenticated',
+  };
+}
+
+function storedSessionToCredentials(session: StoredAuthSession): AuthSessionInstallCredentials {
+  return {
+    provider: AuthSessionInstallProvider,
+    token: session.token,
+    refreshToken: session.refreshToken,
+    contextKind: session.contextKind,
+    subjectId: session.subjectId,
+    actorId: session.actorId,
+    tenantId: session.tenantId,
+    memberId: session.memberId,
+    principalId: session.principalId,
+    username: session.username,
+    email: session.email,
+    displayName: session.displayName,
+    primaryRole: session.primaryRole,
+    roles: [...session.roles],
+    permissions: [...session.permissions],
+    expiresAt: session.expiresAt,
+  };
+}
+
+function toStoredAuthSession(
+  session: AuthSessionInstallCredentials,
+  activeContext: VerifiedAuthContext,
+): StoredAuthSession {
+  return {
+    version: 1,
+    token: session.token,
+    refreshToken: session.refreshToken,
+    contextKind: session.contextKind,
+    subjectId: session.subjectId,
+    actorId: session.actorId,
+    tenantId: session.tenantId,
+    memberId: session.memberId,
+    principalId: session.principalId,
+    username: session.username,
+    email: session.email,
+    displayName: session.displayName,
+    primaryRole: session.primaryRole,
+    roles: [...(session.roles ?? [])],
+    permissions: [...(session.permissions ?? [])],
+    expiresAt: activeContext.expiresAt,
+  };
+}
+
+function isExpired(expiresAt: string | undefined): boolean {
+  if (!expiresAt) {
+    return false;
+  }
+  const timestamp = Date.parse(expiresAt);
+  return Number.isFinite(timestamp) && timestamp <= Date.now();
 }
 
 function readSessionInstallCredentials(
