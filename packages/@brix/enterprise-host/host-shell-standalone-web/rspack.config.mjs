@@ -121,6 +121,10 @@ export default defineConfig({
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/presets/defaultPreset.ts'
       ),
+      '@brix-sdk/platform-frame-web/layouts/ProtectedLayout': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-frame-web/src/layouts/ProtectedLayout.tsx'
+      ),
       '@brix-sdk/platform-auth-web': path.resolve(
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-auth-web'

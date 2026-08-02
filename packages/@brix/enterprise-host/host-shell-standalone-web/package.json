@@ -18,6 +18,7 @@
     "@brix-sdk/runtime-sdk-react": "link:../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-react",
     "@brix-sdk/enterprise-standalone-web-runtime-profile": "link:../standalone-web-runtime-profile",
     "@brix-sdk/platform-admin-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web",
+    "@brix-sdk/platform-frame-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web",
     "@brix-sdk/shared-runtime-web": "link:../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web"
   },
   "devDependencies": {

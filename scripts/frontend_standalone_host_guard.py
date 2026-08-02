@@ -133,6 +133,7 @@ def validate_host(host: Path) -> list[dict[str, str]]:
                     "@brix-sdk/runtime-sdk-api-web",
                     "@brix-sdk/runtime-sdk-react",
                     "@brix-sdk/platform-admin-web",
+                    "@brix-sdk/platform-frame-web",
                     "@brix-sdk/shared-runtime-web",
                 }:
                     add_violation(
