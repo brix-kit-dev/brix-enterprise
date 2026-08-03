@@ -19,6 +19,7 @@
     "@brix-sdk/enterprise-standalone-web-runtime-profile": "link:../standalone-web-runtime-profile",
     "@brix-sdk/platform-admin-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web",
     "@brix-sdk/platform-frame-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web",
+    "@brix-sdk/platform-tenant-web": "link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web",
     "@brix-sdk/shared-runtime-web": "link:../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web"
   },
   "devDependencies": {

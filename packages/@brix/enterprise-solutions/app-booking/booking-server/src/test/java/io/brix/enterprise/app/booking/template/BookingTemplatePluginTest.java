@@ -8,6 +8,9 @@ package io.brix.enterprise.app.booking.template;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +33,8 @@ import io.runtime.sdk.plugin.QueryHandler;
 
 class BookingTemplatePluginTest {
 
+    private static final String ACTIVE_MANIFEST = "META-INF/brix/plugin-manifest.yaml";
+
     @Test
     void serviceLoaderPublishesExactlyOneTemplateProvider() {
         List<BrixPlugin> providers = ServiceLoader.load(BrixPlugin.class).stream()
@@ -41,6 +46,21 @@ class BookingTemplatePluginTest {
             .hasSize(1)
             .first()
             .isInstanceOf(BookingTemplatePlugin.class);
+    }
+
+    @Test
+    void activeManifestUsesCurrentRuntimeShellShape() throws IOException {
+        String manifest = activeManifest();
+
+        assertThat(manifest).contains(
+            "tasks:\n  provides: []",
+            "internalContracts:\n  provides: []",
+            "endpointId: " + BookingTemplatePlugin.STATUS_ENDPOINT_ID,
+            "endpointId: " + BookingTemplatePlugin.FEATURES_ENDPOINT_ID);
+        assertThat(manifest).doesNotContain(
+            "accessPolicy:",
+            "requires: []",
+            "routes:");
     }
 
     @Test
@@ -87,6 +107,14 @@ class BookingTemplatePluginTest {
 
         assertThat(response).isInstanceOfSatisfying(BookingTemplateFeaturesResponse.class, features ->
             assertThat(features.features()).isEmpty());
+    }
+
+    private static String activeManifest() throws IOException {
+        try (InputStream inputStream = BookingTemplatePluginTest.class.getClassLoader()
+            .getResourceAsStream(ACTIVE_MANIFEST)) {
+            assertThat(inputStream).as("active plugin manifest").isNotNull();
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     private static EndpointInvocation<Object> invocation() {

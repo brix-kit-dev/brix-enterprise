@@ -35,13 +35,17 @@ if (-not $DevSmtp) {
 cd $RemoteDir
 test -f .env || exit 2
 MAIL_HOST=`$(grep -E '^SPRING_MAIL_HOST=' .env | tail -n 1 | cut -d= -f2-)
-SMTP_FROM=`$(grep -E '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env | tail -n 1 | cut -d= -f2-)
-SETUP_BASE_URL=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=' .env | tail -n 1 | cut -d= -f2-)
-SETUP_MAIL_FROM=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=' .env | tail -n 1 | cut -d= -f2-)
-LOGGING=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=' .env | tail -n 1 | cut -d= -f2-)
-if [ -z "`$SETUP_BASE_URL" ]; then
-  exit 5
-fi
+	SMTP_FROM=`$(grep -E '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env | tail -n 1 | cut -d= -f2-)
+	SETUP_BASE_URL=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=' .env | tail -n 1 | cut -d= -f2-)
+	FIRST_OWNER_INVITE_BASE_URL=`$(grep -E '^BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=' .env | tail -n 1 | cut -d= -f2-)
+	SETUP_MAIL_FROM=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=' .env | tail -n 1 | cut -d= -f2-)
+	LOGGING=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=' .env | tail -n 1 | cut -d= -f2-)
+	if [ -z "`$SETUP_BASE_URL" ]; then
+	  exit 5
+	fi
+	if [ -z "`$FIRST_OWNER_INVITE_BASE_URL" ]; then
+	  exit 6
+	fi
 if [ -z "`$MAIL_HOST" ] && [ "`$LOGGING" != "true" ]; then
   exit 1
 fi
@@ -68,6 +72,10 @@ fi
     }
     if ($LASTEXITCODE -eq 5) {
         Write-Host "ERROR: BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty in the remote .env." -ForegroundColor Red
+        exit 1
+    }
+    if ($LASTEXITCODE -eq 6) {
+        Write-Host "ERROR: BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty in the remote .env." -ForegroundColor Red
         exit 1
     }
     if ($LASTEXITCODE -ne 0) {

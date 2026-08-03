@@ -23,6 +23,7 @@
       "@brix-sdk/runtime-sdk-react": ["../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-react/src/index.ts"],
       "@brix-sdk/enterprise-standalone-web-runtime-profile": ["../standalone-web-runtime-profile/src/index.ts"],
       "@brix-sdk/platform-admin-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web/src/index.ts"],
+      "@brix-sdk/platform-tenant-web": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web/src/index.ts"],
       "@brix-sdk/platform-auth-web/AuthCapabilityImpl": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-auth-web/src/AuthCapabilityImpl.ts"],
       "@brix-sdk/platform-frame-web/theme/ThemeCapabilityImpl": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/ThemeCapabilityImpl.ts"],
       "@brix-sdk/platform-frame-web/theme/presets/defaultPreset": ["../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/presets/defaultPreset.ts"],

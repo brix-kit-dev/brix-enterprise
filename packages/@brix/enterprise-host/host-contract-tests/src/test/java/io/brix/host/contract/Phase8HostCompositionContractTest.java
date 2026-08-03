@@ -74,6 +74,7 @@ class Phase8HostCompositionContractTest {
             .contains("table-name: ${BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE:platform_tenant_outbox}")
             .contains("publish-timeout-ms: ${BRIX_INFRA_KAFKA_OUTBOX_PUBLISH_TIMEOUT_MS:30000}")
             .contains("setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}")
+            .contains("invite-base-url: ${BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL:}")
             .contains("include: readinessState,runtimeShellReadiness");
         assertThat(autoConfiguration)
             .contains("RuntimeShellFatalAction")
@@ -91,6 +92,7 @@ class Phase8HostCompositionContractTest {
         assertThat(compose)
             .contains("BRIX_PLATFORM_NOTIFICATION_ENABLED")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL")
             .contains("BRIX_OUTBOX_RELAY_ENABLED")
             .contains("BRIX_OUTBOX_RELAY_OWNER")
             .contains("BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED")
@@ -120,6 +122,7 @@ class Phase8HostCompositionContractTest {
             .contains("redact()")
             .contains("wait_for_readiness")
             .contains("mailpitSetupMailArrived=true")
+            .doesNotContain("inviteBaseUrl")
             .doesNotContain("echo \"$bootstrap_token\"")
             .doesNotContain("echo \"$setup_token\"")
             .doesNotContain("SELECT id, email");
@@ -144,22 +147,29 @@ class Phase8HostCompositionContractTest {
             .contains("Verifying canonical Outbox Relay reached host-shell container")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty")
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local")
             .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
         assertThat(start)
             .contains("Verifying canonical Outbox Relay reached host-shell container")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty")
             .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
         assertThat(remoteDeploy)
+            .contains("\"BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL\"")
             .contains("\"BRIX_INFRA_EMAIL_SMTP_FROM\"")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept")
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local");
         assertThat(remoteStart)
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty")
             .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
         assertThat(remoteRebuild)
             .contains("BRIX_INFRA_EMAIL_SMTP_FROM")
             .contains("BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty")
+            .contains("BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty")
             .contains("SPRING_MAIL_HOST is set but BRIX_INFRA_EMAIL_SMTP_FROM is empty");
     }
 

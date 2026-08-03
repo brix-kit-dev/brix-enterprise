@@ -49,7 +49,6 @@ endpoints:
         policyRef: endpoint-default
       idempotency:
         mode: not-applicable
-      accessPolicy: app-booking-template-read
     - endpointId: app-booking.template.features.v1
       transport: http
       method: GET
@@ -74,7 +73,6 @@ endpoints:
         policyRef: endpoint-default
       idempotency:
         mode: not-applicable
-      accessPolicy: app-booking-template-read
 capabilities:
   required: []
   optional: []
@@ -87,9 +85,10 @@ commands:
 events:
   publishes: []
   subscribes: []
+tasks:
+  provides: []
 internalContracts:
   provides: []
-  requires: []
 externalServices: []
 permissions:
   - id: app-booking:template:read

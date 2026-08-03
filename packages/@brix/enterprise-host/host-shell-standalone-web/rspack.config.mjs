@@ -109,6 +109,10 @@ export default defineConfig({
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-admin-web/src/index.ts'
       ),
+      '@brix-sdk/platform-tenant-web': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-tenant-web/src/index.ts'
+      ),
       '@brix-sdk/platform-auth-web/AuthCapabilityImpl': path.resolve(
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-auth-web/src/AuthCapabilityImpl.ts'

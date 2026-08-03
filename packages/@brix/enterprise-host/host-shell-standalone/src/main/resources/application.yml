@@ -234,6 +234,10 @@ brix:
         setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}
         setup-code-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS:900}
         bootstrap-session-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS:300}
+  tenant:
+    first-owner-invitation:
+      invite-base-url: ${BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL:}
+      setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}
   shell:
     standalone:
       enabled: true

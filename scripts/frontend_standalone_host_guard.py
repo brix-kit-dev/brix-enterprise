@@ -36,14 +36,16 @@ FORBIDDEN_TEXT = {
     "PLATFORM_ROLE_CODE",
     "PLATFORM_ADMIN_PERMISSIONS",
     "@brix-sdk/platform-auth-web",
-    "@brix-sdk/platform-tenant-web",
     "@brix-sdk/infra-adapter-http-web",
     "@brix-sdk/infra-adapter-ui-",
     "host-shell-standalone-web/src",
 }
 
 ALLOWED_SOURCE_SUFFIXES = {".ts", ".tsx", ".css"}
-PHASE3_COMPOSITION_PLATFORM_ADMIN_IMPORT = "@brix-sdk/platform-admin-web"
+COMPOSITION_ROUTE_SNAPSHOT_IMPORTS = {
+    "@brix-sdk/platform-admin-web",
+    "@brix-sdk/platform-tenant-web",
+}
 
 
 def is_phase3_composition_snapshot_file(path: Path, src: Path) -> bool:
@@ -97,19 +99,23 @@ def validate_host(host: Path) -> list[dict[str, str]]:
             continue
 
         text = path.read_text(encoding="utf-8")
-        if (
-            PHASE3_COMPOSITION_PLATFORM_ADMIN_IMPORT in text
-            and not is_phase3_composition_snapshot_file(path, src)
-        ):
-            add_violation(
-                violations,
-                "frontend-host.forbidden-text",
-                path,
-                (
-                    "Forbidden Host token found: "
-                    f"{PHASE3_COMPOSITION_PLATFORM_ADMIN_IMPORT}"
-                ),
-            )
+        for composition_import in sorted(COMPOSITION_ROUTE_SNAPSHOT_IMPORTS):
+            if composition_import not in text:
+                continue
+            if not is_phase3_composition_snapshot_file(path, src):
+                add_violation(
+                    violations,
+                    "frontend-host.forbidden-text",
+                    path,
+                    f"Forbidden Host token found: {composition_import}",
+                )
+            if f"{composition_import}/" in text:
+                add_violation(
+                    violations,
+                    "frontend-host.forbidden-text",
+                    path,
+                    f"Host may only import the public route snapshot barrel: {composition_import}",
+                )
         for token in sorted(FORBIDDEN_TEXT):
             if token in text:
                 add_violation(
@@ -134,6 +140,7 @@ def validate_host(host: Path) -> list[dict[str, str]]:
                     "@brix-sdk/runtime-sdk-react",
                     "@brix-sdk/platform-admin-web",
                     "@brix-sdk/platform-frame-web",
+                    "@brix-sdk/platform-tenant-web",
                     "@brix-sdk/shared-runtime-web",
                 }:
                     add_violation(

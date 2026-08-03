@@ -56,6 +56,12 @@ importers:
       '@brix-sdk/platform-admin-web':
         specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web
         version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-admin-web
+      '@brix-sdk/platform-frame-web':
+        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web
+        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-frame-web
+      '@brix-sdk/platform-tenant-web':
+        specifier: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web
+        version: link:../../../../../brix/packages/@brix/platform-commons/packages/client/platform-tenant-web
       '@brix-sdk/runtime-orchestrator-web':
         specifier: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web
         version: link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web

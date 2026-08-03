@@ -310,8 +310,7 @@ if [ -n "${PHASE8_PLATFORM_ACCESS_TOKEN:-}" ] && [ -n "${PHASE8_PLATFORM_ACTOR_I
 
   before_invite_mail_count="$(mailpit_count)"
   invitee_json="$(json_string "${PHASE8_FIRST_OWNER_EMAIL:-$PHASE8_FIRST_ADMIN_EMAIL}")"
-  invite_base_json="$(json_string "${PHASE8_INVITE_BASE_URL:-https://console.example.invalid/invite}")"
-  invite_result="$(http_request POST "$BASE/api/platform/tenants/$tenant_id/first-owner-invitations" "{\"inviteeEmail\":$invitee_json,\"inviteBaseUrl\":$invite_base_json,\"locale\":\"en-US\"}" "$PHASE8_PLATFORM_ACCESS_TOKEN" "$PHASE8_PLATFORM_ACTOR_ID")"
+  invite_result="$(http_request POST "$BASE/api/platform/tenants/$tenant_id/first-owner-invitations" "{\"inviteeEmail\":$invitee_json,\"locale\":\"en-US\"}" "$PHASE8_PLATFORM_ACCESS_TOKEN" "$PHASE8_PLATFORM_ACTOR_ID")"
   invite_http_code="$(printf '%s' "$invite_result" | sed -n '1p')"
   invite_body="$(printf '%s' "$invite_result" | sed '1d')"
   require_http_success "create FIRST_OWNER invitation" "$invite_http_code" "$invite_body"

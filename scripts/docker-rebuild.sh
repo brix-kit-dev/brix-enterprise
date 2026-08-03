@@ -212,6 +212,11 @@ create_dev_env_if_needed() {
       chmod 600 .env
       success "Added missing BRIX_PLATFORM_ADMIN_SETUP_BASE_URL to existing .env"
     fi
+    if ! grep -Eq '^BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=' .env; then
+      printf '\nBRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept\n' >> .env
+      chmod 600 .env
+      success "Added missing BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL to existing .env"
+    fi
     if ! grep -Eq '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env; then
       printf '\nBRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local\n' >> .env
       chmod 600 .env
@@ -252,6 +257,7 @@ TOKEN_ENCRYPTION_KEY=${token_key}
 BRIX_PLATFORM_MFA_ISSUER=Brix
 BRIX_PLATFORM_MFA_ENCRYPTION_KEY=${mfa_key}
 BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup
+BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept
 BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=platform-admin@brix.local
 BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local
 BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS=86400
@@ -322,21 +328,17 @@ get_env_value() {
 }
 
 check_notification_environment() {
-  step "Checking setup-link notification environment..."
-
-  if [[ "$DEV_SMTP" == "true" ]]; then
-    info "Dev SMTP enabled; Mailpit compose overlay will provide SMTP."
-    return 0
-  fi
+  step "Checking setup-link and FIRST_OWNER notification environment..."
 
   if [[ ! -f .env ]]; then
     fail ".env not found in $COMPOSE_DIR. Create it or run with --dev-smtp --init-env for local development."
     exit 1
   fi
 
-  local mail_host setup_base_url setup_mail_from smtp_from logging
+  local mail_host setup_base_url first_owner_invite_base_url setup_mail_from smtp_from logging
   mail_host="$(get_env_value SPRING_MAIL_HOST)"
   setup_base_url="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_BASE_URL)"
+  first_owner_invite_base_url="$(get_env_value BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL)"
   setup_mail_from="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM)"
   smtp_from="$(get_env_value BRIX_INFRA_EMAIL_SMTP_FROM)"
   logging="$(get_env_value BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED)"
@@ -344,6 +346,17 @@ check_notification_environment() {
   if [[ -z "$setup_base_url" ]]; then
     fail "BRIX_PLATFORM_ADMIN_SETUP_BASE_URL is empty in .env."
     exit 1
+  fi
+
+  if [[ -z "$first_owner_invite_base_url" ]]; then
+    fail "BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty in .env."
+    exit 1
+  fi
+
+  if [[ "$DEV_SMTP" == "true" ]]; then
+    info "Dev SMTP enabled; Mailpit compose overlay will provide SMTP."
+    success "Notification environment OK"
+    return 0
   fi
 
   if [[ -z "$mail_host" && "$logging" != "true" ]]; then

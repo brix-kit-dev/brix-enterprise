@@ -1,5 +1,6 @@
 import type { FrontendHostComposition } from '@brix-sdk/runtime-orchestrator-web';
 import { createPlatformAdminRouteSnapshotSource } from './platform-admin-route-snapshot';
+import { createPlatformTenantRouteSnapshotSource } from './platform-tenant-route-snapshot';
 
 export const standaloneWebComposition: FrontendHostComposition = {
   id: 'host-shell-standalone-web',
@@ -24,6 +25,9 @@ export const standaloneWebComposition: FrontendHostComposition = {
     snapshotId: 'standalone-web.routes.v1',
     defaultRouteId: 'platform-admin.dashboard',
     hostCapabilities: ['auth', 'http', 'i18n', 'router', 'theme', 'ui'],
-    sources: [createPlatformAdminRouteSnapshotSource()],
+    sources: [
+      createPlatformAdminRouteSnapshotSource(),
+      createPlatformTenantRouteSnapshotSource(),
+    ],
   },
 } as const;
