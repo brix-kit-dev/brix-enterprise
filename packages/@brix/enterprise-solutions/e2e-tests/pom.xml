@@ -152,14 +152,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Platform Auth Web — AuthController (/api/auth/login) -->
-        <dependency>
-            <groupId>io.brix.platform</groupId>
-            <artifactId>platform-auth-web</artifactId>
-            <version>${runtime-sdk.version}</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- Runtime Orchestrator — RuntimeShellEndpointController dispatcher under test -->
         <dependency>
             <groupId>io.brix</groupId>

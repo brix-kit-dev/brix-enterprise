@@ -39,8 +39,6 @@ import io.brix.platform.auth.jwt.JwtValidator.JwtValidationException;
 import io.brix.platform.auth.servlet.AuthorizationExceptionAdvice;
 import io.brix.platform.auth.servlet.SecurityContextFilter;
 import io.brix.platform.auth.servlet.SimpleAuthContextCapability;
-import io.brix.platform.auth.web.advice.AuthFlowExceptionAdvice;
-import io.brix.platform.auth.web.controller.AuthController;
 import io.brix.platform.tenant.service.AuditService;
 import io.runtime.orchestrator.endpoint.DefaultPluginEndpointDispatcher;
 import io.runtime.orchestrator.endpoint.EndpointRoute;
@@ -106,7 +104,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(
     controllers = {
         RuntimeShellEndpointController.class,
-        AuthController.class,
         PlatformAdminLoginE2ETest.ProtectedAdminTenantProbeController.class
     },
     excludeAutoConfiguration = {
@@ -119,7 +116,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = true)
 @Import({
     RuntimeShellEndpointController.class,
-    AuthFlowExceptionAdvice.class,
     AuthorizationExceptionAdvice.class,
     PlatformAdminLoginE2ETest.TestSecurityConfiguration.class
 })
@@ -247,7 +243,7 @@ class PlatformAdminLoginE2ETest {
 
     @Test
     @Order(2)
-    @DisplayName("2. Shared tenant login endpoint does not issue platform login response")
+    @DisplayName("2. Shared tenant login endpoint is not a platform login entry")
     void sharedLoginEndpointDoesNotIssuePlatformToken() throws Exception {
         String loginBody = objectMapper.writeValueAsString(
                 Map.of("loginId", "superadmin@test.com", "password", "Test@123456"));
@@ -255,9 +251,7 @@ class PlatformAdminLoginE2ETest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginBody))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value(AuthFlowCapability.AuthFlowException.CODE_NO_TENANT_ASSOCIATION))
-                .andExpect(jsonPath(REMOVED_PLATFORM_FLAG_JSON_PATH).doesNotExist());
+                .andExpect(status().isNotFound());
     }
 
     // ============================================================================

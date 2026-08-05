@@ -316,7 +316,7 @@ identity:
       window-seconds: ${IDENTITY_RATE_LIMIT_WINDOW:60}
 
 # ==================== Platform Security (D2/D3 — capability-driven) ====================
-# 取代 identity.jwt.* 与 oauth2.google.*，由 platform-auth + platform-auth-web 消费。
+# 取代 identity.jwt.* 与 oauth2.google.*，由 platform-auth + platform-auth-operational 消费。
 # 旧配置 (identity.jwt.*, oauth2.google.*) 在 D4 阶段移除。
 platform:
   security:

@@ -131,17 +131,10 @@
 
         <!-- spring-security-crypto: platform-auth 将其声明为 optional，Host 必须显式引入
              以确保 BCryptPasswordEncoder 在 fat JAR 中可用，从而激活 PasswordCapabilityAutoConfiguration
-             → PasswordCapability → AuthFlowCapability → AuthController 启动成功 -->
+             → PasswordCapability → AuthFlowCapability internal contract 启动成功 -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
-        </dependency>
-
-        <!-- ========== Platform Auth Web（D3：AuthFlowCapability + OAuth2FederationCapability 的 REST 表面）========== -->
-        <dependency>
-            <groupId>io.brix.platform</groupId>
-            <artifactId>platform-auth-web</artifactId>
-            <version>3.2.0</version>
         </dependency>
 
         <!-- Platform Auth Operational: publishes AuthFlow internal contract through Runtime Shell. -->

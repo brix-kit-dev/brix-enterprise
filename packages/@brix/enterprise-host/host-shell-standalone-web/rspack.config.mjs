@@ -231,6 +231,11 @@ export default defineConfig({
     hot: false,
     liveReload: false,
     static: false,
+    headers: {
+      'Cache-Control': 'no-store, max-age=0',
+      Pragma: 'no-cache',
+      Expires: '0',
+    },
     proxy: [
       {
         context: ['/api'],

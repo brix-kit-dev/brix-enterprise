@@ -22,8 +22,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Test entry point that activates Spring Boot auto-configuration for E2E tests.
  *
  * <p>Scan roots cover both the enterprise solution layer and the platform
- * layer so that auto-configurations in {@code platform-auth-servlet} and
- * {@code platform-auth-web} are discovered and registered.</p>
+ * layer so that platform security filters and Runtime Shell operational
+ * entry points are discovered and registered.</p>
  */
 @SpringBootApplication(
         scanBasePackages = {
