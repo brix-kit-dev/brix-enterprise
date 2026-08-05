@@ -13,6 +13,10 @@
  */
 package io.brix.enterprise.host.standalone;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.junit.ArchTests;
@@ -22,6 +26,8 @@ import org.junit.jupiter.api.Test;
 
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -69,5 +75,23 @@ public class ArchitectureTest {
         hostDoesNotDependOnEnterpriseBusinessTypes.check(new ClassFileImporter()
             .withImportOption(new ImportOption.DoNotIncludeTests())
             .importPackages("io.brix.enterprise.host.standalone"));
+    }
+
+    @Test
+    void hostMapsFirstOwnerSetupBaseUrlToIdentityCapability() throws IOException {
+        String applicationYaml = resourceText("application.yml");
+
+        assertTrue(applicationYaml.contains("first-owner-invitee-setup:"));
+        assertTrue(applicationYaml.contains(
+            "setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}"));
+    }
+
+    private static String resourceText(String name) throws IOException {
+        try (InputStream input = ArchitectureTest.class.getClassLoader().getResourceAsStream(name)) {
+            if (input == null) {
+                throw new IOException(name + " was not found on the test classpath");
+            }
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 }

@@ -49,6 +49,7 @@ class Phase8HostCompositionContractTest {
 
         assertThat(pom)
             .contains("<artifactId>platform-admin</artifactId>")
+            .contains("<artifactId>platform-identity</artifactId>")
             .contains("<artifactId>platform-tenant</artifactId>")
             .contains("<artifactId>platform-notification</artifactId>")
             .contains("<artifactId>infra-adapter-email-smtp</artifactId>")
@@ -64,8 +65,10 @@ class Phase8HostCompositionContractTest {
             .contains("required-operational-modules:")
             .contains("- platform-admin")
             .contains("required-plugins:")
+            .contains("- platform-identity")
             .contains("- platform-tenant")
             .contains("- app-booking")
+            .contains("- platform-identity    # owns sys_identity / sys_platform_admin / sys_bootstrap_state / sys_platform_audit_log")
             .contains("relay:")
             .contains("enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}")
             .contains("owner: ${BRIX_OUTBOX_RELAY_OWNER:enterprise-shell}")

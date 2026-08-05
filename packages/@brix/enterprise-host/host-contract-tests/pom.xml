@@ -87,6 +87,18 @@
         </dependency>
         <dependency>
             <groupId>io.brix.platform</groupId>
+            <artifactId>platform-identity</artifactId>
+            <version>${platform-commons.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-auth-operational</artifactId>
+            <version>${platform-commons.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.platform</groupId>
             <artifactId>platform-admin</artifactId>
             <version>${platform-commons.version}</version>
             <scope>test</scope>

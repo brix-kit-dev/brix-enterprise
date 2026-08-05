@@ -113,8 +113,8 @@ brix:
       - io.runtime.sdk.capability.ObservabilityCapability
       - io.runtime.sdk.capability.ConfigStoreCapability
       - io.brix.platform.tenant.internal.TenantAdministration
-      - io.brix.platform.tenant.internal.PlatformBootstrapAdministration
-      - io.brix.platform.tenant.internal.PlatformIdentityAdministration
+      - io.brix.platform.identity.internal.PlatformBootstrapAdministration
+      - io.brix.platform.identity.internal.PlatformIdentityAdministration
   runtime-shell:
     enabled: true
     runtime-version: ${BRIX_RUNTIME_SHELL_VERSION:3.2.0}
@@ -125,6 +125,7 @@ brix:
       - platform-auth-flow
       - platform-admin
     required-plugins:
+      - platform-identity
       - platform-tenant
       - app-booking
   outbox:
@@ -180,6 +181,7 @@ brix:
         modules:
           # Platform foundation (must run first — referenced by app-* migrations)
           - platform-auth        # creates auth_user / auth_role / auth_permission (referenced by app-identity V100)
+          - platform-identity    # owns sys_identity / sys_platform_admin / sys_bootstrap_state / sys_platform_audit_log
           - platform-tenant      # creates sys_tenant / sys_identity / sys_tenant_member etc.
           # Application modules
           - app-identity
@@ -234,6 +236,9 @@ brix:
         setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}
         setup-code-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS:900}
         bootstrap-session-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS:300}
+  identity:
+    first-owner-invitee-setup:
+      setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}
   tenant:
     first-owner-invitation:
       invite-base-url: ${BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL:}

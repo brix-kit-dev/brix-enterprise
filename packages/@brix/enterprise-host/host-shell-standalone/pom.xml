@@ -151,6 +151,13 @@
             <version>3.2.0</version>
         </dependency>
 
+        <!-- Platform Identity: owns bootstrap/global identity internal contracts. -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-identity</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
         <!--
           ========== Platform Notification（平台通知能力 — L2B）==========
           Provides NotificationCapability policy/template orchestration. SMTP is

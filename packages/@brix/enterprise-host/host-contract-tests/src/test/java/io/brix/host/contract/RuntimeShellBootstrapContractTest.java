@@ -28,8 +28,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import io.brix.platform.tenant.internal.PlatformBootstrapAdministration;
-import io.brix.platform.tenant.internal.PlatformIdentityAdministration;
+import io.brix.platform.identity.internal.PlatformBootstrapAdministration;
+import io.brix.platform.identity.internal.PlatformIdentityAdministration;
 import io.brix.platform.tenant.internal.TenantAdministration;
 import io.runtime.orchestrator.bootstrap.HostBootstrapCoordinator;
 import io.runtime.orchestrator.bootstrap.HostRuntimeOperationalView;
@@ -48,6 +48,7 @@ import io.runtime.orchestrator.plugin.PluginRuntimeManager;
 import io.runtime.orchestrator.plugin.PluginRuntimeState;
 import io.runtime.orchestrator.plugin.ServiceLoaderPluginDiscovery;
 import io.runtime.sdk.capability.AuthCapability;
+import io.runtime.sdk.capability.AuthFlowCapability;
 import io.runtime.sdk.capability.DataScope;
 import io.runtime.sdk.capability.EventBusCapability;
 import io.runtime.sdk.internalcontract.InternalContractProvider;
@@ -69,6 +70,8 @@ import io.runtime.sdk.plugin.PluginLifecycleState;
 class RuntimeShellBootstrapContractTest {
 
     private static final String PLATFORM_ADMIN_MODULE_ID = "platform-admin";
+    private static final String PLATFORM_AUTH_FLOW_MODULE_ID = "platform-auth-flow";
+    private static final String PLATFORM_IDENTITY_PLUGIN_ID = "platform-identity";
     private static final String PLATFORM_TENANT_PLUGIN_ID = "platform-tenant";
     private static final String APP_BOOKING_PLUGIN_ID = "app-booking";
 
@@ -77,8 +80,8 @@ class RuntimeShellBootstrapContractTest {
         DefaultPluginEndpointDispatcher dispatcher = new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30));
         RuntimeShellBootstrap bootstrap = hostBootstrap(
             dispatcher,
-            List.of(PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
-            List.of(PLATFORM_ADMIN_MODULE_ID));
+            List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
+            List.of(PLATFORM_AUTH_FLOW_MODULE_ID, PLATFORM_ADMIN_MODULE_ID));
 
         RuntimeShellBootstrapHandle handle = bootstrap.start();
         List<PluginRuntimeState> states = bootstrap.pluginStates();
@@ -86,6 +89,11 @@ class RuntimeShellBootstrapContractTest {
         assertThat(bootstrap.ready()).isTrue();
         assertThat(handle.ready()).isTrue();
         assertThat(states)
+            .anySatisfy(state -> {
+                assertThat(state.identity().pluginId()).isEqualTo(PLATFORM_IDENTITY_PLUGIN_ID);
+                assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
+                assertThat(state.ready()).isTrue();
+            })
             .anySatisfy(state -> {
                 assertThat(state.identity().pluginId()).isEqualTo(PLATFORM_TENANT_PLUGIN_ID);
                 assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
@@ -98,6 +106,12 @@ class RuntimeShellBootstrapContractTest {
                 assertThat(state.health().status()).isEqualTo(BrixHealth.Status.UP);
             });
         assertThat(bootstrap.operationalStates())
+            .anySatisfy(state -> {
+                assertThat(state.identity().moduleId()).isEqualTo(PLATFORM_AUTH_FLOW_MODULE_ID);
+                assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
+                assertThat(state.ready()).isTrue();
+                assertThat(state.entriesPublished()).isTrue();
+            })
             .anySatisfy(state -> {
                 assertThat(state.identity().moduleId()).isEqualTo(PLATFORM_ADMIN_MODULE_ID);
                 assertThat(state.lifecycleState()).isEqualTo(PluginLifecycleState.STARTED);
@@ -232,6 +246,7 @@ class RuntimeShellBootstrapContractTest {
     private static DefaultCapabilityRegistry registryWithHostRequiredCapabilities() {
         DefaultCapabilityRegistry registry = new DefaultCapabilityRegistry();
         registry.register(AuthCapability.class, new ContractAuthCapability());
+        registry.register(AuthFlowCapability.class, throwingProxy(AuthFlowCapability.class));
         registry.register(EventBusCapability.class, EventBusTestFactory.allImplementations()
             .findFirst()
             .orElseThrow());
