@@ -24,7 +24,9 @@ import java.security.Principal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,6 +44,7 @@ import io.runtime.orchestrator.internalcontract.ServiceLoaderInternalContractPro
 import io.runtime.orchestrator.operational.OperationalModuleRuntimeManager;
 import io.runtime.orchestrator.operational.OperationalRuntimeException;
 import io.runtime.orchestrator.operational.ServiceLoaderOperationalModuleDiscovery;
+import io.runtime.orchestrator.persistence.OwnerPersistenceProvider;
 import io.runtime.orchestrator.plugin.ClasspathPluginRuntimeDescriptorResolver;
 import io.runtime.orchestrator.plugin.PluginRuntimeException;
 import io.runtime.orchestrator.plugin.PluginRuntimeManager;
@@ -51,6 +54,8 @@ import io.runtime.sdk.capability.AuthCapability;
 import io.runtime.sdk.capability.AuthFlowCapability;
 import io.runtime.sdk.capability.DataScope;
 import io.runtime.sdk.capability.EventBusCapability;
+import io.runtime.sdk.capability.PersistenceCapability;
+import io.runtime.sdk.capability.UnitOfWork;
 import io.runtime.sdk.internalcontract.InternalContractProvider;
 import io.runtime.sdk.plugin.BrixHealth;
 import io.runtime.sdk.plugin.BrixPlugin;
@@ -74,6 +79,10 @@ class RuntimeShellBootstrapContractTest {
     private static final String PLATFORM_IDENTITY_PLUGIN_ID = "platform-identity";
     private static final String PLATFORM_TENANT_PLUGIN_ID = "platform-tenant";
     private static final String APP_BOOKING_PLUGIN_ID = "app-booking";
+    private static final OwnerPersistenceProvider OWNER_PERSISTENCE = ownerId ->
+        PLATFORM_IDENTITY_PLUGIN_ID.equals(ownerId)
+            ? Optional.of(ContractOwnerPersistence.INSTANCE)
+            : Optional.empty();
 
     @Test
     void phase1RuntimeHostBootstrapDiscoversAndStartsRequiredComposition() {
@@ -81,7 +90,8 @@ class RuntimeShellBootstrapContractTest {
         RuntimeShellBootstrap bootstrap = hostBootstrap(
             dispatcher,
             List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
-            List.of(PLATFORM_AUTH_FLOW_MODULE_ID, PLATFORM_ADMIN_MODULE_ID));
+            List.of(PLATFORM_AUTH_FLOW_MODULE_ID, PLATFORM_ADMIN_MODULE_ID),
+            OWNER_PERSISTENCE);
 
         RuntimeShellBootstrapHandle handle = bootstrap.start();
         List<PluginRuntimeState> states = bootstrap.pluginStates();
@@ -138,7 +148,8 @@ class RuntimeShellBootstrapContractTest {
             registryWithHostRequiredCapabilities(),
             List.of("missing-required-plugin"),
             new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30)),
-            null));
+            null,
+            OWNER_PERSISTENCE));
 
         assertThatThrownBy(bootstrap::start)
             .isInstanceOf(PluginRuntimeException.class)
@@ -172,18 +183,34 @@ class RuntimeShellBootstrapContractTest {
             });
     }
 
+    @Test
+    void identityRequiresItsOwnerPersistenceUnit() {
+        RuntimeShellBootstrap bootstrap = hostBootstrap(
+            new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30)),
+            List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
+            List.of(PLATFORM_AUTH_FLOW_MODULE_ID, PLATFORM_ADMIN_MODULE_ID),
+            OwnerPersistenceProvider.none());
+
+        assertThatThrownBy(bootstrap::start)
+            .hasMessageContaining(PersistenceCapability.class.getName());
+    }
+
     private static RuntimeShellBootstrap hostBootstrap(
             DefaultPluginEndpointDispatcher dispatcher,
             List<String> requiredPlugins,
-            List<String> requiredOperationalModules) {
+            List<String> requiredOperationalModules,
+            OwnerPersistenceProvider ownerPersistence) {
         DefaultCapabilityRegistry registry = registryWithHostRequiredCapabilities();
-        InternalContractBinder internalContracts =
-            new InternalContractBinder(registry, registry, RuntimeShellBootstrapContractTest.class.getClassLoader());
+        InternalContractBinder internalContracts = new InternalContractBinder(
+            registry,
+            registry,
+            RuntimeShellBootstrapContractTest.class.getClassLoader(),
+            ownerPersistence);
         HostRuntimeOperationalView runtimeView = new HostRuntimeOperationalView(requiredModules(
             requiredPlugins,
             requiredOperationalModules));
         return new RuntimeShellBootstrap(new HostBootstrapCoordinator(
-            runtimeManager(registry, requiredPlugins, dispatcher, internalContracts),
+            runtimeManager(registry, requiredPlugins, dispatcher, internalContracts, ownerPersistence),
             operationalManager(
                 registry,
                 new ServiceLoaderOperationalModuleDiscovery()::discover,
@@ -199,7 +226,8 @@ class RuntimeShellBootstrapContractTest {
             DefaultCapabilityRegistry registry,
             List<String> requiredPlugins,
             DefaultPluginEndpointDispatcher dispatcher,
-            InternalContractBinder internalContracts) {
+            InternalContractBinder internalContracts,
+            OwnerPersistenceProvider ownerPersistence) {
         return new PluginRuntimeManager(
             new ServiceLoaderPluginDiscovery()::discover,
             new ClasspathPluginRuntimeDescriptorResolver(),
@@ -208,7 +236,8 @@ class RuntimeShellBootstrapContractTest {
             dispatcher,
             ignored -> { },
             RuntimeShellBootstrapContractTest::internalContractProviders,
-            internalContracts);
+            internalContracts,
+            ownerPersistence);
     }
 
     private static OperationalModuleRuntimeManager operationalManager(
@@ -283,6 +312,33 @@ class RuntimeShellBootstrapContractTest {
                 throw new UnsupportedOperationException("Contract method is not invoked by Phase 1 bootstrap tests");
             });
         return contractType.cast(proxy);
+    }
+
+    /**
+     * Owner persistence for platform-identity; Phase 1 bootstrap never reaches its repositories.
+     */
+    private enum ContractOwnerPersistence implements PersistenceCapability, UnitOfWork {
+        INSTANCE;
+
+        @Override
+        public <R> R repository(Class<R> repositoryType) {
+            throw new UnsupportedOperationException("Repositories are not used by Phase 1 bootstrap tests");
+        }
+
+        @Override
+        public UnitOfWork unitOfWork() {
+            return this;
+        }
+
+        @Override
+        public <T> T required(Supplier<T> work) {
+            return work.get();
+        }
+
+        @Override
+        public <T> T readOnly(Supplier<T> work) {
+            return work.get();
+        }
     }
 
     private static final class ContractAuthCapability implements AuthCapability {

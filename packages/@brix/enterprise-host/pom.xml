@@ -175,6 +175,11 @@
             </dependency>
             <dependency>
                 <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-persistence-jpa</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
                 <artifactId>infra-adapter-minio</artifactId>
                 <version>${infra-adapters.version}</version>
             </dependency>

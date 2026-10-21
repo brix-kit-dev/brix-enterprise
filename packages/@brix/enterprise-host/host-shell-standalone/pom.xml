@@ -111,6 +111,11 @@
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-database</artifactId>
         </dependency>
+        <!-- Owner-scoped PersistenceCapability (root blueprint 3.1.0 §7) -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-persistence-jpa</artifactId>
+        </dependency>
         <!-- ✅ 红线 R1 修复：文件存储能力适配器（MinIO） -->
         <dependency>
             <groupId>io.brix</groupId>
