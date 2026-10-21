@@ -11,14 +11,14 @@
       "id": "runtime-shell-3.0.10",
       "domain": "runtime-shell",
       "kind": "ROOT",
-      "status": "ACTIVE",
+      "status": "SUPERSEDED",
       "path": "docs/v3.0.10-运行壳架构设计蓝图.md",
       "version": "3.0.10",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "non-conformant",
       "rebaseRequired": false,
-      "effective": true,
+      "effective": false,
       "inherits": null,
       "sha256": "ccd55421dc27f82c69e276fbc2009cf0b07777923b64b06725168d2b391e5e8d",
       "gitBlob": "24d88cdf5e7554cbb190f36038975e9f41b47f46",
@@ -119,11 +119,11 @@
       "id": "runtime-shell-3.0.11",
       "domain": "runtime-shell",
       "kind": "ROOT",
-      "status": "CANDIDATE",
+      "status": "ARCHIVED",
       "path": "docs/archived/v3.0.11-运行壳架构设计蓝图（Freeze Candidate）.md",
       "version": "3.0.11",
       "compatibilityEpoch": 1,
-      "architectureState": "freeze-candidate",
+      "architectureState": "historical",
       "implementationStatus": "non-conformant",
       "rebaseRequired": false,
       "effective": false,
@@ -145,11 +145,11 @@
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
-      "rebaseRequired": false,
+      "rebaseRequired": true,
       "effective": true,
       "inherits": {
-        "id": "runtime-shell-3.0.10",
-        "version": "3.0.10"
+        "id": "runtime-shell-3.1.0",
+        "version": "3.1.0"
       },
       "sha256": "1ba8246c70bb4417cc6b826ca76bcea369b7f6f11a868b65ba0a2599c4d900c2",
       "gitBlob": "6208231fbbee7abd927727083512d84b3cbfad5b",
@@ -187,11 +187,11 @@
       "compatibilityEpoch": 2,
       "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
-      "rebaseRequired": false,
+      "rebaseRequired": true,
       "effective": true,
       "inherits": {
-        "id": "runtime-shell-3.0.10",
-        "version": "3.0.10"
+        "id": "runtime-shell-3.1.0",
+        "version": "3.1.0"
       },
       "sha256": "22d677432aa456cee3de372389ecff306b8718127ad9c3f0a175c208a75baaf6",
       "gitBlob": "a88d703389c11dc146ec95d1756175eb336537e1",
@@ -229,11 +229,11 @@
       "compatibilityEpoch": 2,
       "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
-      "rebaseRequired": false,
+      "rebaseRequired": true,
       "effective": true,
       "inherits": {
-        "id": "runtime-shell-3.0.10",
-        "version": "3.0.10"
+        "id": "runtime-shell-3.1.0",
+        "version": "3.1.0"
       },
       "sha256": "70a68b4fde9825dc810df392dbca16aa87d019e99e3561ac12f3333214f84439",
       "gitBlob": "7021d98d7c28fb7560385facc48d83f1dd7f67bf",
@@ -260,6 +260,45 @@
         }
       ],
       "effectiveDate": "2026-07-27"
+    },
+    {
+      "id": "runtime-shell-3.1.0",
+      "domain": "runtime-shell",
+      "kind": "ROOT",
+      "status": "ACTIVE",
+      "path": "docs/v3.1.0-运行壳架构设计蓝图.md",
+      "version": "3.1.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "non-conformant",
+      "rebaseRequired": false,
+      "effective": true,
+      "inherits": null,
+      "sha256": "33016713f2c6dd5638d32fce4772725718fd73d23cdea715688d9b72b3412d33",
+      "gitBlob": "adf116f1c81a99049ff97ed351a656cd9010a4d0",
+      "gitCommit": "b98383bde6d31a57b4906a332142236f78157e18",
+      "decisionRef": "user-declaration:2026-10-21:runtime-shell-3.1.0",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-declaration:2026-10-21:committee:jsq",
+          "approvedAt": "2026-10-21T21:08:46+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-declaration:2026-10-21:security:jsq",
+          "approvedAt": "2026-10-21T21:08:46+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-declaration:2026-10-21:sre:jsq",
+          "approvedAt": "2026-10-21T21:08:46+09:00"
+        }
+      ],
+      "effectiveDate": "2026-10-21"
     }
   ]
 }

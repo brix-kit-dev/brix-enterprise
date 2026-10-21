@@ -1,6 +1,16 @@
 # Brix Platform 运行壳架构蓝图 — 变更日志
 
-> 与 [v3.0.10-运行壳架构设计蓝图.md](./v3.0.10-运行壳架构设计蓝图.md) 配套；蓝图正文不再内嵌历史版本日志。
+> 与 [v3.1.0-运行壳架构设计蓝图.md](./v3.1.0-运行壳架构设计蓝图.md)（当前 ACTIVE）配套；[v3.0.10-运行壳架构设计蓝图.md](./v3.0.10-运行壳架构设计蓝图.md) 已转为 SUPERSEDED。蓝图正文不再内嵌历史版本日志。
+
+---
+
+## v3.1.0（2026-10-21）— 持久化抽象与数据库可移植性
+
+- 来源：`docs/rfc/RFC-001-运行壳-持久化抽象与数据库可移植性（Draft）.md`。负责人裁决：Q1 插件持久化编程模型采用 JPA 映射 + Spring Data Repository 接口（仅 JPQL），经 `PersistenceCapability` 取得；Q2/Q4 人大金仓适配暂缓，只保留 DCP 扩展口；Q3 schema-per-Owner 与 Owner 最小权限身份为 SHOULD；Q5 版本号 3.1.0。
+- §7 重写：废止 `BRX-RS-DATA-007`（ID 保留）；新增 `BRX-RS-DATA-020`～`044`，覆盖持久化编程模型与禁用 API、Owner 持久化单元、Runtime 管理的入口级 Unit of Work、锁与异常转换、迁移变体与可移植 DDL 子集、ORM 自动建表禁令、数据库兼容档案（DCP）、数据库层所有权、租户隔离接口点、`DatabaseCapability` 弃用和 L2A 最小签名。
+- 红线：A-13 含义不变、证明方式改为禁用 API 扫描 + Repository 创建校验；A-8、A-15 补充证据；新增 A-27（DCP 一致性测试矩阵、禁止共享/正式环境 ORM 自动建表）。GOVERNANCE-021 增加 3 个持久化负例。
+- 修正 §0.6 关联专项表（改为 frontend 1.1、super-admin 3.0、multi-tenant 4.0）；§3.2、§4.7、§5.1、§12.2、§13、附录 A/B/C 同步更新；新增 GOVERNANCE-024 裁决记录。
+- 状态：Architecture Frozen，自 2026-10-21 生效。Architecture Committee、Security、SRE 三个批准角色均由 `jsq` 明确批准；冻结正文 commit 为 `b98383bde6d31a57b4906a332142236f78157e18`，raw bytes SHA-256 为 `33016713f2c6dd5638d32fce4772725718fd73d23cdea715688d9b72b3412d33`。v3.0.10 转为 SUPERSEDED；runtime-shell 3.0.11 候选转为 ARCHIVED；frontend 1.1、super-admin 3.0、multi-tenant 4.0 改为继承 v3.1.0 并标记 `rebaseRequired=true`。`compatibilityEpoch` 保持 1。
 
 ---
 
