@@ -5,7 +5,8 @@
  */
 package io.brix.enterprise.app.identity.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.runtime.sdk.capability.ConfigStoreCapability;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -102,7 +103,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
 
     public LoginRateLimitFilter(ConfigStoreCapability configStore) {
         this.configStore = configStore;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = JsonMapper.builder().configureForJackson2().build();
     }
 
     @Override

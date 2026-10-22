@@ -6,9 +6,10 @@
  */
 package io.brix.enterprise.app.products.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.brix.enterprise.app.products.dto.ProductDTO;
 import io.brix.enterprise.app.products.entity.Product;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ import java.util.List;
 @Slf4j
 public final class ProductMapper {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().configureForJackson2().build();
 
     private ProductMapper() { }
 
@@ -70,7 +71,7 @@ public final class ProductMapper {
         }
         try {
             return OBJECT_MAPPER.readValue(json, new TypeReference<List<String>>() {});
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("Failed to parse JSON list: {}", e.getMessage());
             return Collections.emptyList();
         }
@@ -83,7 +84,7 @@ public final class ProductMapper {
         }
         try {
             return OBJECT_MAPPER.writeValueAsString(list);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("Failed to serialize JSON list: {}", e.getMessage());
             return null;
         }

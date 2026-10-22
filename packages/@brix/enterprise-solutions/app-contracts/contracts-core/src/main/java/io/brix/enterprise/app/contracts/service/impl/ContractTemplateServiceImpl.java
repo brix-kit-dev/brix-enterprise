@@ -13,7 +13,7 @@
  */
 package io.brix.enterprise.app.contracts.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.brix.enterprise.app.contracts.dto.ContractTemplateDTO;
 import io.brix.enterprise.app.contracts.dto.TemplateVariableDTO;
 import io.brix.enterprise.app.contracts.dto.TemplateVersionDTO;

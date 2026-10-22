@@ -92,31 +92,25 @@
         <runtime-sdk.version>3.2.0</runtime-sdk.version>
         
         <!-- Spring Boot 版本 -->
-        <spring-boot.version>3.2.2</spring-boot.version>
+        <spring-boot.version>4.1.1</spring-boot.version>
 
-        <!-- Flyway 版本（与 platform-commons 对齐，覆盖 Spring Boot BOM 的 9.x） -->
-        <flyway.version>11.8.0</flyway.version>
         
-        <!-- 持久层依赖 -->
-        <jakarta-persistence.version>3.1.0</jakarta-persistence.version>
-        <hibernate.version>6.4.1.Final</hibernate.version>
         
         <!-- 工具类 -->
-        <lombok.version>1.18.30</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <jackson.version>2.16.1</jackson.version>
+        <lombok.version>1.18.46</lombok.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
         
         <!-- 测试框架 -->
-        <junit.version>5.10.1</junit.version>
-        <mockito.version>5.8.0</mockito.version>
-        <assertj.version>3.24.2</assertj.version>
-        <archunit.version>1.2.1</archunit.version>
+        <junit.version>6.0.3</junit.version>
+        <mockito.version>5.23.0</mockito.version>
+        <assertj.version>3.27.7</assertj.version>
+        <archunit.version>1.5.1</archunit.version>
         
         <!-- 架构守护 -->
         <architecture-guard.version>3.2.0</architecture-guard.version>
         
         <!-- OpenAPI 文档（Phase 5: OpenAPI 驱动的前后端契约自动化） -->
-        <swagger-annotations.version>2.2.28</swagger-annotations.version>
+        <swagger-annotations.version>2.2.55</swagger-annotations.version>
         <springdoc-openapi-maven-plugin.version>1.4</springdoc-openapi-maven-plugin.version>
 
         <!-- Pact 契约测试（Phase 5.3: Consumer-Driven Contract Testing） -->
@@ -124,7 +118,7 @@
         
         <!-- Maven 插件 -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     </properties>
 
     <!-- ==================== 依赖管理 ==================== -->
@@ -142,12 +136,6 @@
             </dependency>
             <!-- runtime-sdk 已废弃，合并到 runtime-sdk-api -->
 
-            <!-- Flyway PostgreSQL（Flyway 10+ 必需的独立模块） -->
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-database-postgresql</artifactId>
-                <version>${flyway.version}</version>
-            </dependency>
 
             <!-- ========== 业务模块 API（跨模块事件契约）========== -->
             <dependency>
@@ -184,12 +172,7 @@
             <!-- [红线 R2 修复] 已移除 io.brix.platform:platform-auth 依赖。
                  安全能力通过 runtime-sdk-api 中的 AuthCapability 契约获取。-->
 
-            <!-- ========== 持久层（JPA 允许保留）========== -->
-            <dependency>
-                <groupId>jakarta.persistence</groupId>
-                <artifactId>jakarta.persistence-api</artifactId>
-                <version>${jakarta-persistence.version}</version>
-            </dependency>
+            <!-- ========== 持久层（JPA 允许保留；Jakarta Persistence 版本由 Spring Boot BOM 管理）========== -->
 
             <!-- ========== 工具类 ========== -->
             <dependency>
@@ -248,7 +231,7 @@
             <!-- ========== 架构测试（ArchUnit）========== -->
             <dependency>
                 <groupId>com.tngtech.archunit</groupId>
-                <artifactId>archunit-junit5</artifactId>
+                <artifactId>archunit-junit6</artifactId>
                 <version>${archunit.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -301,7 +284,7 @@
         <!-- 架构约束测试 -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
-            <artifactId>archunit-junit5</artifactId>
+            <artifactId>archunit-junit6</artifactId>
             <scope>test</scope>
         </dependency>
 

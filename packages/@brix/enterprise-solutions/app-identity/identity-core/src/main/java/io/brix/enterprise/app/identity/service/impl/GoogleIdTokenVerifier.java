@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import io.brix.enterprise.app.identity.dto.GoogleUserInfo;
 import io.brix.enterprise.app.identity.exception.JwksRetrievalException;
 import io.brix.enterprise.app.identity.exception.OAuth2AuthenticationException;
@@ -129,13 +129,13 @@ public class GoogleIdTokenVerifier {
             String headerJson = decodeBase64Url(parts[0]);
             JsonNode header = objectMapper.readTree(headerJson);
 
-            String alg = header.path("alg").asText();
+            String alg = header.path("alg").asString();
             if (!"RS256".equals(alg)) {
                 throw OAuth2AuthenticationException.invalidIdToken(
                         "Unsupported algorithm: " + alg + ". Expected RS256.");
             }
 
-            String kid = header.path("kid").asText();
+            String kid = header.path("kid").asString();
             if (kid.isEmpty()) {
                 throw OAuth2AuthenticationException.invalidIdToken("Missing kid in header");
             }
@@ -280,14 +280,14 @@ public class GoogleIdTokenVerifier {
 
             ConcurrentHashMap<String, PublicKey> newCache = new ConcurrentHashMap<>();
             for (JsonNode keyNode : keys) {
-                String kid = keyNode.path("kid").asText();
-                String kty = keyNode.path("kty").asText();
-                String alg = keyNode.path("alg").asText();
+                String kid = keyNode.path("kid").asString();
+                String kty = keyNode.path("kty").asString();
+                String alg = keyNode.path("alg").asString();
 
                 if ("RSA".equals(kty) && "RS256".equals(alg)) {
                     PublicKey publicKey = buildRsaPublicKey(
-                            keyNode.path("n").asText(),
-                            keyNode.path("e").asText()
+                            keyNode.path("n").asString(),
+                            keyNode.path("e").asString()
                     );
                     newCache.put(kid, publicKey);
                 }

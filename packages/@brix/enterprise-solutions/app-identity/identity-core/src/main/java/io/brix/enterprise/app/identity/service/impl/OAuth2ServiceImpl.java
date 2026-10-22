@@ -5,7 +5,7 @@
  */
 package io.brix.enterprise.app.identity.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.brix.enterprise.app.identity.dto.GoogleUserInfo;
 import io.brix.enterprise.app.identity.dto.OAuth2AuthResult;
 import io.brix.enterprise.app.identity.entity.SocialConnection;

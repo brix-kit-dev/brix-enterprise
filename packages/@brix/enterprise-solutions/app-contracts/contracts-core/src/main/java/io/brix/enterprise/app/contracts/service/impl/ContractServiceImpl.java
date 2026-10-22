@@ -13,8 +13,8 @@
  */
 package io.brix.enterprise.app.contracts.service.impl;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import io.brix.enterprise.app.contracts.dto.*;
 import io.brix.enterprise.app.contracts.dto.request.ContractQueryRequest;
 import io.brix.enterprise.app.contracts.dto.request.CreateContractRequest;

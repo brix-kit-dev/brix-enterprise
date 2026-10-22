@@ -5,8 +5,9 @@
  */
 package io.brix.enterprise.app.identity.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.brix.enterprise.app.identity.entity.User;
 import io.brix.enterprise.app.identity.exception.JwtSigningException;
 import io.brix.enterprise.app.identity.repository.RbacRepository;
@@ -170,7 +171,7 @@ public class JwtTokenService {
      * by the ObjectMapper, eliminating injection vectors through crafted usernames,
      * emails, or other user-controlled fields.</p>
      */
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().configureForJackson2().build();
 
     // ==================== Configuration Fields (loaded from ConfigStoreCapability at runtime) ====================
 
@@ -317,7 +318,7 @@ public class JwtTokenService {
         String payloadJson;
         try {
             payloadJson = objectMapper.writeValueAsString(claims);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new JwtSigningException(
                     "Failed to serialize JWT claims to JSON",
                     JwtSigningException.FailureType.SIGNING, e);
@@ -500,7 +501,7 @@ public class JwtTokenService {
         String payloadJson;
         try {
             payloadJson = objectMapper.writeValueAsString(claims);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new JwtSigningException(
                     "Failed to serialize JWT claims to JSON",
                     JwtSigningException.FailureType.SIGNING, e);

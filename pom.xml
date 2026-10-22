@@ -92,15 +92,14 @@ License: Proprietary
         <brix.core.version>3.2.0</brix.core.version>
         
         <!-- Dependency Versions -->
-        <spring-boot.version>3.2.2</spring-boot.version>
-        <slf4j.version>2.0.9</slf4j.version>
-        <jackson.version>2.16.1</jackson.version>
-        <junit.version>5.10.1</junit.version>
-        <mockito.version>5.8.0</mockito.version>
+        <spring-boot.version>4.1.1</spring-boot.version>
+        <slf4j.version>2.0.18</slf4j.version>
+        <junit.version>6.0.3</junit.version>
+        <mockito.version>5.23.0</mockito.version>
         
         <!-- Plugin Versions -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
         <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
     </properties>

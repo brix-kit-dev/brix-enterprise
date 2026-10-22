@@ -52,6 +52,8 @@ management:
 springdoc:
   api-docs:
     path: /api-docs
+    # springdoc 3 defaults to OpenAPI 3.1; keep the OpenAPI 3.0 document
+    version: openapi_3_0
   swagger-ui:
     path: /swagger-ui.html
     enabled: true

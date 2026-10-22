@@ -21,6 +21,12 @@ spring:
 server:
   port: 8082
 
+# springdoc 3 defaults to OpenAPI 3.1; keep publishing the OpenAPI 3.0 document
+# that /v3/api-docs served before the Spring Boot 4 upgrade.
+springdoc:
+  api-docs:
+    version: openapi_3_0
+
 ---
 # ============================================================
 # embedded profile - 轻量级嵌入模式

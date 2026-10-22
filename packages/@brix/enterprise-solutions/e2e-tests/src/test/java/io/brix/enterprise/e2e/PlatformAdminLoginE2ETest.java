@@ -12,9 +12,9 @@
  *   4. No token          → GET /api/admin/tenants → 401
  *
  * Design notes:
- *   - @MockBean JwtValidator  : prevents classpath key loading; controls
+ *   - @MockitoBean JwtValidator  : prevents classpath key loading; controls
  *     which AuthenticatedUser is placed in the security context per token.
- *   - @MockBean AuthFlowCapability : controls the Runtime Entry response without
+ *   - @MockitoBean AuthFlowCapability : controls the Runtime Entry response without
  *     requiring a seeded superadmin in the H2 test database.
  *   - The rest of the stack (SecurityContextFilter, PermissionAspect,
  *     AuthorizationExceptionAdvice, and a protected probe controller) runs
@@ -26,7 +26,7 @@
  */
 package io.brix.enterprise.e2e;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.brix.platform.admin.handler.PlatformLoginHandler;
 import io.brix.platform.auth.PlatformPermissions;
 import io.brix.platform.auth.annotation.RequirePermission;
@@ -52,14 +52,9 @@ import io.runtime.sdk.capability.AuthFlowCapability.LoginResult;
 import io.runtime.sdk.capability.AuthFlowCapability.LoginStatus;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
@@ -90,7 +85,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * and the platform admin API enforces correct HTTP status codes (200/401/403)
  * based on the caller's identity.</p>
  *
- * <h3>Why @MockBean for JwtValidator?</h3>
+ * <h3>Why @MockitoBean for JwtValidator?</h3>
  * <p>The production JwtValidator loads an RSA public key from
  * {@code classpath:keys/public.pem}. No real key file is shipped in the
  * E2E test resources. Replacing the bean with a Mockito mock avoids
@@ -101,17 +96,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Brix Platform Team
  * @version 3.2.0-SNAPSHOT
  */
+// Spring Boot 4 ships Boot's Spring Security and OAuth2 auto-configuration in separate
+// modules (spring-boot-security, spring-boot-security-oauth2-*) that this module does not
+// depend on, so the exclusions this test needed on Spring Boot 3 have nothing left to
+// exclude: TestSecurityConfiguration remains the only security setup.
 @WebMvcTest(
     controllers = {
         RuntimeShellEndpointController.class,
         PlatformAdminLoginE2ETest.ProtectedAdminTenantProbeController.class
-    },
-    excludeAutoConfiguration = {
-        SecurityAutoConfiguration.class,
-        SecurityFilterAutoConfiguration.class,
-        UserDetailsServiceAutoConfiguration.class,
-        OAuth2ClientAutoConfiguration.class,
-        OAuth2ResourceServerAutoConfiguration.class
     })
 @AutoConfigureMockMvc(addFilters = true)
 @Import({
@@ -158,17 +150,17 @@ class PlatformAdminLoginE2ETest {
      *   <li>Return a controlled {@link AuthenticatedUser} for known test tokens.</li>
      * </ul>
      */
-    @MockBean
+    @MockitoBean
     private JwtValidator jwtValidator;
 
     /**
      * Replaces {@code AuthFlowCapabilityImpl} to return a controlled
      * {@link LoginResult} without a live database with a seeded super-admin.
      */
-    @MockBean
+    @MockitoBean
     private AuthFlowCapability authFlowCapability;
 
-    @MockBean
+    @MockitoBean
     private AuditService auditService;
 
     // ============================================================================

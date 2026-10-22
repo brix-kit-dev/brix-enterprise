@@ -22,7 +22,7 @@
  */
 package io.brix.enterprise.app.storage.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.brix.enterprise.app.storage.entity.FileMetadata;
 import io.brix.enterprise.app.storage.enums.BusinessType;
 import io.brix.enterprise.app.storage.repository.FileMetadataRepository;
@@ -43,7 +43,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -199,7 +199,7 @@ class StorageE2ETest {
 
             // Store file ID for subsequent tests
             String responseBody = result.getResponse().getContentAsString();
-            uploadedFileId = objectMapper.readTree(responseBody).get("fileId").asText();
+            uploadedFileId = objectMapper.readTree(responseBody).get("fileId").asString();
             assertThat(uploadedFileId).isNotEmpty();
         }
 

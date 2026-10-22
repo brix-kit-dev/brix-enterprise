@@ -46,7 +46,7 @@
         <!-- Spring Web (REST endpoints) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <!-- Bean Validation (request validation) -->

@@ -9,7 +9,9 @@ import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
 
 import io.brix.enterprise.app.tenant.exception.TenantAlreadyExistsException;
 import io.brix.enterprise.app.tenant.exception.TenantRecordNotFoundException;
@@ -58,7 +60,7 @@ public final class TenantPlugin implements BrixPlugin {
     private volatile boolean started;
     private volatile boolean notificationAvailable;
     private TenantManagementService tenantManagementService;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = JsonMapper.builder().configureForJackson2().build();
 
     /**
      * Injects plugin-owned services after ServiceLoader discovery.
@@ -174,7 +176,8 @@ public final class TenantPlugin implements BrixPlugin {
                 return request;
             }
             return objectMapper.convertValue(body, CreateTenantRequest.class);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | JacksonException e) {
+            // Jackson 3 reports conversion failures as (unchecked) JacksonException
             throw new EndpointHandlingException(400, ERROR_REQUEST_INVALID, "Tenant create request body is invalid");
         }
     }
