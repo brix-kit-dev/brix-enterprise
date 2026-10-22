@@ -1,5 +1,45 @@
 # Specialized Architecture Changelog
 
+## 2026-10-22
+
+### Identity Auth 1.0 Architecture Frozen
+
+- New specialized domain `identity-auth`; no supersession target. Decision background: RFC-002.
+- Becomes the single specialized SSoT for how platform administrators, tenant staff and end users authenticate: three client classes, hosted login with identifier-first flow, credentials (password, passkey, TOTP, recovery codes, SMS/email codes, third-party login layer with Google first), assurance levels `brix:aal1` / `brix:aal2` / `brix:aal2-phr`, trusted devices, layered sessions, onboarding, recovery, abuse controls and authentication audit; red lines IA-1 to IA-7.
+- All tenant staff must use two factors; platform administrators must use phishing-resistant authenticators on every authentication.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-22:identity-auth-1.0-freeze`.
+- Locked at commit `289fe504f511bca2cb3d92038b1eff77c3dd4d1e`, SHA-256 `0908c3731126891b9ede15a58f50e1fbf56de4e0fec61971256561b2384a866a`, Git blob `d1e6eb33c4398593c2485731eb81b160be47b25a`, effective 2026-10-22.
+- Registered as the unique ACTIVE identity-auth blueprint; `requiredActiveDomains` now includes `identity-auth`.
+
+### Super Admin 4.0 Architecture Frozen
+
+- Supersession target: `super-admin-3.0`.
+- Compatibility epoch changes from `2` to `3`: platform login moves to the identity protocol surface as the `platform-console` client; the `/api/platform/auth/login`, `/login/totp`, `/setup/*` and `/api/platform/admins/me/change-password` Runtime Entries are removed.
+- Platform authentication requires `brix:aal2-phr` (passkey or hardware security key); TOTP is recovery only; setup registers a passkey and recovery codes; Platform Token claims use `acr`/`amr`/`auth_time`/`sid`; adds `BRX-SA-AUTH-007` step-up, `BRX-SA-SEC-013`, `BRX-SA-SEC-014` and red line SA-13.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-22:super-admin-4.0-freeze`.
+- Locked at commit `289fe504f511bca2cb3d92038b1eff77c3dd4d1e`, SHA-256 `7e38ea714f414b71f8b2ebf792322e4f1215a62cb80b70bad43bd3f816f74777`, Git blob `6ed11b6e1002a1975a5bf80077537e2428920a2c`, effective 2026-10-22.
+- Registered as the unique ACTIVE super-admin blueprint; super-admin 3.0 is SUPERSEDED and remains byte-for-byte unchanged.
+
+### Multi Tenant 5.0 Architecture Frozen
+
+- Supersession target: `multi-tenant-4.0`.
+- Compatibility epoch changes from `2` to `3`: tenant staff and end users log in through the `tenant-console` and brand-app clients of the identity protocol surface; `/api/auth/login/actor` and `/api/auth/login/subject` are no longer public APIs.
+- Login-time discovery, one-time selection tickets and stable `contextId` semantics are preserved and executed inside the authentication service; context switching and refresh go through the BFF; adds §9.7 staff MFA policy (`BRX-TENANT-AUTH-001`, `BRX-TENANT-AUTH-002`) and implementation item I10.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-22:multi-tenant-5.0-freeze`.
+- Locked at commit `289fe504f511bca2cb3d92038b1eff77c3dd4d1e`, SHA-256 `90a5cf442221cd5bca4bd92d26342c1df9fa0900b028e68997bd55de247b8d4f`, Git blob `a003f3736afbf40f98bca96ebcc2b8a4d89ba004`, effective 2026-10-22.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 4.0 is SUPERSEDED and remains byte-for-byte unchanged.
+
+### Frontend 1.2 Architecture Frozen
+
+- Supersession target: `frontend-1.1`.
+- Compatibility epoch remains `1`.
+- Adds §2.3a: session state only from the BFF, no Access/Refresh Token in the browser, unified step-up and session-expiry redirects, hosted login pages with strict CSP and no third-party scripts, no credential pages in consoles (`BRX-FE-AUTH-002` to `005`); adds red line FE-13; completes the confirmation review for runtime-shell 3.1.0.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-22:frontend-1.2-freeze`.
+- Locked at commit `289fe504f511bca2cb3d92038b1eff77c3dd4d1e`, SHA-256 `bff96b4ba558320fd23e5d6b1aed74618a81c534493e8da559043f070916ec91`, Git blob `001843ca587b5b209811f8d54261946cae91903f`, effective 2026-10-22.
+- Registered as the unique ACTIVE frontend blueprint; frontend 1.1 is SUPERSEDED and remains byte-for-byte unchanged.
+
 ## 2026-07-27
 
 ### Frontend 1.1 Architecture Frozen

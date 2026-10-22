@@ -1,6 +1,15 @@
 # Brix Platform 运行壳架构蓝图 — 变更日志
 
-> 与 [v3.1.0-运行壳架构设计蓝图.md](./v3.1.0-运行壳架构设计蓝图.md)（当前 ACTIVE）配套；[v3.0.10-运行壳架构设计蓝图.md](./v3.0.10-运行壳架构设计蓝图.md) 已转为 SUPERSEDED。蓝图正文不再内嵌历史版本日志。
+> 与 [v3.2.0-运行壳架构设计蓝图.md](./v3.2.0-运行壳架构设计蓝图.md)（当前 ACTIVE）配套；[v3.1.0](./v3.1.0-运行壳架构设计蓝图.md) 与 [v3.0.10](./v3.0.10-运行壳架构设计蓝图.md) 已转为 SUPERSEDED。蓝图正文不再内嵌历史版本日志。
+
+---
+
+## v3.2.0（2026-10-22）— 统一身份认证与登录架构
+
+- 来源：`docs/rfc/RFC-002-身份认证-统一登录架构与认证专项（Draft）.md`。负责人裁决：Q1 托管登录 + 授权码 + PKCE + BFF；Q5 全体租户员工强制双因素；Q7 首批第三方登录只接 Google，并实现第三方登录通用层；其余问题（Q2 内嵌 Spring Authorization Server 作为 L2C Adapter、Q3 新增 identity-auth 专项、Q4 超管只用防钓鱼认证器、Q6 会话默认值、Q8 保留前缀、Q9 托管登录页为独立前端模块、Q10 Spring Boot 4.1、Q11 版本号、Q12 第三方登录归 Open Core）按 RFC 建议采纳。
+- §10.1 新增 `BRX-RS-SECURITY-011`～`015`：身份协议面（`MANIFEST-021` 的唯一例外，保留前缀 `/oauth2/**`、`/.well-known/**`、`/auth/**`、`/bff/**`）、Web 客户端 BFF、特权访问防钓鱼、失败防护（不得跨入口全局锁定）、敏感操作再验证。
+- §9.4 新增 `BRX-RS-UI-018`（凭证只在托管登录页输入）；§2 新增 6 个术语；§11.2 新增 S-19、S-20（S-12～S-18 曾在已归档 super-admin v2.0 中使用，不予分配）；§13 新增 3 条否决方案；§0.6、§12.2、附录 A/B/C 同步；新增 `BRX-RS-GOVERNANCE-025` 裁决记录。
+- 状态：Architecture Frozen，自 2026-10-22 生效。Architecture Committee、Security、SRE 三个批准角色均由 `jsq` 明确批准；冻结正文 commit 为 `289fe504f511bca2cb3d92038b1eff77c3dd4d1e`，raw bytes SHA-256 为 `38c2db6645cec798c33b2c0371fa92f098ea89e764cad16caabc757258278139`。v3.1.0 转为 SUPERSEDED；identity-auth 1.0、frontend 1.2、super-admin 4.0、multi-tenant 5.0 同批生效并继承 v3.2.0，其中 super-admin 4.0 与 multi-tenant 5.0 因 §7 复核未完成保持 `rebaseRequired=true`；`requiredActiveDomains` 增加 `identity-auth`。`compatibilityEpoch` 保持 1。
 
 ---
 

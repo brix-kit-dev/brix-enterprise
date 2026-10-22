@@ -4,7 +4,8 @@
     "runtime-shell",
     "frontend",
     "super-admin",
-    "multi-tenant"
+    "multi-tenant",
+    "identity-auth"
   ],
   "blueprints": [
     {
@@ -139,14 +140,14 @@
       "id": "frontend-1.1",
       "domain": "frontend",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
+      "status": "SUPERSEDED",
       "path": "docs/v1.1-前端架构-设计蓝图（冻结）.md",
       "version": "1.1",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
       "rebaseRequired": true,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.1.0",
         "version": "3.1.0"
@@ -181,14 +182,14 @@
       "id": "super-admin-3.0",
       "domain": "super-admin",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
+      "status": "SUPERSEDED",
       "path": "docs/v3.0-平台超管功能最小实现-设计蓝图（冻结）.md",
       "version": "3.0",
       "compatibilityEpoch": 2,
       "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
       "rebaseRequired": true,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.1.0",
         "version": "3.1.0"
@@ -223,14 +224,14 @@
       "id": "multi-tenant-4.0",
       "domain": "multi-tenant",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
+      "status": "SUPERSEDED",
       "path": "docs/v4.0-多租户功能最小实现-设计蓝图（冻结）.md",
       "version": "4.0",
       "compatibilityEpoch": 2,
       "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": true,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.1.0",
         "version": "3.1.0"
@@ -265,14 +266,14 @@
       "id": "runtime-shell-3.1.0",
       "domain": "runtime-shell",
       "kind": "ROOT",
-      "status": "ACTIVE",
+      "status": "SUPERSEDED",
       "path": "docs/v3.1.0-运行壳架构设计蓝图.md",
       "version": "3.1.0",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "non-conformant",
       "rebaseRequired": false,
-      "effective": true,
+      "effective": false,
       "inherits": null,
       "sha256": "33016713f2c6dd5638d32fce4772725718fd73d23cdea715688d9b72b3412d33",
       "gitBlob": "adf116f1c81a99049ff97ed351a656cd9010a4d0",
@@ -299,6 +300,213 @@
         }
       ],
       "effectiveDate": "2026-10-21"
+    },
+    {
+      "id": "identity-auth-1.0",
+      "domain": "identity-auth",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v1.0-身份认证功能最小实现-设计蓝图.md",
+      "version": "1.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "pending",
+      "rebaseRequired": false,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.2.0",
+        "version": "3.2.0"
+      },
+      "sha256": "0908c3731126891b9ede15a58f50e1fbf56de4e0fec61971256561b2384a866a",
+      "gitBlob": "d1e6eb33c4398593c2485731eb81b160be47b25a",
+      "gitCommit": "289fe504f511bca2cb3d92038b1eff77c3dd4d1e",
+      "decisionRef": "user-authorization:2026-10-22:identity-auth-1.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:identity-auth-1.0:architecture-committee",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:identity-auth-1.0:security",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:identity-auth-1.0:sre",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        }
+      ],
+      "effectiveDate": "2026-10-22"
+    },
+    {
+      "id": "frontend-1.2",
+      "domain": "frontend",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v1.2-前端架构-设计蓝图.md",
+      "version": "1.2",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": false,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.2.0",
+        "version": "3.2.0"
+      },
+      "sha256": "bff96b4ba558320fd23e5d6b1aed74618a81c534493e8da559043f070916ec91",
+      "gitBlob": "001843ca587b5b209811f8d54261946cae91903f",
+      "gitCommit": "289fe504f511bca2cb3d92038b1eff77c3dd4d1e",
+      "decisionRef": "user-authorization:2026-10-22:frontend-1.2-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:frontend-1.2:architecture-committee",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:frontend-1.2:security",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:frontend-1.2:sre",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        }
+      ],
+      "effectiveDate": "2026-10-22"
+    },
+    {
+      "id": "super-admin-4.0",
+      "domain": "super-admin",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v4.0-平台超管功能最小实现-设计蓝图.md",
+      "version": "4.0",
+      "compatibilityEpoch": 3,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": true,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.2.0",
+        "version": "3.2.0"
+      },
+      "sha256": "7e38ea714f414b71f8b2ebf792322e4f1215a62cb80b70bad43bd3f816f74777",
+      "gitBlob": "6ed11b6e1002a1975a5bf80077537e2428920a2c",
+      "gitCommit": "289fe504f511bca2cb3d92038b1eff77c3dd4d1e",
+      "decisionRef": "user-authorization:2026-10-22:super-admin-4.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:super-admin-4.0:architecture-committee",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:super-admin-4.0:security",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:super-admin-4.0:sre",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        }
+      ],
+      "effectiveDate": "2026-10-22"
+    },
+    {
+      "id": "multi-tenant-5.0",
+      "domain": "multi-tenant",
+      "kind": "SPECIALIZED",
+      "status": "ACTIVE",
+      "path": "docs/v5.0-多租户功能最小实现-设计蓝图.md",
+      "version": "5.0",
+      "compatibilityEpoch": 3,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "pending",
+      "rebaseRequired": true,
+      "effective": true,
+      "inherits": {
+        "id": "runtime-shell-3.2.0",
+        "version": "3.2.0"
+      },
+      "sha256": "90a5cf442221cd5bca4bd92d26342c1df9fa0900b028e68997bd55de247b8d4f",
+      "gitBlob": "a003f3736afbf40f98bca96ebcc2b8a4d89ba004",
+      "gitCommit": "289fe504f511bca2cb3d92038b1eff77c3dd4d1e",
+      "decisionRef": "user-authorization:2026-10-22:multi-tenant-5.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:multi-tenant-5.0:architecture-committee",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:multi-tenant-5.0:security",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:multi-tenant-5.0:sre",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        }
+      ],
+      "effectiveDate": "2026-10-22"
+    },
+    {
+      "id": "runtime-shell-3.2.0",
+      "domain": "runtime-shell",
+      "kind": "ROOT",
+      "status": "ACTIVE",
+      "path": "docs/v3.2.0-运行壳架构设计蓝图.md",
+      "version": "3.2.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "architecture-frozen",
+      "implementationStatus": "non-conformant",
+      "rebaseRequired": false,
+      "effective": true,
+      "inherits": null,
+      "sha256": "38c2db6645cec798c33b2c0371fa92f098ea89e764cad16caabc757258278139",
+      "gitBlob": "330dc066034816e38dc3343c0316c119d3c26f39",
+      "gitCommit": "289fe504f511bca2cb3d92038b1eff77c3dd4d1e",
+      "decisionRef": "user-authorization:2026-10-22:runtime-shell-3.2.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:runtime-shell-3.2.0:architecture-committee",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:runtime-shell-3.2.0:security",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-10-22:runtime-shell-3.2.0:sre",
+          "approvedAt": "2026-10-22T13:08:12+09:00"
+        }
+      ],
+      "effectiveDate": "2026-10-22"
     }
   ]
 }
