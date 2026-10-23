@@ -1,5 +1,19 @@
 # Specialized Architecture Changelog
 
+## 2026-10-23
+
+### Multi Tenant 5.1 Architecture Frozen
+
+- Supersession target: `multi-tenant-5.0`.
+- Compatibility epoch remains `3`: adds tenant authorization without changing member, principal, token structure, DDL or isolation semantics.
+- Adds §9.8 tenant minimal RBAC (`BRX-TENANT-AUTHZ-001` to `012`): permission codes only from plugin manifests; built-in Actor (OWNER, ADMIN, MEMBER) and Subject (CUSTOMER, GUEST) roles; default grants declared next to each permission; an immutable grant table built at H3/B2; request-time expansion of `mtype`/`ptype` with no trusted permission list in tokens; `TENANT`/`SELF` data scopes delivered to handlers in the access decision (`BRX-TENANT-CONTRACT-007`); Subject roles limited to `SELF`; tenant endpoints accept either actor or subject tokens (`tenant-actor` / `tenant-subject`); tenant console permission catalog for `platform-tenant`.
+- Adds red lines T-29 and T-30; T-11 and T-22 keep their meaning and gain startup gates; adds implementation item I11.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Decision background: RFC-003, ruled under `user-authorization:2026-10-23:rfc-003-ruling`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-23:multi-tenant-5.1-freeze`.
+- Locked at commit `3d726a0eeb7ac1bee8bcfa98680f3ff0356ad8ce`, SHA-256 `5bd94f07d37f5e51c1fec03daf1e08ceecca818edad9cdb8cee0c6c1f5bd8179`, Git blob `1c6f40dd722b6858298b0206348795e8fdf8fa2c`, effective 2026-10-23.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 5.0 is SUPERSEDED and remains byte-for-byte unchanged.
+
 ## 2026-10-22
 
 ### Identity Auth 1.0 Architecture Frozen

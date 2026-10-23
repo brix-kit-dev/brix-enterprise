@@ -28,7 +28,7 @@ Do not rely on chat history, summaries, cached context, or internal memory as ar
 
 - Frontend shells, web/mobile UI, BrixUI, routing, and design tokens require the active `frontend` blueprint.
 - Platform administrator identity, bootstrap, login, permissions, or `/api/platform/**` work requires the active `super-admin` blueprint.
-- Tenant identity, isolation, tenant data, context selection, tenant token, or `app-tenant` work requires the active `multi-tenant` blueprint.
+- Tenant identity, isolation, tenant data, context selection, tenant token, tenant authorization (roles, permissions, grants, data scopes), or `app-tenant` work requires the active `multi-tenant` blueprint.
 - Authentication, login, credentials, MFA, sessions, hosted login pages, BFF, or identity-provider work requires the active `identity-auth` blueprint; platform administrator or tenant login work also reads `super-admin` or `multi-tenant`.
 - Cross-domain work must read every affected active specialized blueprint and apply the strictest compatible rule.
 
