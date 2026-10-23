@@ -36,14 +36,14 @@ endpoints:
       handlerId: app-booking.template.status.v1
       authentication:
         mode: required
-        policyRef: authenticated-user
+        policyRef: tenant-actor
       authorization:
         permissions:
           - app-booking:template:read
         decision: all
         resourcePolicyRef: app-booking-template-read
       tenantContext:
-        mode: optional
+        mode: required
         source: runtime
       timeout:
         policyRef: endpoint-default
@@ -60,14 +60,14 @@ endpoints:
       handlerId: app-booking.template.features.v1
       authentication:
         mode: required
-        policyRef: authenticated-user
+        policyRef: tenant-actor
       authorization:
         permissions:
           - app-booking:template:read
         decision: all
         resourcePolicyRef: app-booking-template-read
       tenantContext:
-        mode: optional
+        mode: required
         source: runtime
       timeout:
         policyRef: endpoint-default
@@ -94,6 +94,10 @@ permissions:
   - id: app-booking:template:read
     name: Read booking template status
     description: Allows reading commercial booking template assembly status.
+    grants:
+      - {role: OWNER, scope: TENANT}
+      - {role: ADMIN, scope: TENANT}
+      - {role: MEMBER, scope: TENANT}
 config: []
 ui:
   web:

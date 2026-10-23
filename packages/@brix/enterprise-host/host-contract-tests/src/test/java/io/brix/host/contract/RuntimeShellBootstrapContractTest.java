@@ -23,7 +23,9 @@ import java.lang.reflect.Proxy;
 import java.security.Principal;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -39,6 +41,7 @@ import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrap;
 import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrapHandle;
 import io.runtime.orchestrator.capability.DefaultCapabilityRegistry;
 import io.runtime.orchestrator.endpoint.DefaultPluginEndpointDispatcher;
+import io.runtime.orchestrator.endpoint.EndpointAccessDeniedException;
 import io.runtime.orchestrator.internalcontract.InternalContractBinder;
 import io.runtime.orchestrator.internalcontract.ServiceLoaderInternalContractProviderDiscovery;
 import io.runtime.orchestrator.operational.OperationalModuleRuntimeManager;
@@ -140,6 +143,49 @@ class RuntimeShellBootstrapContractTest {
             })
             .allSatisfy(route -> assertThat(route.pluginId()).isNotEqualTo("host-shell-standalone"));
         bootstrap.stop();
+    }
+
+    @Test
+    void manifestGrantsAuthorizeTenantStaffAndRejectEndUsersBeforeHandlers() {
+        DefaultPluginEndpointDispatcher dispatcher = new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30));
+        RuntimeShellBootstrap bootstrap = hostBootstrap(
+            dispatcher,
+            List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
+            List.of(PLATFORM_AUTH_FLOW_MODULE_ID, PLATFORM_ADMIN_MODULE_ID),
+            OWNER_PERSISTENCE);
+        bootstrap.start();
+        try {
+            assertThat(invokeTemplateStatus(dispatcher, tenantCaller("actor", "MEMBER"))).isNotNull();
+
+            assertThatThrownBy(() -> invokeTemplateStatus(dispatcher, tenantCaller("subject", "CUSTOMER")))
+                .isInstanceOfSatisfying(EndpointAccessDeniedException.class, denied ->
+                    assertThat(denied.errorCode()).isEqualTo(EndpointAccessDeniedException.TOKEN_NOT_ACCEPTED));
+
+            Map<String, List<String>> forged = new HashMap<>(tenantCaller("actor", "CUSTOMER"));
+            forged.put("x-auth-permission", List.of("app-booking:template:read"));
+            assertThatThrownBy(() -> invokeTemplateStatus(dispatcher, forged))
+                .isInstanceOfSatisfying(EndpointAccessDeniedException.class, denied ->
+                    assertThat(denied.errorCode()).isEqualTo(EndpointAccessDeniedException.PERMISSION_DENIED));
+        } finally {
+            bootstrap.stop();
+        }
+    }
+
+    private static Object invokeTemplateStatus(
+            DefaultPluginEndpointDispatcher dispatcher,
+            Map<String, List<String>> caller) {
+        return dispatcher.invoke("GET", "/api/app-booking/v1/template/status", null, Map.of(), caller);
+    }
+
+    private static Map<String, List<String>> tenantCaller(String tokenRole, String tenantRoleType) {
+        return Map.of(
+            "x-actor-id", List.of("2001"),
+            "x-tenant-id", List.of("42"),
+            "x-auth-token-role", List.of(tokenRole),
+            "x-auth-token-type", List.of("access"),
+            "x-auth-token-scope", List.of(tokenRole),
+            "x-auth-tenant-role-type", List.of(tenantRoleType),
+            "x-auth-tenant-ref-id", List.of("77"));
     }
 
     @Test
