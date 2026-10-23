@@ -91,7 +91,7 @@ public class Partner {
     /**
      * 合作伙伴类型
      */
-    @Column(name = "partner_type", nullable = false, length = 32)
+    @Column(name = "partner_type", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private PartnerType partnerType;
 
@@ -128,7 +128,7 @@ public class Partner {
     /**
      * 地址
      */
-    @Column(name = "address", length = 500)
+    @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
     // =====================================================

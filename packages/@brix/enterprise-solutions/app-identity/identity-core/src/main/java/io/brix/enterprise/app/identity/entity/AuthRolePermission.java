@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 public class AuthRolePermission {
 
     @Id
-    @Column(name = "id", length = 64)
+    @Column(name = "id", length = 128)
     private String id;
 
     @Column(name = "role_id", length = 64, nullable = false)

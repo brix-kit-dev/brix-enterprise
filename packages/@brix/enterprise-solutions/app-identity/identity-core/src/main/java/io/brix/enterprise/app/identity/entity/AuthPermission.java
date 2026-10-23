@@ -28,7 +28,7 @@ public class AuthPermission {
     private String id;
 
     /** Permission code (e.g., "booking:read", "booking:write"), unique per tenant. */
-    @Column(name = "code", length = 200, nullable = false)
+    @Column(name = "code", length = 150, nullable = false)
     private String code;
 
     /** Human-readable permission name. */

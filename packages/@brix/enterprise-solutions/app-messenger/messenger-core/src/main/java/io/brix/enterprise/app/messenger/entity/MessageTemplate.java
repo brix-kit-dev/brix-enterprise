@@ -64,14 +64,14 @@ public class MessageTemplate {
     /**
      * 租户ID
      */
-    @Column(name = "tenant_id", length = 36, nullable = false)
+    @Column(name = "tenant_id", length = 64, nullable = false)
     private String tenantId;
     
     /**
      * 模板编码
      * 用于业务调用的唯一标识
      */
-    @Column(name = "template_code", length = 100, nullable = false)
+    @Column(name = "template_code", length = 64, nullable = false)
     private String templateCode;
     
     /**
@@ -97,7 +97,7 @@ public class MessageTemplate {
      * 标题模板
      * 支持 ${variable} 格式的变量占位符
      */
-    @Column(name = "title_template", length = 200, nullable = false)
+    @Column(name = "title_template", length = 500, nullable = false)
     private String titleTemplate;
     
     /**

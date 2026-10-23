@@ -54,7 +54,7 @@ public class FileAccessLog {
      * 日志ID
      */
     @Id
-    @Column(name = "id", length = 36)
+    @Column(name = "id", length = 64)
     private String id;
 
     /**
@@ -66,20 +66,20 @@ public class FileAccessLog {
     /**
      * 文件ID
      */
-    @Column(name = "file_id", nullable = false, length = 36)
+    @Column(name = "file_id", nullable = false, length = 64)
     private String fileId;
 
     /**
      * 文件名
      * 冗余存储，便于查询展示
      */
-    @Column(name = "file_name", length = 255)
+    @Column(name = "file_name", length = 300)
     private String fileName;
 
     /**
      * 访问类型
      */
-    @Column(name = "access_type", nullable = false, length = 20)
+    @Column(name = "access_type", nullable = false, length = 32)
     @Enumerated(EnumType.STRING)
     private AccessType accessType;
 

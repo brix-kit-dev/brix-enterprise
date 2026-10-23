@@ -79,7 +79,7 @@ public class User {
     @Column(name = "display_name", length = 100)
     private String displayName;
 
-    @Column(name = "avatar_url", length = 512)
+    @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
     // ==================== 状态 ====================
