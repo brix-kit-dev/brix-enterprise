@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   type ReactNode,
 } from '@brix-sdk/shared-runtime-web/react';
 import { publishFrontendRuntimeIdentityEvidence } from '@brix-sdk/shared-runtime-web/runtime-identity';
@@ -186,9 +187,11 @@ function TenantConsoleFrame({
     permissions: route.permissions,
   }) ?? { allowed: false, reason: 'anonymous' as const };
   const returnTo = location.pathname + location.search;
+  // Signing out also ends the session; the guard must not send the browser back to login then.
+  const signingOut = useRef(false);
 
   useEffect(() => {
-    if (decision.reason === 'anonymous') {
+    if (decision.reason === 'anonymous' && !signingOut.current) {
       if (bffSession) {
         bffSession.redirectToLogin(returnTo);
       } else {
@@ -199,6 +202,7 @@ function TenantConsoleFrame({
   }, [bffSession, decision.reason, returnTo]);
 
   const handleLogout = useCallback(async () => {
+    signingOut.current = true;
     await auth.logout();
     window.location.assign('/auth/signed-out');
   }, [auth]);
