@@ -1,7 +1,7 @@
 # RFC-003：租户最小 RBAC 授权模型（Draft）
 
 > **文档类型**：RFC（多租户专项授权条款修订提案）
-> **状态**：已裁决（2026-10-23）。条款已并入 multi-tenant 5.1 Freeze Candidate，批准并登记 lock 后生效；本文是决策背景，**不指导施工**
+> **状态**：已裁决（2026-10-23）。条款已并入 multi-tenant 5.1（2026-10-23 Architecture Frozen / ACTIVE）；本文是决策背景，**不指导施工**
 > **起草日期**：2026-10-23
 > **修订**：2026-10-23 第 2 稿：C 端 Subject（CUSTOMER、GUEST）纳入同一授予机制，范围只允许 `SELF`（§3.6、Q7）；Q1 补充同一角色内不能按岗位区分的已知限制。2026-10-23 第 3 稿：记录裁决；按 multi-tenant §8.1 第 3 条与 T-11 改为员工接口与 C 端接口分开声明、一个权限只授予一类角色（§3.6、`BRX-TENANT-AUTHZ-003`/`004`/`011`/`012`）；更正访问判定的现状（§8 第 4 条）；写明与 super-admin 角色分配表的边界（`BRX-TENANT-AUTHZ-002`）；补充兼容性、迁移与回滚（§12）
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；identity-auth 1.0、frontend 1.2（ACTIVE）；multi-tenant 5.0、super-admin 4.0（ACTIVE，均为 `rebaseRequired=true`，本文不能作为它们 Implementation Accepted 的依据）
@@ -299,7 +299,7 @@ BFF 会话接口：用同一授予表、按当前上下文返回有效权限 →
 ## 9. 落地顺序建议（非规范）
 
 1. 负责人裁决 §11（2026-10-23 已完成）；
-2. 写出 multi-tenant 5.1（Freeze Candidate，2026-10-23 已写出），架构、安全、SRE 批准后登记 lock；
+2. 写出 multi-tenant 5.1，架构、安全、SRE 批准后登记 lock（2026-10-23 已完成）；
 3. 施工（identity-auth §13「前置」最后一项，一个垂直切片）：Manifest `grants` 与认证策略校验 → 授予表与 Dispatcher 展开（Actor 与 Subject）→ AccessDecision 数据范围 → Token claims 清理 → platform-tenant 目录与业务插件授予 → 负例与端到端测试；
 4. 前置验收：全量测试通过；未授予的权限在 Handler 前被拒绝；`SELF` 范围不越权；Subject 只能得到 `SELF`；角色变更后旧 Token 返回 `STALE_AUTHZ_VERSION`。C 端登录入口上线前，Subject 部分以集成测试验收，端到端验收随 M3；
 5. 之后进入 M1，租户员工控制台使用 BFF 返回的有效权限。
