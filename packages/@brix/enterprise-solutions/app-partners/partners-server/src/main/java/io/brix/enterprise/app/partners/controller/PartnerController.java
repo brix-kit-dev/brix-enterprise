@@ -129,7 +129,7 @@ public class PartnerController {
     @PutMapping("/{id}")
     public ResponseEntity<PartnerDTO> update(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id,
+            @PathVariable String id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "更新合作伙伴请求", required = true,
                 content = @Content(schema = @Schema(implementation = UpdatePartnerRequest.class)))
@@ -154,7 +154,7 @@ public class PartnerController {
     @GetMapping("/{id}")
     public ResponseEntity<PartnerDTO> getById(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id) {
+            @PathVariable String id) {
         String tenantId = getCurrentTenantId();
         return partnerService.getById(tenantId, id)
                 .map(ResponseEntity::ok)
@@ -249,7 +249,7 @@ public class PartnerController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id) {
+            @PathVariable String id) {
         String tenantId = getCurrentTenantId();
         partnerService.delete(tenantId, id);
         return ResponseEntity.noContent().build();
@@ -273,7 +273,7 @@ public class PartnerController {
     @PostMapping("/{id}/activate")
     public ResponseEntity<PartnerDTO> activate(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id) {
+            @PathVariable String id) {
         String tenantId = getCurrentTenantId();
         PartnerDTO result = partnerService.activate(tenantId, id);
         return ResponseEntity.ok(result);
@@ -296,7 +296,7 @@ public class PartnerController {
     @PostMapping("/{id}/suspend")
     public ResponseEntity<PartnerDTO> suspend(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody(required = false) Map<String, String> body) {
         String tenantId = getCurrentTenantId();
         String reason = body != null ? body.get("reason") : null;
@@ -320,7 +320,7 @@ public class PartnerController {
     @PostMapping("/{id}/resume")
     public ResponseEntity<PartnerDTO> resume(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id) {
+            @PathVariable String id) {
         String tenantId = getCurrentTenantId();
         PartnerDTO result = partnerService.resume(tenantId, id);
         return ResponseEntity.ok(result);
@@ -343,7 +343,7 @@ public class PartnerController {
     @PostMapping("/{id}/terminate")
     public ResponseEntity<PartnerDTO> terminate(
             @Parameter(description = "合作伙伴ID", required = true, example = "1001")
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody(required = false) Map<String, String> body) {
         String tenantId = getCurrentTenantId();
         String reason = body != null ? body.get("reason") : null;

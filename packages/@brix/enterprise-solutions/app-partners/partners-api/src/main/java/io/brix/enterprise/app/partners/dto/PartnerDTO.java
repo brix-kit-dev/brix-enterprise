@@ -51,7 +51,7 @@ public class PartnerDTO {
     /**
      * 合作伙伴ID
      */
-    private Long id;
+    private String id;
 
     /**
      * 租户ID

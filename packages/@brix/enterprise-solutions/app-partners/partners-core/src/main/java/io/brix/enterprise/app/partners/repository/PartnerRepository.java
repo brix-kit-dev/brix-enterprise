@@ -33,7 +33,7 @@ import java.util.Optional;
  * @since 3.0.0
  */
 @Repository
-public interface PartnerRepository extends JpaRepository<Partner, Long> {
+public interface PartnerRepository extends JpaRepository<Partner, String> {
 
     /**
      * 根据租户ID和合作伙伴ID查询
@@ -43,7 +43,7 @@ public interface PartnerRepository extends JpaRepository<Partner, Long> {
      * @return 合作伙伴实体（可能为空）
      */
     @Query("SELECT p FROM Partner p WHERE p.tenantId = :tenantId AND p.id = :id AND p.deleted = false")
-    Optional<Partner> findByTenantIdAndId(@Param("tenantId") String tenantId, @Param("id") Long id);
+    Optional<Partner> findByTenantIdAndId(@Param("tenantId") String tenantId, @Param("id") String id);
 
     /**
      * 根据合作伙伴编码查询

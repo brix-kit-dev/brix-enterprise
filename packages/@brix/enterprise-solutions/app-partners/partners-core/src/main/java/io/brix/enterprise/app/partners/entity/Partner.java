@@ -57,8 +57,8 @@ public class Partner {
      * 主键ID
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", length = 64)
+    private String id;
 
     /**
      * 租户ID

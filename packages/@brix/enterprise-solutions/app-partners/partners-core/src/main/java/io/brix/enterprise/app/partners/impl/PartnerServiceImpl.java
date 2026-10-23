@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -94,6 +95,7 @@ public class PartnerServiceImpl implements PartnerService {
 
         // 创建实体
         Partner partner = Partner.builder()
+                .id(UUID.randomUUID().toString())
                 .tenantId(tenantId)
                 .partnerCode(partnerCode)
                 .name(request.getName())
@@ -131,7 +133,7 @@ public class PartnerServiceImpl implements PartnerService {
      * {@inheritDoc}
      */
     @Override
-    public PartnerDTO update(String tenantId, Long id, UpdatePartnerRequest request) {
+    public PartnerDTO update(String tenantId, String id, UpdatePartnerRequest request) {
         log.info("更新合作伙伴: tenantId={}, id={}", tenantId, id);
 
         Partner partner = findPartnerById(tenantId, id);
@@ -171,7 +173,7 @@ public class PartnerServiceImpl implements PartnerService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<PartnerDTO> getById(String tenantId, Long id) {
+    public Optional<PartnerDTO> getById(String tenantId, String id) {
         return partnerRepository.findByTenantIdAndId(tenantId, id)
                 .map(this::toDTO);
     }
@@ -219,7 +221,7 @@ public class PartnerServiceImpl implements PartnerService {
      * {@inheritDoc}
      */
     @Override
-    public void delete(String tenantId, Long id) {
+    public void delete(String tenantId, String id) {
         log.info("删除合作伙伴: tenantId={}, id={}", tenantId, id);
 
         Partner partner = findPartnerById(tenantId, id);
@@ -293,7 +295,7 @@ public class PartnerServiceImpl implements PartnerService {
      * {@inheritDoc}
      */
     @Override
-    public PartnerDTO activate(String tenantId, Long id) {
+    public PartnerDTO activate(String tenantId, String id) {
         log.info("激活合作伙伴: tenantId={}, id={}", tenantId, id);
 
         Partner partner = findPartnerById(tenantId, id);
@@ -318,7 +320,7 @@ public class PartnerServiceImpl implements PartnerService {
      * {@inheritDoc}
      */
     @Override
-    public PartnerDTO suspend(String tenantId, Long id, String reason) {
+    public PartnerDTO suspend(String tenantId, String id, String reason) {
         log.info("暂停合作伙伴: tenantId={}, id={}, reason={}", tenantId, id, reason);
 
         Partner partner = findPartnerById(tenantId, id);
@@ -344,7 +346,7 @@ public class PartnerServiceImpl implements PartnerService {
      * {@inheritDoc}
      */
     @Override
-    public PartnerDTO resume(String tenantId, Long id) {
+    public PartnerDTO resume(String tenantId, String id) {
         log.info("恢复合作伙伴: tenantId={}, id={}", tenantId, id);
 
         Partner partner = findPartnerById(tenantId, id);
@@ -369,7 +371,7 @@ public class PartnerServiceImpl implements PartnerService {
      * {@inheritDoc}
      */
     @Override
-    public PartnerDTO terminate(String tenantId, Long id, String reason) {
+    public PartnerDTO terminate(String tenantId, String id, String reason) {
         log.info("终止合作伙伴: tenantId={}, id={}, reason={}", tenantId, id, reason);
 
         Partner partner = findPartnerById(tenantId, id);
@@ -396,7 +398,7 @@ public class PartnerServiceImpl implements PartnerService {
     /**
      * 根据 ID 查找合作伙伴，不存在时抛出异常
      */
-    private Partner findPartnerById(String tenantId, Long id) {
+    private Partner findPartnerById(String tenantId, String id) {
         return partnerRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("合作伙伴不存在: " + id));
     }

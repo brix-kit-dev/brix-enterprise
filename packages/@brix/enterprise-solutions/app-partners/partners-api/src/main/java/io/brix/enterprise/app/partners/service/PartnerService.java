@@ -69,7 +69,7 @@ public interface PartnerService {
      * @return 更新后的合作伙伴信息
      * @throws IllegalArgumentException 如果合作伙伴不存在
      */
-    PartnerDTO update(String tenantId, Long id, UpdatePartnerRequest request);
+    PartnerDTO update(String tenantId, String id, UpdatePartnerRequest request);
 
     /**
      * 根据ID查询合作伙伴
@@ -78,7 +78,7 @@ public interface PartnerService {
      * @param id       合作伙伴ID
      * @return 合作伙伴信息（可能为空）
      */
-    Optional<PartnerDTO> getById(String tenantId, Long id);
+    Optional<PartnerDTO> getById(String tenantId, String id);
 
     /**
      * 根据编码查询合作伙伴
@@ -107,7 +107,7 @@ public interface PartnerService {
      * @param id       合作伙伴ID
      * @throws IllegalStateException 如果合作伙伴状态不允许删除
      */
-    void delete(String tenantId, Long id);
+    void delete(String tenantId, String id);
 
     // ==================== 查询操作 ====================
 
@@ -153,7 +153,7 @@ public interface PartnerService {
      * @return 更新后的合作伙伴信息
      * @throws IllegalStateException 如果当前状态不允许激活
      */
-    PartnerDTO activate(String tenantId, Long id);
+    PartnerDTO activate(String tenantId, String id);
 
     /**
      * 暂停合作伙伴
@@ -167,7 +167,7 @@ public interface PartnerService {
      * @return 更新后的合作伙伴信息
      * @throws IllegalStateException 如果当前状态不允许暂停
      */
-    PartnerDTO suspend(String tenantId, Long id, String reason);
+    PartnerDTO suspend(String tenantId, String id, String reason);
 
     /**
      * 恢复合作伙伴
@@ -180,7 +180,7 @@ public interface PartnerService {
      * @return 更新后的合作伙伴信息
      * @throws IllegalStateException 如果当前状态不允许恢复
      */
-    PartnerDTO resume(String tenantId, Long id);
+    PartnerDTO resume(String tenantId, String id);
 
     /**
      * 终止合作伙伴
@@ -194,5 +194,5 @@ public interface PartnerService {
      * @return 更新后的合作伙伴信息
      * @throws IllegalStateException 如果当前状态不允许终止
      */
-    PartnerDTO terminate(String tenantId, Long id, String reason);
+    PartnerDTO terminate(String tenantId, String id, String reason);
 }
