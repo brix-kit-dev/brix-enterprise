@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "exemptions": [
+    {
+      "id": "EX-2026-001",
+      "title": "旧员工登录接口与 FIRST_OWNER 受邀人页面在 M1 切片 1–2 期间保留",
+      "ruleIds": [
+        "BRX-RS-SECURITY-002",
+        "BRX-RS-SECURITY-012",
+        "S-20",
+        "BRX-IA-FLOW-006",
+        "IA-1",
+        "IA-2"
+      ],
+      "artifacts": [
+        "brix platform-auth POST /api/auth/login/actor（ActorLoginHandler，接收密码并在响应体返回 Token）",
+        "brix platform-tenant-web FIRST_OWNER 设置与接受页（FirstOwnerIdentityRepository、TenantInvitationRepository 在页面内输入密码并持有 identity token）"
+      ],
+      "owner": "platform-auth / platform-tenant",
+      "reason": "M1 切片 1 上线托管登录 + BFF 的员工登录后，FIRST_OWNER 接受邀请仍依赖旧接口和旧页面；切片 3 把受邀人页面迁入托管登录后才能删除它们。",
+      "risk": "旧接口接收凭证并把 Token 返回给浏览器，Token 存在 sessionStorage，可被页面脚本读取；与 BFF 方案相比，XSS 和凭证撞库的影响更大。",
+      "compensatingControls": [
+        "不新增任何调用方：员工控制台只走托管登录 + BFF",
+        "Actor Token 保持授权版本（mver）校验，权限只由 Runtime 授予表计算，Token 内没有权限列表",
+        "接口只在 FIRST_OWNER 接受邀请流程中使用",
+        "切片 3 完成后删除接口与页面，并移除本豁免"
+      ],
+      "expiresOn": "2027-01-31",
+      "exitCriteria": "M1 切片 3 完成：受邀人页面迁入托管登录，/api/auth/login/actor 与相关前端页面删除，IA-1、IA-2 门禁无此项豁免即可通过。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-10-23:identity-auth-m1-plan",
+        "approvedAt": "2026-10-23T18:33:53+09:00"
+      }
+    },
+    {
+      "id": "EX-2026-002",
+      "title": "旧平台登录、setup 与浏览器持有平台 Token 在 M1 切片 4 之前保留",
+      "ruleIds": [
+        "BRX-RS-SECURITY-002",
+        "BRX-RS-SECURITY-012",
+        "BRX-RS-SECURITY-013",
+        "S-19",
+        "S-20",
+        "BRX-RS-UI-018",
+        "IA-1",
+        "IA-2",
+        "IA-3",
+        "BRX-SA-AUTH-003"
+      ],
+      "artifacts": [
+        "brix platform-admin platform-operational.yaml：/api/platform/auth/login、/api/platform/auth/login/totp、/api/platform/auth/setup/*",
+        "brix platform-admin-web PlatformLoginPage、PlatformLoginTotpPage、PlatformSetupPage",
+        "brix-enterprise standalone-web-runtime-profile 的 sessionStorage 会话（brix:standalone-web-runtime:auth-session:v1）"
+      ],
+      "owner": "platform-admin / platform-identity / enterprise host web",
+      "reason": "M1 先交付员工登录；平台控制台在切片 4 迁入托管登录和 BFF，之前继续使用现有的密码 + TOTP 登录。",
+      "risk": "密码 + TOTP 不是防钓鱼认证；平台 Token 由浏览器持有，可被页面脚本读取。",
+      "compensatingControls": [
+        "平台超管账号数量受控（当前 1 个），每次登录强制 TOTP",
+        "登录失败 5 次锁定 15 分钟（现有机制）",
+        "平台权限仍按 super-admin 的权限 ID 在 Handler 前校验",
+        "切片 4 完成后删除旧接口、旧页面和 sessionStorage 会话，并移除本豁免"
+      ],
+      "expiresOn": "2027-02-28",
+      "exitCriteria": "M1 切片 4 完成：平台控制台改用 platform-console 客户端、托管登录与 BFF；旧平台登录与 setup 接口、页面和浏览器 Token 存储删除。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-10-23:identity-auth-m1-plan",
+        "approvedAt": "2026-10-23T18:33:53+09:00"
+      }
+    }
+  ]
+}

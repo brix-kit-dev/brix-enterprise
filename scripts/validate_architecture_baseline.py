@@ -8,6 +8,7 @@ import hashlib
 import json
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +51,7 @@ def load_json(path: Path) -> Any:
         raise BaselineValidationError(f"Cannot parse {path}: {error}") from error
 
 
-def validate_schema(lock: Any, schema: Any) -> None:
+def validate_schema(lock: Any, schema: Any, label: str = "Baseline lock") -> None:
     """Validate lock structure and standard date/date-time formats."""
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
     errors = sorted(validator.iter_errors(lock), key=lambda error: list(error.path))
@@ -59,7 +60,31 @@ def validate_schema(lock: Any, schema: Any) -> None:
             f"{'/'.join(map(str, error.path)) or '<root>'}: {error.message}"
             for error in errors
         )
-        raise BaselineValidationError(f"Baseline lock schema validation failed: {details}")
+        raise BaselineValidationError(f"{label} schema validation failed: {details}")
+
+
+def validate_exemptions(
+    exemptions_path: Path,
+    schema_path: Path,
+    today: date,
+) -> list[dict[str, Any]]:
+    """Validate temporary exemptions (BRX-RS-GOVERNANCE-013); an expired one fails."""
+    if not exemptions_path.exists():
+        return []
+    registry = load_json(exemptions_path)
+    validate_schema(registry, load_json(schema_path), "Architecture exemptions")
+    exemptions = registry["exemptions"]
+    ids = [exemption["id"] for exemption in exemptions]
+    if len(ids) != len(set(ids)):
+        raise BaselineValidationError("Temporary exemption ids must be unique")
+    for exemption in exemptions:
+        expires_on = date.fromisoformat(exemption["expiresOn"])
+        if expires_on < today:
+            raise BaselineValidationError(
+                f"Temporary exemption {exemption['id']} expired on {expires_on.isoformat()} "
+                "(BRX-RS-GOVERNANCE-013); finish its exit criteria or renew it with a new approval"
+            )
+    return exemptions
 
 
 def git_file_bytes(repo_root: Path, commit: str, relative_path: str) -> bytes:
@@ -283,6 +308,16 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("docs/.schemas/architecture-baseline-lock.schema.json"),
     )
+    parser.add_argument(
+        "--exemptions",
+        type=Path,
+        default=Path("docs/architecture-exemptions.json"),
+    )
+    parser.add_argument(
+        "--exemptions-schema",
+        type=Path,
+        default=Path("docs/.schemas/architecture-exemptions.schema.json"),
+    )
     parser.add_argument("--require-active", action="store_true")
     parser.add_argument("--check-instructions", action="store_true")
     parser.add_argument("--base-ref")
@@ -295,6 +330,14 @@ def main() -> int:
     repo_root = args.repo_root.resolve()
     lock_path = args.lock if args.lock.is_absolute() else repo_root / args.lock
     schema_path = args.schema if args.schema.is_absolute() else repo_root / args.schema
+    exemptions_path = (
+        args.exemptions if args.exemptions.is_absolute() else repo_root / args.exemptions
+    )
+    exemptions_schema_path = (
+        args.exemptions_schema
+        if args.exemptions_schema.is_absolute()
+        else repo_root / args.exemptions_schema
+    )
 
     try:
         lock = load_json(lock_path)
@@ -314,6 +357,7 @@ def main() -> int:
             lock_relative_path = relative_to_repo(repo_root, lock_path)
             previous = load_lock_from_git(repo_root, args.base_ref, lock_relative_path)
             validate_transition(previous, lock)
+        exemptions = validate_exemptions(exemptions_path, exemptions_schema_path, date.today())
     except BaselineValidationError as error:
         print(f"architecture-baseline: FAIL: {error}", file=sys.stderr)
         return 1
@@ -332,6 +376,10 @@ def main() -> int:
         f"architecture-baseline: PASS: ACTIVE[{active}] "
         f"CANDIDATE(non-guiding)[{candidates}]"
     )
+    active_exemptions = ", ".join(
+        f"{exemption['id']} until {exemption['expiresOn']}" for exemption in exemptions
+    ) or "none"
+    print(f"architecture-exemptions: ACTIVE[{active_exemptions}]")
     return 0
 
 
