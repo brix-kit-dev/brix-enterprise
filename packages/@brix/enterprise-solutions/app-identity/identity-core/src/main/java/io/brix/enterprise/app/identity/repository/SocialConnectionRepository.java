@@ -6,7 +6,6 @@
 package io.brix.enterprise.app.identity.repository;
 
 import io.brix.enterprise.app.identity.entity.SocialConnection;
-import io.brix.enterprise.app.identity.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,11 +37,11 @@ public interface SocialConnectionRepository extends JpaRepository<SocialConnecti
      * 查找用户的所有第三方绑定
      */
     @Query("SELECT sc FROM SocialConnection sc " +
-            "WHERE sc.authUser = :authUser " +
+            "WHERE sc.authUserId = :authUserId " +
             "AND sc.tenantId = :tenantId " +
             "AND sc.deleted = false")
-    List<SocialConnection> findByAuthUserAndTenantId(
-            @Param("authUser") User authUser,
+    List<SocialConnection> findByAuthUserIdAndTenantId(
+            @Param("authUserId") String authUserId,
             @Param("tenantId") String tenantId);
 
     /**
@@ -50,12 +49,12 @@ public interface SocialConnectionRepository extends JpaRepository<SocialConnecti
      */
     @Query("UPDATE SocialConnection sc " +
             "SET sc.deleted = true, sc.deletedAt = CURRENT_TIMESTAMP " +
-            "WHERE sc.authUser = :authUser " +
+            "WHERE sc.authUserId = :authUserId " +
             "AND sc.provider = :provider " +
             "AND sc.tenantId = :tenantId " +
             "AND sc.deleted = false")
-    void softDeleteByAuthUserAndProvider(
-            @Param("authUser") User authUser,
+    void softDeleteByAuthUserIdAndProvider(
+            @Param("authUserId") String authUserId,
             @Param("provider") String provider,
             @Param("tenantId") String tenantId);
 }

@@ -41,10 +41,9 @@ public class UserProfile {
     @Column(name = "id", length = 64)
     private String id;
 
-    /** 关联 auth_user（一对一） */
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "auth_user_id", nullable = false, unique = true)
-    private User authUser;
+    /** auth_user.id；auth_user 归 platform-auth 所有，这里只保存不透明引用，不建 ORM 关联 */
+    @Column(name = "auth_user_id", length = 64, nullable = false, unique = true)
+    private String authUserId;
 
     /** 身份类型 */
     @Enumerated(EnumType.STRING)
@@ -131,9 +130,9 @@ public class UserProfile {
     protected UserProfile() {
     }
 
-    public UserProfile(String id, User authUser, UserType userType, String tenantId) {
+    public UserProfile(String id, String authUserId, UserType userType, String tenantId) {
         this.id = id;
-        this.authUser = authUser;
+        this.authUserId = authUserId;
         this.userType = userType;
         this.tenantId = tenantId;
         this.createdAt = LocalDateTime.now();
@@ -149,7 +148,7 @@ public class UserProfile {
     // ==================== Getters & Setters ====================
 
     public String getId() { return id; }
-    public User getAuthUser() { return authUser; }
+    public String getAuthUserId() { return authUserId; }
     public UserType getUserType() { return userType; }
     public void setUserType(UserType userType) { this.userType = userType; }
     public String getDisplayName() { return displayName; }

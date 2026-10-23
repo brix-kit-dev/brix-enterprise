@@ -3,7 +3,7 @@
   "pluginId": "brix-app-identity",
   "version": "3.0.0-SNAPSHOT",
   "displayName": "身份认证",
-  "description": "Brix Enterprise Identity Management - provides user authentication, authorization, organization structure, and role-based access control for the platform.",
+  "description": "Brix Enterprise identity profiles - keeps user, employee and patient profiles and social connections in the plugin-owned identity_* tables. Authentication, credentials, tokens and roles belong to the platform identity owner.",
   
   "ui": {
     "web": {
@@ -97,15 +97,7 @@
   },
   
   "events": {
-    "publish": [
-      "UserCreated",
-      "UserUpdated",
-      "UserDeleted",
-      "UserActivated",
-      "UserDeactivated",
-      "RoleAssigned",
-      "OrganizationCreated"
-    ],
+    "publish": [],
     "subscribe": []
   },
 

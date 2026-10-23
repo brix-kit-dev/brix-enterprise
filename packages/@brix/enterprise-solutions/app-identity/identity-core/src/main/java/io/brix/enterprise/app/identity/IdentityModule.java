@@ -45,7 +45,7 @@ import java.time.Instant;
     id = "brix-app-identity",
     name = "用户身份管理",
     version = "3.0.0-SNAPSHOT",
-    description = "提供用户身份管理的完整业务能力"
+    description = "用户、员工、患者档案与第三方账号绑定（本模块自有 identity_* 表）"
 )
 @Component  // Spring Bean 注册，Host 通过 ApplicationContext 发现模块
 public class IdentityModule extends AbstractModule {

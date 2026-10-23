@@ -27,7 +27,7 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, String
      * 根据 auth_user ID 查找画像
      */
     @Query("SELECT p FROM UserProfile p " +
-            "WHERE p.authUser.id = :authUserId " +
+            "WHERE p.authUserId = :authUserId " +
             "AND p.deleted = false")
     Optional<UserProfile> findByAuthUserId(@Param("authUserId") String authUserId);
 

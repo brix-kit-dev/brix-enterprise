@@ -42,10 +42,9 @@ public class SocialConnection {
     @Column(name = "id", length = 64)
     private String id;
 
-    /** 关联 auth_user */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "auth_user_id", nullable = false)
-    private User authUser;
+    /** auth_user.id；auth_user 归 platform-auth 所有，这里只保存不透明引用，不建 ORM 关联 */
+    @Column(name = "auth_user_id", length = 64, nullable = false)
+    private String authUserId;
 
     // ==================== 第三方信息 ====================
 
@@ -163,10 +162,10 @@ public class SocialConnection {
     protected SocialConnection() {
     }
 
-    public SocialConnection(String id, User authUser, String tenantId,
+    public SocialConnection(String id, String authUserId, String tenantId,
                             String provider, String providerUserId) {
         this.id = id;
-        this.authUser = authUser;
+        this.authUserId = authUserId;
         this.tenantId = tenantId;
         this.provider = provider;
         this.providerUserId = providerUserId;
@@ -199,8 +198,8 @@ public class SocialConnection {
     // ==================== Getters & Setters ====================
 
     public String getId() { return id; }
-    public User getAuthUser() { return authUser; }
-    public void setAuthUser(User authUser) { this.authUser = authUser; }
+    public String getAuthUserId() { return authUserId; }
+    public void setAuthUserId(String authUserId) { this.authUserId = authUserId; }
     public String getProvider() { return provider; }
     public String getProviderUserId() { return providerUserId; }
     public String getNickname() { return nickname; }
