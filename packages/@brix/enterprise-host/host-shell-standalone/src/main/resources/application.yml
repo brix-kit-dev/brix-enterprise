@@ -240,6 +240,13 @@ brix:
         setup-base-url: ${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}
         setup-code-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE_TTL_SECONDS:900}
         bootstrap-session-ttl-seconds: ${BRIX_BOOTSTRAP_SUPER_ADMIN_SESSION_TTL_SECONDS:300}
+  # ==================== Identity protocol surface (identity-auth 1.0) ====================
+  # Hosted login + authorization code with PKCE + BFF session cookies for the tenant console.
+  # The issuer is the public origin browsers use for the consoles (scheme://host[:port]); the
+  # __Host- session cookies need https, or http://localhost during development.
+  identity-provider:
+    enabled: ${BRIX_IDENTITY_PROVIDER_ENABLED:false}
+    issuer: ${BRIX_IDENTITY_PROVIDER_ISSUER:}
   identity:
     first-owner-invitee-setup:
       setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}

@@ -117,6 +117,10 @@ export default defineConfig({
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-auth-web/src/AuthCapabilityImpl.ts'
       ),
+      '@brix-sdk/platform-auth-web/BffSessionAuthState': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-auth-web/src/BffSessionAuthState.ts'
+      ),
       '@brix-sdk/platform-frame-web/theme/ThemeCapabilityImpl': path.resolve(
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-frame-web/src/theme/ThemeCapabilityImpl.ts'
@@ -241,6 +245,14 @@ export default defineConfig({
         context: ['/api'],
         target: backendUrl,
         changeOrigin: true,
+        secure: false,
+      },
+      {
+        // Identity protocol surface (root BRX-RS-SECURITY-011): hosted login, authorization
+        // server and BFF stay on the console origin so their __Host- cookies are same-origin.
+        context: ['/oauth2', '/.well-known', '/auth', '/bff'],
+        target: backendUrl,
+        changeOrigin: false,
         secure: false,
       },
     ],

@@ -7,7 +7,8 @@ import {
   type HttpCapability,
 } from '@brix-sdk/runtime-sdk-api-web';
 
-import { createStandaloneWebRuntimeCapabilityBindings } from './index';
+import { createBffSessionAuthState } from '@brix-sdk/platform-auth-web/BffSessionAuthState';
+import { createStandaloneWebRuntimeCapabilityBindings, type StandaloneWebRuntimeProfileOptions } from './index';
 
 describe('standalone web runtime auth session storage', () => {
   beforeEach(() => {
@@ -73,13 +74,67 @@ describe('standalone web runtime auth session storage', () => {
 
     expect(capabilities().auth.isAuthenticated()).toBe(false);
   });
+
+  it('runs a BFF console on its session: no bearer token, CSRF token on writes', async () => {
+    window.sessionStorage.setItem('brix:standalone-web-runtime:auth-session:v1', JSON.stringify({
+      version: 1, token: 'legacy-token', contextKind: 'platform', subjectId: '1001', roles: [], permissions: [],
+    }));
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => new Response(JSON.stringify(
+      String(input) === '/bff/session'
+        ? {
+            authenticated: true,
+            csrfToken: 'csrf-1',
+            identity: { id: '21', email: 'staff@example.test' },
+            context: { kind: 'actor', tenantId: '42', tenantName: 'Clinic', memberType: 'MEMBER' },
+            permissions: ['tenant:profile:read'],
+          }
+        : { ok: true },
+    ), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    const bffSession = createBffSessionAuthState({ navigate: vi.fn() });
+    await bffSession.load();
+
+    const runtime = capabilities({ bffSession });
+    await runtime.http.get('/tenant/session');
+    await runtime.http.post('/tenant/members', {});
+
+    expect(runtime.auth.isAuthenticated()).toBe(true);
+    expect(runtime.auth.getToken()).toBeNull();
+    expect(runtime.auth.getVerifiedActorContext()?.tenantId).toBe('42');
+    const [read, write] = vi.mocked(fetch).mock.calls.slice(-2).map(call => new Headers((call[1] as RequestInit).headers));
+    expect(read.get('Authorization')).toBeNull();
+    expect(read.get('X-Brix-CSRF')).toBeNull();
+    expect(write.get('Authorization')).toBeNull();
+    expect(write.get('X-Brix-CSRF')).toBe('csrf-1');
+  });
+
+  it('sends the browser back through the BFF login when the session has ended', async () => {
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => String(input) === '/bff/session'
+      ? new Response(JSON.stringify({
+          authenticated: true,
+          csrfToken: 'csrf-1',
+          identity: { id: '21' },
+          context: { kind: 'actor', tenantId: '42' },
+          permissions: [],
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      : new Response(JSON.stringify({ errorCode: 'ENDPOINT_AUTHENTICATION_REQUIRED' }), {
+          status: 401, headers: { 'Content-Type': 'application/json' },
+        }));
+    const navigate = vi.fn();
+    const bffSession = createBffSessionAuthState({ navigate });
+    await bffSession.load();
+    window.history.replaceState(null, '', '/tenant?tab=members');
+
+    await expect(capabilities({ bffSession }).http.get('/tenant/session')).rejects.toBeTruthy();
+
+    expect(navigate).toHaveBeenCalledWith('/bff/login?returnTo=%2Ftenant%3Ftab%3Dmembers');
+  });
 });
 
-function capabilities(): {
+function capabilities(options: Partial<StandaloneWebRuntimeProfileOptions> = {}): {
   readonly auth: AuthCapability;
   readonly http: HttpCapability;
 } {
-  const bindings = createStandaloneWebRuntimeCapabilityBindings({ apiBaseUrl: '/api' });
+  const bindings = createStandaloneWebRuntimeCapabilityBindings({ apiBaseUrl: '/api', ...options });
   const auth = bindings
     .find(binding => binding.capabilityType === AuthCapabilityType)
     ?.provider.provide() as AuthCapability | undefined;

@@ -126,6 +126,18 @@
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-email-smtp</artifactId>
         </dependency>
+        <!-- Identity protocol surface (root BRX-RS-SECURITY-011). Selected per deployment with
+             brix.identity-provider.enabled; it owns /oauth2, /.well-known, /auth and /bff. -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-identity-provider</artifactId>
+        </dependency>
+        <!-- Hosted login UI served by the identity protocol surface under /auth/** -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-hosted-login-web</artifactId>
+            <version>3.2.0</version>
+        </dependency>
 
         <!-- ========== Platform Auth Servlet（认证能力 — Servlet 运行时绑定）========== -->
         <dependency>

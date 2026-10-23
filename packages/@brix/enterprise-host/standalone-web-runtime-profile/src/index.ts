@@ -22,6 +22,7 @@ import {
   type VerifiedAuthContext,
 } from '@brix-sdk/runtime-sdk-api-web';
 import { AuthCapabilityImpl } from '@brix-sdk/platform-auth-web/AuthCapabilityImpl';
+import type { BffSessionAuthState } from '@brix-sdk/platform-auth-web/BffSessionAuthState';
 import { I18nCapabilityImpl } from '@brix-sdk/platform-i18n-web';
 import { ThemeCapabilityImpl } from '@brix-sdk/platform-frame-web/theme/ThemeCapabilityImpl';
 import { defaultPreset } from '@brix-sdk/platform-frame-web/theme/presets/defaultPreset';
@@ -39,6 +40,12 @@ import {
 export interface StandaloneWebRuntimeProfileOptions {
   readonly apiBaseUrl?: string;
   readonly routeSources?: readonly FrontendHostRouteSnapshotSource[];
+  /**
+   * Session of a console that runs behind the BFF (root BRX-RS-SECURITY-012). When set, the
+   * Auth capability reads that session and API requests carry its CSRF token instead of a
+   * bearer token; the browser holds no token (frontend BRX-FE-AUTH-002/003).
+   */
+  readonly bffSession?: BffSessionAuthState;
 }
 
 interface BrowserAuthStorage {
@@ -71,15 +78,31 @@ const AUTH_SESSION_STORAGE_KEY = 'brix:standalone-web-runtime:auth-session:v1';
 export function createStandaloneWebRuntimeCapabilityBindings(
   options: StandaloneWebRuntimeProfileOptions = {},
 ): readonly FrontendHostCapabilityBinding[] {
-  const authState = createStandaloneAuthState();
-  const auth = new AuthCapabilityImpl(authState);
+  const bffSession = options.bffSession;
+  // Installed tokens remain only for the exempted legacy consoles (EX-2026-001/002).
+  const auth = new AuthCapabilityImpl(bffSession ?? createStandaloneAuthState());
   const http = createHttpCapability({
     baseURL: normalizeApiBaseUrl(options.apiBaseUrl),
-    authTokenProvider: () => auth.getToken(),
+    ...(bffSession
+      ? { csrfTokenProvider: () => bffSession.csrfToken() }
+      : { authTokenProvider: () => auth.getToken() }),
     cache: {
       defaultTTL: 0,
     },
   });
+  if (bffSession) {
+    // Frontend BRX-FE-AUTH-003: an ended BFF session sends the browser through the identity
+    // protocol surface and back to this page; pages and hooks never handle authentication.
+    http.addResponseInterceptor({
+      onResponse: response => response,
+      onResponseError: error => {
+        if ((error as { status?: number } | null)?.status === 401) {
+          bffSession.redirectToLogin(window.location.pathname + window.location.search);
+        }
+        throw error;
+      },
+    });
+  }
   const pageRegistry = createPageRegistry(options.routeSources ?? []);
   const routerService = createBrowserRouterService();
   const navigation = new NavigationCapabilityImpl({

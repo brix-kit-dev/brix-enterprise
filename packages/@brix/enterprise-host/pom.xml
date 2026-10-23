@@ -176,6 +176,12 @@
                 <artifactId>infra-adapter-email-smtp</artifactId>
                 <version>${infra-adapters.version}</version>
             </dependency>
+            <!-- Identity protocol surface: embedded authorization server, hosted login, BFF. -->
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-identity-provider</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
             <!-- Broker-neutral canonical Outbox persistence used by the Runtime Relay. -->
             <dependency>
                 <groupId>io.brix</groupId>

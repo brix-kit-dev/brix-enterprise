@@ -104,6 +104,10 @@ services:
       - BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=${BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED:-false}
       - BRIX_PLATFORM_NOTIFICATION_ENABLED=${BRIX_PLATFORM_NOTIFICATION_ENABLED:-true}
       - BRIX_PLATFORM_NOTIFICATION_DEFAULT_LOCALE=${BRIX_PLATFORM_NOTIFICATION_DEFAULT_LOCALE:-en-US}
+      # Identity protocol surface: hosted login and BFF of the tenant console. The issuer is
+      # the console origin, e.g. https://console.example.com (http://localhost:3001 in dev).
+      - BRIX_IDENTITY_PROVIDER_ENABLED=${BRIX_IDENTITY_PROVIDER_ENABLED:-false}
+      - BRIX_IDENTITY_PROVIDER_ISSUER=${BRIX_IDENTITY_PROVIDER_ISSUER:-}
       # SMTP is the production NotificationCapability adapter for setup links.
       # Leave these unset when using docker-compose.dev-smtp.yml (Mailpit) or
       # when another NotificationCapability bean is provided by the runtime.

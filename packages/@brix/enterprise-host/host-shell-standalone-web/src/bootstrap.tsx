@@ -3,6 +3,7 @@ import {
   createRoot,
   isValidElement,
   useCallback,
+  useEffect,
   useMemo,
   type ReactNode,
 } from '@brix-sdk/shared-runtime-web/react';
@@ -15,8 +16,9 @@ import {
   useLocation,
   useNavigate,
 } from '@brix-sdk/shared-runtime-web/router';
-import { RuntimeContextProvider, useAuth } from '@brix-sdk/runtime-sdk-react';
+import { RuntimeContextProvider, useAuth, useRuntimeContext } from '@brix-sdk/runtime-sdk-react';
 import {
+  type AuthCapability,
   AuthCapabilityType,
   I18nCapabilityType,
   NavigationCapabilityType,
@@ -31,6 +33,10 @@ import {
 } from '@brix-sdk/runtime-orchestrator-web';
 import { ProtectedLayout } from '@brix-sdk/platform-frame-web/layouts/ProtectedLayout';
 import { createStandaloneWebRuntimeCapabilityBindings } from '@brix-sdk/enterprise-standalone-web-runtime-profile';
+import {
+  createBffSessionAuthState,
+  type BffSessionAuthState,
+} from '@brix-sdk/platform-auth-web/BffSessionAuthState';
 import { standaloneWebComposition } from './composition/standalone-web.composition';
 
 interface HostSidebarMenuItem {
@@ -51,6 +57,13 @@ function toRouteElement(route: FrontendHostRouteSnapshotEntry): ReactNode {
 
 function isProtectedRoute(route: FrontendHostRouteSnapshotEntry): boolean {
   return route.guardPolicy === 'platform-authenticated';
+}
+
+/** Staff console (identity-auth `tenant-console`): runs behind the BFF, never with tokens. */
+const TENANT_CONSOLE_BASE = '/tenant';
+
+function isTenantConsolePath(pathname: string): boolean {
+  return pathname === TENANT_CONSOLE_BASE || pathname.startsWith(`${TENANT_CONSOLE_BASE}/`);
 }
 
 function toSidebarMenuItem(menu: FrontendHostMenuSnapshotEntry): HostSidebarMenuItem {
@@ -149,11 +162,86 @@ function ProtectedRouteFrame({
   );
 }
 
+/**
+ * Admits staff console routes from the BFF session (frontend BRX-FE-AUTH-002/003): without a
+ * session the Runtime sends the browser to the BFF login and back to this page; pages never
+ * handle authentication themselves.
+ */
+function TenantConsoleFrame({
+  route,
+  bffSession,
+  children,
+}: {
+  readonly route: FrontendHostRouteSnapshotEntry;
+  readonly bffSession: BffSessionAuthState | null;
+  readonly children: ReactNode;
+}) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const auth = useAuth();
+  const runtime = useRuntimeContext();
+  const decision = runtime.getCapability<AuthCapability>(AuthCapabilityType)?.canAccessRoute({
+    allowedContexts: ['actor'],
+    tenantContext: 'required',
+    permissions: route.permissions,
+  }) ?? { allowed: false, reason: 'anonymous' as const };
+  const returnTo = location.pathname + location.search;
+
+  useEffect(() => {
+    if (decision.reason === 'anonymous') {
+      if (bffSession) {
+        bffSession.redirectToLogin(returnTo);
+      } else {
+        // The console was entered from another console's page: start it with its own session.
+        window.location.assign(returnTo);
+      }
+    }
+  }, [bffSession, decision.reason, returnTo]);
+
+  const handleLogout = useCallback(async () => {
+    await auth.logout();
+    window.location.assign('/auth/signed-out');
+  }, [auth]);
+
+  const handleNavigate = useCallback(
+    (path: string, options?: { replace?: boolean }) => {
+      navigate(path, { replace: options?.replace });
+    },
+    [navigate],
+  );
+
+  if (decision.reason === 'anonymous') {
+    return <div style={{ padding: 24 }}>正在前往登录…</div>;
+  }
+  return (
+    <ProtectedLayout
+      branding={{ appName: standaloneWebComposition.runtime.appName }}
+      user={{ name: auth.user?.displayName ?? auth.user?.username ?? 'Staff' }}
+      menuItems={[]}
+      currentPath={location.pathname}
+      onNavigate={handleNavigate}
+      onLogout={handleLogout}
+    >
+      {decision.allowed ? children : (
+        <div role="alert" style={{ padding: 24 }}>你当前的角色不能访问此页面。</div>
+      )}
+    </ProtectedLayout>
+  );
+}
+
 function toHostedRouteElement(
   route: FrontendHostRouteSnapshotEntry,
   routeSnapshot: FrontendHostPublishedRouteSnapshot,
+  bffSession: BffSessionAuthState | null,
 ): ReactNode {
   const element = toRouteElement(route);
+  if (isTenantConsolePath(route.path)) {
+    return (
+      <TenantConsoleFrame route={route} bffSession={bffSession}>
+        {element}
+      </TenantConsoleFrame>
+    );
+  }
   if (!isProtectedRoute(route)) {
     return element;
   }
@@ -167,9 +255,11 @@ function toHostedRouteElement(
 function RuntimeEntry({
   routeSnapshot,
   status,
+  bffSession,
 }: {
   readonly routeSnapshot: FrontendHostPublishedRouteSnapshot;
   readonly status: string;
+  readonly bffSession: BffSessionAuthState | null;
 }) {
   const defaultPath = routeSnapshot.defaultPath ?? routeSnapshot.routes[0]?.path ?? '/';
   return (
@@ -187,7 +277,7 @@ function RuntimeEntry({
             <Route
               key={route.routeId}
               path={route.path}
-              element={toHostedRouteElement(route, routeSnapshot)}
+              element={toHostedRouteElement(route, routeSnapshot, bffSession)}
             />
           ))}
         </Routes>
@@ -204,11 +294,19 @@ export async function bootstrap(): Promise<void> {
 
   document.title = standaloneWebComposition.runtime.appName;
 
+  // The staff console and the legacy consoles are separate entries (identity-auth
+  // BRX-IA-FLOW-005); the console a page load starts in decides how it authenticates.
+  const bffSession = isTenantConsolePath(window.location.pathname) ? createBffSessionAuthState() : null;
+  if (bffSession) {
+    await bffSession.load();
+  }
+
   const result = await bootstrapFrontendHost({
     composition: standaloneWebComposition,
     capabilityBindings: createStandaloneWebRuntimeCapabilityBindings({
       apiBaseUrl: import.meta.env.VITE_API_BASE,
       routeSources: standaloneWebComposition.routes.sources,
+      ...(bffSession ? { bffSession } : {}),
     }),
     debug: import.meta.env.DEV === true,
   });
@@ -233,6 +331,7 @@ export async function bootstrap(): Promise<void> {
         <RuntimeEntry
           routeSnapshot={result.routeSnapshot}
           status={result.runtime.status}
+          bffSession={bffSession}
         />
       </RuntimeContextProvider>
     </StrictMode>

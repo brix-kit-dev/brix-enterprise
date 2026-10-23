@@ -28,6 +28,10 @@ export default defineConfig({
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-auth-web/src/AuthCapabilityImpl.ts',
       ),
+      '@brix-sdk/platform-auth-web/BffSessionAuthState': path.resolve(
+        brixRoot,
+        'packages/@brix/platform-commons/packages/client/platform-auth-web/src/BffSessionAuthState.ts',
+      ),
       '@brix-sdk/platform-auth-web': path.resolve(
         brixRoot,
         'packages/@brix/platform-commons/packages/client/platform-auth-web/src/index.ts',

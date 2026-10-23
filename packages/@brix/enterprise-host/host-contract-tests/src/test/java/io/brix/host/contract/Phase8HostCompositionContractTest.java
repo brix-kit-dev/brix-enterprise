@@ -53,6 +53,7 @@ class Phase8HostCompositionContractTest {
             .contains("<artifactId>platform-tenant</artifactId>")
             .contains("<artifactId>platform-notification</artifactId>")
             .contains("<artifactId>infra-adapter-email-smtp</artifactId>")
+            .contains("<artifactId>infra-adapter-identity-provider</artifactId>")
             .contains("<artifactId>infra-adapter-outbox</artifactId>")
             .doesNotContain("<artifactId>infra-adapter-kafka-outbox</artifactId>")
             .contains("<artifactId>booking-server</artifactId>")
