@@ -3,12 +3,17 @@ import {
   AuthCapabilityType,
   AuthSessionInstallProvider,
   HttpCapabilityType,
+  TenantCapabilityType,
   type AuthCapability,
   type HttpCapability,
 } from '@brix-sdk/runtime-sdk-api-web';
 
 import { createBffSessionAuthState } from '@brix-sdk/platform-auth-web/BffSessionAuthState';
-import { createStandaloneWebRuntimeCapabilityBindings, type StandaloneWebRuntimeProfileOptions } from './index';
+import {
+  createStandaloneWebBffRuntimeCapabilityBindings,
+  createStandaloneWebRuntimeCapabilityBindings,
+  type StandaloneWebRuntimeProfileOptions,
+} from './index';
 
 describe('standalone web runtime auth session storage', () => {
   beforeEach(() => {
@@ -127,6 +132,30 @@ describe('standalone web runtime auth session storage', () => {
     await expect(capabilities({ bffSession }).http.get('/tenant/session')).rejects.toBeTruthy();
 
     expect(navigate).toHaveBeenCalledWith('/bff/login?returnTo=%2Ftenant%3Ftab%3Dmembers');
+  });
+
+  it('reads the BFF session before the Runtime starts, so the Host never holds it', async () => {
+    vi.mocked(fetch).mockImplementation(async (input: RequestInfo | URL) => new Response(JSON.stringify(
+      String(input) === '/bff/session'
+        ? {
+            authenticated: true,
+            csrfToken: 'csrf-1',
+            identity: { id: '21' },
+            context: { kind: 'actor', tenantId: '42' },
+            permissions: ['tenant:profile:read'],
+          }
+        : { ok: true },
+    ), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    const bindings = await createStandaloneWebBffRuntimeCapabilityBindings({ apiBaseUrl: '/api' });
+    const auth = bindings
+      .find(binding => binding.capabilityType === AuthCapabilityType)
+      ?.provider.provide() as AuthCapability;
+
+    expect(vi.mocked(fetch).mock.calls.map(call => String(call[0]))).toEqual(['/bff/session']);
+    expect(auth.getVerifiedActorContext()?.tenantId).toBe('42');
+    expect(auth.getToken()).toBeNull();
+    expect(bindings.some(binding => binding.capabilityType === TenantCapabilityType)).toBe(true);
   });
 });
 

@@ -7,6 +7,7 @@ import {
   HttpCapabilityType,
   I18nCapabilityType,
   NavigationCapabilityType,
+  TenantCapabilityType,
   ThemeCapabilityType,
   UICapabilityType,
   type AuthChangeHandler,
@@ -22,7 +23,11 @@ import {
   type VerifiedAuthContext,
 } from '@brix-sdk/runtime-sdk-api-web';
 import { AuthCapabilityImpl } from '@brix-sdk/platform-auth-web/AuthCapabilityImpl';
-import type { BffSessionAuthState } from '@brix-sdk/platform-auth-web/BffSessionAuthState';
+import {
+  createBffSessionAuthState,
+  type BffSessionAuthState,
+} from '@brix-sdk/platform-auth-web/BffSessionAuthState';
+import { createBffTenantCapability } from '@brix-sdk/platform-auth-web/BffTenantCapability';
 import { I18nCapabilityImpl } from '@brix-sdk/platform-i18n-web';
 import { ThemeCapabilityImpl } from '@brix-sdk/platform-frame-web/theme/ThemeCapabilityImpl';
 import { defaultPreset } from '@brix-sdk/platform-frame-web/theme/presets/defaultPreset';
@@ -125,7 +130,17 @@ export function createStandaloneWebRuntimeCapabilityBindings(
     designTokenResolver: new NativeDesignTokenResolver(),
   });
 
+  // The staff console's tenant context and switching come from its BFF session (T-26).
+  const tenantBindings: FrontendHostCapabilityBinding[] = bffSession
+    ? [{
+        capabilityId: 'tenant',
+        capabilityType: TenantCapabilityType,
+        provider: { provide: () => createBffTenantCapability(bffSession) },
+      }]
+    : [];
+
   return [
+    ...tenantBindings,
     {
       capabilityId: 'auth',
       capabilityType: AuthCapabilityType,
@@ -162,6 +177,19 @@ export function createStandaloneWebRuntimeCapabilityBindings(
       provider: { provide: () => nativeUIAdapter },
     },
   ];
+}
+
+/**
+ * Bindings for a console that runs behind the BFF (root BRX-RS-SECURITY-012). The BFF session is
+ * read before the Runtime starts, so the console starts with its Actor context or with none; the
+ * Host never holds the session itself and starts a login through the Auth capability.
+ */
+export async function createStandaloneWebBffRuntimeCapabilityBindings(
+  options: Omit<StandaloneWebRuntimeProfileOptions, 'bffSession'> = {},
+): Promise<readonly FrontendHostCapabilityBinding[]> {
+  const bffSession = createBffSessionAuthState();
+  await bffSession.load();
+  return createStandaloneWebRuntimeCapabilityBindings({ ...options, bffSession });
 }
 
 function createStandaloneAuthState(): AuthCapabilityConfig {

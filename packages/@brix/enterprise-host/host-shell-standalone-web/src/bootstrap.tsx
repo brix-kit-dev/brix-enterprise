@@ -33,11 +33,10 @@ import {
   type FrontendHostRouteSnapshotEntry,
 } from '@brix-sdk/runtime-orchestrator-web';
 import { ProtectedLayout } from '@brix-sdk/platform-frame-web/layouts/ProtectedLayout';
-import { createStandaloneWebRuntimeCapabilityBindings } from '@brix-sdk/enterprise-standalone-web-runtime-profile';
 import {
-  createBffSessionAuthState,
-  type BffSessionAuthState,
-} from '@brix-sdk/platform-auth-web/BffSessionAuthState';
+  createStandaloneWebBffRuntimeCapabilityBindings,
+  createStandaloneWebRuntimeCapabilityBindings,
+} from '@brix-sdk/enterprise-standalone-web-runtime-profile';
 import { standaloneWebComposition } from './composition/standalone-web.composition';
 
 interface HostSidebarMenuItem {
@@ -170,18 +169,19 @@ function ProtectedRouteFrame({
  */
 function TenantConsoleFrame({
   route,
-  bffSession,
+  startedBehindBff,
   children,
 }: {
   readonly route: FrontendHostRouteSnapshotEntry;
-  readonly bffSession: BffSessionAuthState | null;
+  readonly startedBehindBff: boolean;
   readonly children: ReactNode;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
   const auth = useAuth();
   const runtime = useRuntimeContext();
-  const decision = runtime.getCapability<AuthCapability>(AuthCapabilityType)?.canAccessRoute({
+  const authCapability = runtime.getCapability<AuthCapability>(AuthCapabilityType);
+  const decision = authCapability?.canAccessRoute({
     allowedContexts: ['actor'],
     tenantContext: 'required',
     permissions: route.permissions,
@@ -192,14 +192,15 @@ function TenantConsoleFrame({
 
   useEffect(() => {
     if (decision.reason === 'anonymous' && !signingOut.current) {
-      if (bffSession) {
-        bffSession.redirectToLogin(returnTo);
+      if (startedBehindBff && authCapability) {
+        // The BFF-backed Auth capability sends the browser to log in and back to this page.
+        void authCapability.login({});
       } else {
         // The console was entered from another console's page: start it with its own session.
         window.location.assign(returnTo);
       }
     }
-  }, [bffSession, decision.reason, returnTo]);
+  }, [authCapability, decision.reason, returnTo, startedBehindBff]);
 
   const handleLogout = useCallback(async () => {
     signingOut.current = true;
@@ -236,12 +237,12 @@ function TenantConsoleFrame({
 function toHostedRouteElement(
   route: FrontendHostRouteSnapshotEntry,
   routeSnapshot: FrontendHostPublishedRouteSnapshot,
-  bffSession: BffSessionAuthState | null,
+  startedBehindBff: boolean,
 ): ReactNode {
   const element = toRouteElement(route);
   if (isTenantConsolePath(route.path)) {
     return (
-      <TenantConsoleFrame route={route} bffSession={bffSession}>
+      <TenantConsoleFrame route={route} startedBehindBff={startedBehindBff}>
         {element}
       </TenantConsoleFrame>
     );
@@ -259,11 +260,11 @@ function toHostedRouteElement(
 function RuntimeEntry({
   routeSnapshot,
   status,
-  bffSession,
+  startedBehindBff,
 }: {
   readonly routeSnapshot: FrontendHostPublishedRouteSnapshot;
   readonly status: string;
-  readonly bffSession: BffSessionAuthState | null;
+  readonly startedBehindBff: boolean;
 }) {
   const defaultPath = routeSnapshot.defaultPath ?? routeSnapshot.routes[0]?.path ?? '/';
   return (
@@ -281,7 +282,7 @@ function RuntimeEntry({
             <Route
               key={route.routeId}
               path={route.path}
-              element={toHostedRouteElement(route, routeSnapshot, bffSession)}
+              element={toHostedRouteElement(route, routeSnapshot, startedBehindBff)}
             />
           ))}
         </Routes>
@@ -300,18 +301,17 @@ export async function bootstrap(): Promise<void> {
 
   // The staff console and the legacy consoles are separate entries (identity-auth
   // BRX-IA-FLOW-005); the console a page load starts in decides how it authenticates.
-  const bffSession = isTenantConsolePath(window.location.pathname) ? createBffSessionAuthState() : null;
-  if (bffSession) {
-    await bffSession.load();
-  }
+  const startedBehindBff = isTenantConsolePath(window.location.pathname);
+  const profileOptions = {
+    apiBaseUrl: import.meta.env.VITE_API_BASE,
+    routeSources: standaloneWebComposition.routes.sources,
+  };
 
   const result = await bootstrapFrontendHost({
     composition: standaloneWebComposition,
-    capabilityBindings: createStandaloneWebRuntimeCapabilityBindings({
-      apiBaseUrl: import.meta.env.VITE_API_BASE,
-      routeSources: standaloneWebComposition.routes.sources,
-      ...(bffSession ? { bffSession } : {}),
-    }),
+    capabilityBindings: startedBehindBff
+      ? await createStandaloneWebBffRuntimeCapabilityBindings(profileOptions)
+      : createStandaloneWebRuntimeCapabilityBindings(profileOptions),
     debug: import.meta.env.DEV === true,
   });
   publishFrontendRuntimeIdentityEvidence({
@@ -335,7 +335,7 @@ export async function bootstrap(): Promise<void> {
         <RuntimeEntry
           routeSnapshot={result.routeSnapshot}
           status={result.runtime.status}
-          bffSession={bffSession}
+          startedBehindBff={startedBehindBff}
         />
       </RuntimeContextProvider>
     </StrictMode>
