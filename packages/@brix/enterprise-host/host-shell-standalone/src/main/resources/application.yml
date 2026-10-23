@@ -49,25 +49,17 @@ spring:
 
   jpa:
     hibernate:
-      # Schema ownership (transitional, blueprint-aligned):
+      # Schema ownership (root blueprint BRX-RS-DATA-035):
       #   1. Flyway runs FIRST (per-module migrations in infra-adapter-database)
-      #      and is the source of truth for all explicitly modelled tables
-      #      (platform-auth, platform-tenant, app-* with V100+ scripts).
+      #      and is the only source of DDL, including the legacy app-* tables
+      #      Hibernate used to create (app-* V101/V102).
       #   2. Hibernate runs AFTER Flyway (enforced by
       #      EntityManagerFactoryDependsOnPostProcessor in
-      #      FlywayModuleMigrationAutoConfiguration). In `update` mode it adds
-      #      missing columns/tables for legacy JPA entities that have not yet
-      #      been migrated to Flyway DDL (e.g. contract_party,
-      #      contract_sign_record, template_version).
-      #   3. Since Hibernate 7 (Spring Boot 4.1), `update` also ALTERS the type
-      #      or length of an existing column whose entity mapping differs from
-      #      the migration. Entity @Column mappings MUST therefore match the
-      #      Flyway DDL exactly; drifted columns are restored by forward
-      #      migrations (platform-auth V3, platform-identity/platform-tenant
-      #      V002, app-partners/app-messenger/app-storage V101).
-      # Root blueprint BRX-RS-DATA-035 requires `validate`; it needs Flyway DDL
-      # for every legacy entity table/column first.
-      ddl-auto: update
+      #      FlywayModuleMigrationAutoConfiguration) and only validates the
+      #      entity mappings against that schema; a mismatch fails startup.
+      #   Never switch back to `update`: since Hibernate 7 it also alters the
+      #   type or length of existing columns.
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
