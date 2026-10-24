@@ -240,11 +240,23 @@ const fs = require("fs");
 const file = process.argv[1];
 let state;
 try { state = JSON.parse(fs.readFileSync(file, "utf8")); } catch { process.exit(0); }
+const realpath = (p) => { try { return fs.realpathSync(p); } catch { return null; } };
 for (const proc of state.Processes || []) {
   const pid = Number(proc.PID);
   if (!Number.isInteger(pid) || pid <= 0) continue;
-  try { process.kill(pid, "SIGTERM"); console.log(`[INFO] Stopped ${proc.Name} (PID=${pid})`); }
-  catch (err) { if (err.code !== "ESRCH") console.error(`[FAIL] Could not stop ${proc.Name} (PID=${pid}): ${err.message}`); }
+  // After a reboot the PID may belong to another program: leave it alone unless it runs in the app directory.
+  const cwd = realpath(`/proc/${pid}/cwd`);
+  if (cwd && proc.Path && cwd !== realpath(proc.Path)) {
+    console.log(`[INFO] Skipped ${proc.Name}: PID ${pid} is no longer the recorded process`);
+    continue;
+  }
+  // Started with setsid, so its process group also holds the dev server it spawned (pnpm does not pass SIGTERM on).
+  for (const target of [-pid, pid]) {
+    try { process.kill(target, "SIGTERM"); console.log(`[INFO] Stopped ${proc.Name} (PID=${pid})`); break; }
+    catch (err) {
+      if (err.code !== "ESRCH") { console.error(`[FAIL] Could not stop ${proc.Name} (PID=${pid}): ${err.message}`); break; }
+    }
+  }
 }
 ' "$PID_FILE" || true
   sleep 1
@@ -257,7 +269,7 @@ stop_port_if_forced() {
   local pids=() pid
   while IFS= read -r pid; do
     [[ -n "$pid" ]] && pids+=("$pid")
-  done < <(ss -tulpen 2>/dev/null | sed -n "s/.*pid=\([0-9][0-9]*\).*:${port}[[:space:]].*/\1/p" | sort -u)
+  done < <(ss -Hltnp "sport = :${port}" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u)
 
   for pid in "${pids[@]}"; do
     if kill -0 "$pid" 2>/dev/null; then
@@ -266,9 +278,12 @@ stop_port_if_forced() {
     fi
   done
 
-  if [[ ${#pids[@]} -gt 0 ]]; then
-    sleep 1
-  fi
+  # Give a stopped server up to 10 seconds to release the port.
+  local attempt
+  for ((attempt = 0; attempt < 20 && ${#pids[@]} > 0; attempt++)); do
+    port_listening "$port" || break
+    sleep 0.5
+  done
 }
 
 port_listening() {
