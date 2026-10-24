@@ -140,7 +140,7 @@ function Assert-BootstrapV2Env {
         "BRIX_BOOTSTRAP_SUPER_ADMIN_SETUP_CODE",
         "BRIX_PLATFORM_MFA_ENCRYPTION_KEY",
         "BRIX_PLATFORM_ADMIN_SETUP_BASE_URL",
-        "BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL",
+        "BRIX_IDENTITY_PROVIDER_ISSUER",
         "BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM",
         "BRIX_INFRA_EMAIL_SMTP_FROM"
     )
@@ -148,6 +148,10 @@ function Assert-BootstrapV2Env {
         if ($content -notmatch "(?m)^\s*$name\s*=\s*\S+") {
             throw ".env is missing required v2 bootstrap variable $name."
         }
+    }
+    # FIRST_OWNER links open the hosted pages of the identity protocol surface, never /platform/**.
+    if ($content -match "(?m)^\s*BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL\s*=\s*\S*/platform/") {
+        throw ".env BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL points to a /platform/ page; remove it so the link follows BRIX_IDENTITY_PROVIDER_ISSUER."
     }
 
     $mfaKeyMatch = [regex]::Match($content, "(?m)^\s*BRIX_PLATFORM_MFA_ENCRYPTION_KEY\s*=\s*(\S+)")
@@ -258,7 +262,8 @@ MINIO_BUCKET_NAME=brix-storage
 BRIX_PLATFORM_MFA_ISSUER=Brix
 BRIX_PLATFORM_MFA_ENCRYPTION_KEY=$GeneratedMfaEncryptionKey
 BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup
-BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept
+BRIX_IDENTITY_PROVIDER_ENABLED=true
+BRIX_IDENTITY_PROVIDER_ISSUER=http://localhost:3001
 BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=platform-admin@brix.local
 BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local
 

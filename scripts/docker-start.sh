@@ -238,8 +238,13 @@ check_notification_environment() {
     exit 1
   fi
 
-  if [[ -z "$first_owner_invite_base_url" ]]; then
-    fail "BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty in .env."
+  # FIRST_OWNER links open the hosted pages of the identity protocol surface, never /platform/**.
+  if [[ "$first_owner_invite_base_url" == *"/platform/"* ]]; then
+    fail "BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL points to a /platform/ page; remove it so the link follows BRIX_IDENTITY_PROVIDER_ISSUER."
+    exit 1
+  fi
+  if [[ -z "$first_owner_invite_base_url" && -z "$(get_env_value BRIX_IDENTITY_PROVIDER_ISSUER)" ]]; then
+    fail "BRIX_IDENTITY_PROVIDER_ISSUER is empty in .env; FIRST_OWNER links need the hosted pages."
     exit 1
   fi
 

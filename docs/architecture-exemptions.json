@@ -2,38 +2,6 @@
   "schemaVersion": 1,
   "exemptions": [
     {
-      "id": "EX-2026-001",
-      "title": "旧员工登录接口与 FIRST_OWNER 受邀人页面在 M1 切片 1–2 期间保留",
-      "ruleIds": [
-        "BRX-RS-SECURITY-002",
-        "BRX-RS-SECURITY-012",
-        "S-20",
-        "BRX-IA-FLOW-006",
-        "IA-1",
-        "IA-2"
-      ],
-      "artifacts": [
-        "brix platform-auth POST /api/auth/login/actor（ActorLoginHandler，接收密码并在响应体返回 Token）",
-        "brix platform-tenant-web FIRST_OWNER 设置与接受页（FirstOwnerIdentityRepository、TenantInvitationRepository 在页面内输入密码并持有 identity token）"
-      ],
-      "owner": "platform-auth / platform-tenant",
-      "reason": "M1 切片 1 上线托管登录 + BFF 的员工登录后，FIRST_OWNER 接受邀请仍依赖旧接口和旧页面；切片 3 把受邀人页面迁入托管登录后才能删除它们。",
-      "risk": "旧接口接收凭证并把 Token 返回给浏览器，Token 存在 sessionStorage，可被页面脚本读取；与 BFF 方案相比，XSS 和凭证撞库的影响更大。",
-      "compensatingControls": [
-        "不新增任何调用方：员工控制台只走托管登录 + BFF",
-        "Actor Token 保持授权版本（mver）校验，权限只由 Runtime 授予表计算，Token 内没有权限列表",
-        "接口只在 FIRST_OWNER 接受邀请流程中使用",
-        "切片 3 完成后删除接口与页面，并移除本豁免"
-      ],
-      "expiresOn": "2027-01-31",
-      "exitCriteria": "M1 切片 3 完成：受邀人页面迁入托管登录，/api/auth/login/actor 与相关前端页面删除，IA-1、IA-2 门禁无此项豁免即可通过。",
-      "approval": {
-        "reviewer": "jsq",
-        "recordRef": "user-authorization:2026-10-23:identity-auth-m1-plan",
-        "approvedAt": "2026-10-23T18:33:53+09:00"
-      }
-    },
-    {
       "id": "EX-2026-002",
       "title": "旧平台登录、setup 与浏览器持有平台 Token 在 M1 切片 4 之前保留",
       "ruleIds": [

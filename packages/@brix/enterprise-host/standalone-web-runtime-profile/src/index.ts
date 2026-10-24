@@ -84,7 +84,7 @@ export function createStandaloneWebRuntimeCapabilityBindings(
   options: StandaloneWebRuntimeProfileOptions = {},
 ): readonly FrontendHostCapabilityBinding[] {
   const bffSession = options.bffSession;
-  // Installed tokens remain only for the exempted legacy consoles (EX-2026-001/002).
+  // Installed tokens remain only for the exempted legacy platform console (EX-2026-002).
   const auth = new AuthCapabilityImpl(bffSession ?? createStandaloneAuthState());
   const http = createHttpCapability({
     baseURL: normalizeApiBaseUrl(options.apiBaseUrl),

@@ -45,12 +45,16 @@ MAIL_HOST=`$(grep -E '^SPRING_MAIL_HOST=' .env | tail -n 1 | cut -d= -f2-)
 	SMTP_FROM=`$(grep -E '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env | tail -n 1 | cut -d= -f2-)
 	SETUP_BASE_URL=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=' .env | tail -n 1 | cut -d= -f2-)
 	FIRST_OWNER_INVITE_BASE_URL=`$(grep -E '^BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=' .env | tail -n 1 | cut -d= -f2-)
+	IDENTITY_PROVIDER_ISSUER=`$(grep -E '^BRIX_IDENTITY_PROVIDER_ISSUER=' .env | tail -n 1 | cut -d= -f2-)
 	SETUP_MAIL_FROM=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=' .env | tail -n 1 | cut -d= -f2-)
 	LOGGING=`$(grep -E '^BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=' .env | tail -n 1 | cut -d= -f2-)
 	if [ -z "`$SETUP_BASE_URL" ]; then
 	  exit 5
 	fi
-	if [ -z "`$FIRST_OWNER_INVITE_BASE_URL" ]; then
+	case "`$FIRST_OWNER_INVITE_BASE_URL" in
+	  */platform/*) exit 7 ;;
+	esac
+	if [ -z "`$FIRST_OWNER_INVITE_BASE_URL" ] && [ -z "`$IDENTITY_PROVIDER_ISSUER" ]; then
 	  exit 6
 	fi
 if [ -z "`$MAIL_HOST" ] && [ "`$LOGGING" != "true" ]; then
@@ -82,7 +86,11 @@ fi
         exit 1
     }
     if ($LASTEXITCODE -eq 6) {
-        Write-Host "ERROR: BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty in the remote .env." -ForegroundColor Red
+        Write-Host "ERROR: BRIX_IDENTITY_PROVIDER_ISSUER is empty in the remote .env; FIRST_OWNER links need the hosted pages." -ForegroundColor Red
+        exit 1
+    }
+    if ($LASTEXITCODE -eq 7) {
+        Write-Host "ERROR: BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL points to a /platform/ page in the remote .env; remove it so the link follows BRIX_IDENTITY_PROVIDER_ISSUER." -ForegroundColor Red
         exit 1
     }
     if ($LASTEXITCODE -ne 0) {

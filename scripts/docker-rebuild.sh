@@ -212,10 +212,11 @@ create_dev_env_if_needed() {
       chmod 600 .env
       success "Added missing BRIX_PLATFORM_ADMIN_SETUP_BASE_URL to existing .env"
     fi
-    if ! grep -Eq '^BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=' .env; then
-      printf '\nBRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept\n' >> .env
+    # FIRST_OWNER setup and invitation links open the hosted pages under the issuer.
+    if ! grep -Eq '^BRIX_IDENTITY_PROVIDER_ISSUER=' .env; then
+      printf '\nBRIX_IDENTITY_PROVIDER_ENABLED=true\nBRIX_IDENTITY_PROVIDER_ISSUER=http://localhost:3001\n' >> .env
       chmod 600 .env
-      success "Added missing BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL to existing .env"
+      success "Added missing BRIX_IDENTITY_PROVIDER_* settings to existing .env"
     fi
     if ! grep -Eq '^BRIX_INFRA_EMAIL_SMTP_FROM=' .env; then
       printf '\nBRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local\n' >> .env
@@ -257,7 +258,8 @@ TOKEN_ENCRYPTION_KEY=${token_key}
 BRIX_PLATFORM_MFA_ISSUER=Brix
 BRIX_PLATFORM_MFA_ENCRYPTION_KEY=${mfa_key}
 BRIX_PLATFORM_ADMIN_SETUP_BASE_URL=http://localhost:3001/platform/setup
-BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL=http://localhost:3001/platform/first-owner/accept
+BRIX_IDENTITY_PROVIDER_ENABLED=true
+BRIX_IDENTITY_PROVIDER_ISSUER=http://localhost:3001
 BRIX_PLATFORM_ADMIN_SETUP_MAIL_FROM=platform-admin@brix.local
 BRIX_INFRA_EMAIL_SMTP_FROM=platform-admin@brix.local
 BRIX_PLATFORM_ADMIN_SETUP_TOKEN_TTL_SECONDS=86400
@@ -348,8 +350,13 @@ check_notification_environment() {
     exit 1
   fi
 
-  if [[ -z "$first_owner_invite_base_url" ]]; then
-    fail "BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL is empty in .env."
+  # FIRST_OWNER links open the hosted pages of the identity protocol surface, never /platform/**.
+  if [[ "$first_owner_invite_base_url" == *"/platform/"* ]]; then
+    fail "BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL points to a /platform/ page; remove it so the link follows BRIX_IDENTITY_PROVIDER_ISSUER."
+    exit 1
+  fi
+  if [[ -z "$first_owner_invite_base_url" && -z "$(get_env_value BRIX_IDENTITY_PROVIDER_ISSUER)" ]]; then
+    fail "BRIX_IDENTITY_PROVIDER_ISSUER is empty in .env; FIRST_OWNER links need the hosted pages."
     exit 1
   fi
 

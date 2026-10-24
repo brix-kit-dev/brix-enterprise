@@ -247,13 +247,15 @@ brix:
   identity-provider:
     enabled: ${BRIX_IDENTITY_PROVIDER_ENABLED:false}
     issuer: ${BRIX_IDENTITY_PROVIDER_ISSUER:}
+  # FIRST_OWNER setup and invitation links open the hosted pages of the identity protocol surface
+  # (identity-auth BRX-IA-ONBOARD-002), never a /platform/** page; they follow the issuer by default.
   identity:
     first-owner-invitee-setup:
-      setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}
+      setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_IDENTITY_PROVIDER_ISSUER:}/auth/setup}
   tenant:
     first-owner-invitation:
-      invite-base-url: ${BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL:}
-      setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}
+      invite-base-url: ${BRIX_TENANT_FIRST_OWNER_INVITE_BASE_URL:${BRIX_IDENTITY_PROVIDER_ISSUER:}/auth/invitation}
+      setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_IDENTITY_PROVIDER_ISSUER:}/auth/setup}
   shell:
     standalone:
       enabled: true

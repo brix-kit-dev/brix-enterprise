@@ -83,7 +83,7 @@ public class ArchitectureTest {
 
         assertTrue(applicationYaml.contains("first-owner-invitee-setup:"));
         assertTrue(applicationYaml.contains(
-            "setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_PLATFORM_ADMIN_SETUP_BASE_URL:}}"));
+            "setup-base-url: ${BRIX_TENANT_FIRST_OWNER_SETUP_BASE_URL:${BRIX_IDENTITY_PROVIDER_ISSUER:}/auth/setup}"));
     }
 
     private static String resourceText(String name) throws IOException {
