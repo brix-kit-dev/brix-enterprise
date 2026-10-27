@@ -2,6 +2,24 @@
 
 ## 2026-10-27
 
+### Multi Tenant 5.1.2 Architecture Frozen
+
+- Supersession target: `multi-tenant-5.1.1`.
+- Patch revision (runtime-shell 3.2.0 §12.2: a correction that does not change observable contracts or red lines); compatibility epoch remains `3`.
+- §6.1 adds `sys_setup_token` and `sys_bootstrap_state`, the two global tables super-admin 4.0 defines. It is now also the persistence adapter's global-table register: a table without `tenant_id` that is not listed fails startup.
+- New §6.4 registers every allowed cross-tenant access and forbids the rest:
+  - login-time Actor discovery;
+  - FIRST_OWNER invitation resolution by token;
+  - the invitation resend after an invitee completes setup;
+  - platform-targeted operations.
+- §6 states that `TenantInterceptor` means the adapter's ORM-level tenant filter (root `BRX-RS-DATA-040`).
+- DDL, red lines T-1 to T-30, token structure, the permission catalog and default grants are unchanged.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Decision background: RFC-005, ruled under `user-authorization:2026-10-27:rfc-005-ruling` (option A for the resend).
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-27:multi-tenant-5.1.2-freeze`.
+- Locked at commit `3aaf4c4ed374e8f6cc2b586051cadbcc359d0c07`, SHA-256 `fb0b9f26704f76afc8bad41433bcd51831b28872bedeb692aad3a164a356cceb`, Git blob `e35b88fe3894f4d973a31b07abb0a099365281c6`, effective 2026-10-27.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 5.1.1 is SUPERSEDED and remains byte-for-byte unchanged.
+
 ### Multi Tenant 5.1.1 Architecture Frozen
 
 - Supersession target: `multi-tenant-5.1`.
