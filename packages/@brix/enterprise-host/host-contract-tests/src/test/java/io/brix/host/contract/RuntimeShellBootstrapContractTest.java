@@ -83,7 +83,7 @@ class RuntimeShellBootstrapContractTest {
     private static final String PLATFORM_TENANT_PLUGIN_ID = "platform-tenant";
     private static final String APP_BOOKING_PLUGIN_ID = "app-booking";
     private static final OwnerPersistenceProvider OWNER_PERSISTENCE = ownerId ->
-        PLATFORM_IDENTITY_PLUGIN_ID.equals(ownerId)
+        Set.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID).contains(ownerId)
             ? Optional.of(ContractOwnerPersistence.INSTANCE)
             : Optional.empty();
 
@@ -361,7 +361,8 @@ class RuntimeShellBootstrapContractTest {
     }
 
     /**
-     * Owner persistence for platform-identity; Phase 1 bootstrap never reaches its repositories.
+     * Owner persistence for platform-identity and platform-tenant; Phase 1 bootstrap never reaches
+     * their repositories.
      */
     private enum ContractOwnerPersistence implements PersistenceCapability, UnitOfWork {
         INSTANCE;
