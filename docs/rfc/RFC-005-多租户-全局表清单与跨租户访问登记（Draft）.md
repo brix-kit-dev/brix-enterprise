@@ -1,7 +1,7 @@
 # RFC-005：全局表清单与跨租户访问登记（Draft）
 
 > **文档类型**：RFC（多租户专项 Patch 修订提案）
-> **状态**：已裁决（2026-10-27），待冻结批准。条款已写入 multi-tenant 5.1.2 Freeze Candidate；architecture、security、SRE 批准并登记 lock 前不指导施工
+> **状态**：已裁决（2026-10-27）。条款已并入 multi-tenant 5.1.2（2026-10-27 Architecture Frozen / ACTIVE）；本文是决策背景，**不指导施工**
 > **起草日期**：2026-10-27
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；multi-tenant 5.1.1（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0、super-admin 4.0、frontend 1.2（ACTIVE）
 > **来源**：[租户隔离下沉持久化适配器设计方案](../v5.1.1-多租户-租户隔离下沉持久化适配器-设计方案.md) §8 R1
@@ -85,9 +85,9 @@
 **流程**：
 
 1. 本 RFC 已裁决；
-2. 起草 5.1.2 Freeze Candidate，在 lock 中登记为 CANDIDATE；
-3. architecture、security、SRE 明确批准；
-4. 冻结并登记：5.1.2 成为唯一 ACTIVE，5.1.1 转为 SUPERSEDED。
+2. 起草 5.1.2 Freeze Candidate，在 lock 中登记为 CANDIDATE（2026-10-27 已完成）；
+3. architecture、security、SRE 明确批准（2026-10-27 已完成）；
+4. 冻结并登记：5.1.2 成为唯一 ACTIVE，5.1.1 转为 SUPERSEDED（2026-10-27 已完成）。
 
 ## 5. 兼容性、迁移与回滚
 
