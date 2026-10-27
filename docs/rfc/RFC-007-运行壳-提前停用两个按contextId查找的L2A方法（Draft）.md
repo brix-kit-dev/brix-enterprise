@@ -1,7 +1,7 @@
 # RFC-007：提前停用两个按 contextId 查找的 L2A 方法（Draft）
 
 > **文档类型**：RFC（根级安全 RFC，按 `BRX-RS-CAP-023` 的安全例外缩短弃用期；RFC-006 的补充）
-> **状态**：Draft，待 architecture-committee、security、SRE 批准。批准前，含本变更的分支不得合并
+> **状态**：已批准（2026-10-27，architecture-committee、security、SRE，决定记录 `user-authorization:2026-10-27:rfc-007`）。本文是决策背景，**不指导施工**；施工依据是设计方案与本文 §3 的迁移说明
 > **起草日期**：2026-10-27
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；multi-tenant 5.1.2（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0（ACTIVE）
 > **来源**：[租户隔离下沉持久化适配器设计方案](../v5.1.1-多租户-租户隔离下沉持久化适配器-设计方案.md) §6.1 的更正（§13 第 1 条）
@@ -87,6 +87,8 @@ brix-enterprise 中没有调用方。
 
 | 角色 | 记录 | 批准时间 |
 |---|---|---|
-| architecture-committee | 待批准 | — |
-| security | 待批准 | — |
-| sre | 待批准 | — |
+| architecture-committee | `user-authorization:2026-10-27:rfc-007:architecture-committee` | `2026-10-27T20:47:00+09:00` |
+| security | `user-authorization:2026-10-27:rfc-007:security` | `2026-10-27T20:47:00+09:00` |
+| sre | `user-authorization:2026-10-27:rfc-007:sre` | `2026-10-27T20:47:00+09:00` |
+
+批准人：`jsq`。
