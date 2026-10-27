@@ -104,6 +104,24 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Reference persistence adapter: platform owners must classify under its tenant isolation -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-persistence-jpa</artifactId>
+            <version>${infra-adapters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Test frameworks -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
