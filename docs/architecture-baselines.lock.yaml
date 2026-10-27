@@ -591,6 +591,29 @@
         }
       ],
       "effectiveDate": "2026-10-27"
+    },
+    {
+      "id": "multi-tenant-5.1.2",
+      "domain": "multi-tenant",
+      "kind": "SPECIALIZED",
+      "status": "CANDIDATE",
+      "path": "docs/v5.1.2-多租户功能最小实现-设计蓝图.md",
+      "version": "5.1.2",
+      "compatibilityEpoch": 3,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "pending",
+      "rebaseRequired": true,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.2.0",
+        "version": "3.2.0"
+      },
+      "sha256": "c8197769b4c41b408c2839b905b8bb812cc56efa20df72e2ed0a1d351e2a2416",
+      "gitBlob": "6401bbeed1eb61649b121f8b7064b7a5c64ffd17",
+      "gitCommit": "2ef85cfb8cd1eebe4d16dd2febc2c3133eb77b45",
+      "decisionRef": "user-authorization:2026-10-27:rfc-005-ruling",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }
