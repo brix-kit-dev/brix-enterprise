@@ -1,5 +1,19 @@
 # Specialized Architecture Changelog
 
+## 2026-10-27
+
+### Multi Tenant 5.1.1 Architecture Frozen
+
+- Supersession target: `multi-tenant-5.1`.
+- Patch revision (runtime-shell 3.2.0 §12.2: a correction that does not change observable contracts or red lines); compatibility epoch remains `3`.
+- Resolves the 5.1 conflict on who sends tenant member invitations: §5.5 and §5.7 now agree with §9.8.2. ACTIVE members holding `tenant:member:invite` (by default OWNER and ADMIN) send `TENANT_MEMBER` invitations; an invitation whose target role is OWNER appoints an OWNER, so creating, resending or revoking it also needs `tenant:owner:transfer` (`BRX-TENANT-AUTHZ-007`), and an ADMIN invites only ADMIN or MEMBER.
+- The permission catalog and default grants, DDL, red lines T-1 to T-30, token structure and isolation semantics are unchanged.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Decision background: RFC-004, ruled under `user-authorization:2026-10-27:rfc-004-ruling` (option A).
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-27:multi-tenant-5.1.1-freeze`.
+- Locked at commit `668d66f97be6527409f6971fb649c4530f5064e8`, SHA-256 `a36e48707a0797c6c7210208b779f7c02896c8a8e5b000d8fbfde4e0f42d094a`, Git blob `e6bbdfaffcabb41a05425c1508f6973431f3a825`, effective 2026-10-27.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 5.1 is SUPERSEDED and remains byte-for-byte unchanged.
+
 ## 2026-10-23
 
 ### Multi Tenant 5.1 Architecture Frozen
