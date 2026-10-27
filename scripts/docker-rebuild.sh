@@ -326,7 +326,9 @@ EOF
 
 get_env_value() {
   local name="$1"
-  grep -E "^${name}=" .env 2>/dev/null | tail -n 1 | cut -d= -f2-
+  # A key missing from .env reads as empty (set -o pipefail would otherwise end the script
+  # without a message); the checks decide which settings may be empty.
+  { grep -E "^${name}=" .env 2>/dev/null || true; } | tail -n 1 | cut -d= -f2-
 }
 
 check_notification_environment() {
