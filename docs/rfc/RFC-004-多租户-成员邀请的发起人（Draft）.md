@@ -1,7 +1,7 @@
 # RFC-004：成员邀请的发起人（Draft）
 
 > **文档类型**：RFC（多租户专项 Patch 修订提案）
-> **状态**：已裁决（2026-10-27）。条款写入 multi-tenant 5.1.1 Freeze Candidate，待架构委员会、安全、SRE 批准；本文是决策背景，**不指导施工**
+> **状态**：已裁决（2026-10-27）。条款已并入 multi-tenant 5.1.1（2026-10-27 Architecture Frozen / ACTIVE）；本文是决策背景，**不指导施工**
 > **起草日期**：2026-10-27
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；multi-tenant 5.1（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0、super-admin 4.0、frontend 1.2（ACTIVE）
 > **来源**：2026-10-27 按 multi-tenant 5.1 盘点下一步改造时发现的条款冲突；它阻断租户成员管理切片
@@ -62,9 +62,9 @@ multi-tenant 5.1 对"谁能发起租户成员邀请"有两种写法：
 本次按 multi-tenant §13 的完整流程处理：
 
 1. 负责人裁决（2026-10-27 已完成，选方案 A）；
-2. 写出 `docs/v5.1.1-多租户功能最小实现-设计蓝图.md`（Freeze Candidate），在 lock 中登记为不指导施工的 CANDIDATE；
-3. 架构、安全、SRE 批准；
-4. 在 lock 中登记哈希、commit 与批准记录，v5.1 转为 SUPERSEDED。
+2. 写出 `docs/v5.1.1-多租户功能最小实现-设计蓝图.md`（Freeze Candidate），在 lock 中登记为不指导施工的 CANDIDATE（2026-10-27 已完成）；
+3. 架构、安全、SRE 批准（2026-10-27 已完成）；
+4. 在 lock 中登记哈希、commit 与批准记录，v5.1 转为 SUPERSEDED（2026-10-27 已完成）。
 
 ## 5. 兼容性、迁移与回滚
 
