@@ -1,7 +1,7 @@
 # RFC-006：提前停用三个跨租户 L2A 方法（Draft）
 
 > **文档类型**：RFC（根级安全 RFC，按 `BRX-RS-CAP-023` 的安全例外缩短弃用期）
-> **状态**：Draft，待 architecture、security、SRE 批准
+> **状态**：已批准（2026-10-27，architecture-committee、security、SRE，决定记录 `user-authorization:2026-10-27:rfc-006`）。本文是决策背景，**不指导施工**；施工依据是设计方案与本文 §3 的迁移说明
 > **起草日期**：2026-10-27
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；multi-tenant 5.1.1（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0（ACTIVE）
 > **来源**：[租户隔离下沉持久化适配器设计方案](../v5.1.1-多租户-租户隔离下沉持久化适配器-设计方案.md) §8 R2
@@ -68,3 +68,11 @@ CAP-023 规定：弃用方法要保留到下一个 Major，弃用期至少覆盖
 ## 5. 审批
 
 需要 architecture、security、SRE 批准。批准记录写入本文状态行，并在施工提交中引用本 RFC。
+
+| 角色 | 记录 | 批准时间 |
+|---|---|---|
+| architecture-committee | `user-authorization:2026-10-27:rfc-006:architecture-committee` | `2026-10-27T17:59:17+09:00` |
+| security | `user-authorization:2026-10-27:rfc-006:security` | `2026-10-27T17:59:17+09:00` |
+| sre | `user-authorization:2026-10-27:rfc-006:sre` | `2026-10-27T17:59:17+09:00` |
+
+批准人：`jsq`。
