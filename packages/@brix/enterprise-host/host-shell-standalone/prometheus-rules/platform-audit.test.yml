@@ -1,0 +1,33 @@
+# promtool test rules platform-audit.test.yml
+rule_files:
+  - platform-audit.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      # 2 分钟时平台审计第一次写入失败（序列首次出现），之后不再增加。
+      - series: 'brix_persistence_owner_failures_total{owner="platform-audit",code="persistence.unavailable"}'
+        values: '_ _ 1 1 1 1 1 1 1 1 1 1 1 1'
+      # 其他 Owner 的失败（例如业务冲突）不在这条规则的范围内。
+      - series: 'brix_persistence_owner_failures_total{owner="platform-tenant",code="persistence.unique_constraint_violation"}'
+        values: '0 1 2 3 4 5 6 7 8 9 10 11 12 13'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: BrixPlatformAuditPersistenceFailure
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: BrixPlatformAuditPersistenceFailure
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              category: security
+              owner: platform-audit
+              code: persistence.unavailable
+            exp_annotations:
+              summary: "平台审计写入或查询失败：persistence.unavailable"
+              description: "平台审计 Owner 的事务失败。若是 platform-admin 的操作审计，请求已返回 PLATFORM_AUDIT_WRITE_FAILED，但操作本身已经生效，需要人工补记。到日志中查 event=platform.audit.operation_write_failed。"
+      - eval_time: 12m
+        alertname: BrixPlatformAuditPersistenceFailure
+        exp_alerts: []

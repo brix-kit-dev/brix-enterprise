@@ -1,0 +1,33 @@
+# ============================================================
+# Prometheus 告警规则：平台审计
+# ============================================================
+#
+# 用途：平台审计 Owner 的持久化失败时告警（平台审计设计方案 §14.2 D7）。
+#       platform-admin 的操作审计写不进去时，请求返回 PLATFORM_AUDIT_WRITE_FAILED，
+#       但目标 Owner 的变更已经提交；审计查询失败同样落在这里。
+# 指标：brix_persistence_owner_failures_total
+#       （Micrometer 计数器 brix.persistence.owner.failures，持久化适配器按 Owner 统计）
+# 标签：owner、code（稳定错误码 persistence.*），取值都是有限集合
+#
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules platform-audit.test.yml
+# ============================================================
+
+groups:
+  - name: brix-platform-audit
+    rules:
+      # 任何一次失败都告警，新出现的序列也不漏掉（与 BrixTenantIsolationViolation 相同的写法）。
+      - alert: BrixPlatformAuditPersistenceFailure
+        expr: |
+          sum by (owner, code) (increase(brix_persistence_owner_failures_total{owner="platform-audit"}[5m])) > 0
+          or
+          sum by (owner, code) (
+            brix_persistence_owner_failures_total{owner="platform-audit"}
+            unless brix_persistence_owner_failures_total{owner="platform-audit"} offset 5m
+          ) > 0
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "平台审计写入或查询失败：{{ $labels.code }}"
+          description: "平台审计 Owner 的事务失败。若是 platform-admin 的操作审计，请求已返回 PLATFORM_AUDIT_WRITE_FAILED，但操作本身已经生效，需要人工补记。到日志中查 event=platform.audit.operation_write_failed。"
