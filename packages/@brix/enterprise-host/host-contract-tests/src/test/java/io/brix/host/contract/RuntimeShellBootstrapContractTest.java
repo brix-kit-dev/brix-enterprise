@@ -363,15 +363,15 @@ class RuntimeShellBootstrapContractTest {
     }
 
     /**
-     * Owner persistence for platform-identity and platform-tenant; Phase 1 bootstrap never reaches
-     * their repositories.
+     * Owner persistence for platform-identity and platform-tenant. Event handler factories take their
+     * repositories when the plugin starts; Phase 1 bootstrap never calls them.
      */
     private enum ContractOwnerPersistence implements PersistenceCapability, UnitOfWork {
         INSTANCE;
 
         @Override
         public <R> R repository(Class<R> repositoryType) {
-            throw new UnsupportedOperationException("Repositories are not used by Phase 1 bootstrap tests");
+            return throwingProxy(repositoryType);
         }
 
         @Override
