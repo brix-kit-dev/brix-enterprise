@@ -26,6 +26,7 @@ import io.runtime.sdk.plugin.EndpointHandler;
 import io.runtime.sdk.plugin.EndpointInvocation;
 import io.runtime.sdk.plugin.EndpointResponse;
 import io.runtime.sdk.plugin.EventHandler;
+import io.runtime.sdk.plugin.HandlerFactory;
 import io.runtime.sdk.plugin.ManagedTask;
 import io.runtime.sdk.plugin.PluginBootstrapContext;
 import io.runtime.sdk.plugin.QueryHandler;
@@ -111,7 +112,7 @@ class TenantPluginEndpointHandlerTest {
         }
 
         @Override
-        public void bindEventHandler(String manifestSubscriptionId, EventHandler<?> handler) {
+        public void bindEventHandlerFactory(String manifestSubscriptionId, HandlerFactory<? extends EventHandler<?>> handler) {
         }
 
         @Override
