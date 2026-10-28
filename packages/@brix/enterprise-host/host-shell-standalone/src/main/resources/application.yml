@@ -149,6 +149,8 @@ brix:
     relay:
       enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}
       owner: ${BRIX_OUTBOX_RELAY_OWNER:enterprise-shell}
+      # 进程内投递到订阅方 Owner 的 Inbox（P4 D11）；每个启用插件清单的 data.outbox 各一个 Relay
+      transport: ${BRIX_OUTBOX_RELAY_TRANSPORT:in-process}
       batch-size: ${BRIX_OUTBOX_RELAY_BATCH_SIZE:25}
       max-attempts: ${BRIX_OUTBOX_RELAY_MAX_ATTEMPTS:6}
       lease-duration: ${BRIX_OUTBOX_RELAY_LEASE_DURATION:30s}
@@ -376,8 +378,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,outbox
   endpoint:
+    # 停放消息：GET /actuator/outbox 列出，POST /actuator/outbox/{eventId} 重放（P4 §3）。
+    # 只在管理端口；该端口不发布到宿主机。
+    outbox:
+      access: unrestricted
     health:
       show-details: always
       show-components: always

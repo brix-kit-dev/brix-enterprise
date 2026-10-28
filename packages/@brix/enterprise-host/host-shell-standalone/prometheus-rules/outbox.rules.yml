@@ -1,0 +1,40 @@
+# ============================================================
+# Prometheus 告警规则：Outbox 投递
+# ============================================================
+#
+# 用途：Outbox 的消息被停放或长时间投递不出去时告警（P4 设计方案 §3、§7.2 d）。
+#       停放的消息不会再自动投递，要查清原因后人工重放。
+# 指标：brix_outbox_messages{outbox,status}：Relay 每一轮读到的各状态行数
+#       brix_outbox_oldest_pending_age_seconds{outbox}：最早一条待投递消息的等待时长
+#       （Micrometer brix.outbox.messages、brix.outbox.oldest.pending.age，按 Owner 的 Outbox 表统计）
+# 标签：outbox（Owner 的 Outbox 表名）、status（pending、in_flight、parked），取值都是有限集合
+#
+# 处理：管理端口 GET /actuator/outbox 列出停放的消息；原因消除后
+#       POST /actuator/outbox/{eventId} 重放。eventId 不变，已提交过的订阅方靠 Inbox 跳过。
+#       操作步骤见 TESTING-LOCAL.md。
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules outbox.test.yml
+# ============================================================
+
+groups:
+  - name: brix-outbox
+    rules:
+      # 停放的行一直计在 gauge 里，直到被重放，所以这条告警不会自己消失。
+      - alert: BrixOutboxMessageParked
+        expr: max by (outbox) (brix_outbox_messages{status="parked"}) > 0
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "Outbox {{ $labels.outbox }} 有停放的消息"
+          description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放。"
+      # Relay 在运行，但最早的消息超过 15 分钟仍未投递（例如订阅方一直失败、还没到停放的次数）。
+      - alert: BrixOutboxDeliveryStalled
+        expr: max by (outbox) (brix_outbox_oldest_pending_age_seconds) > 900
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "Outbox {{ $labels.outbox }} 有消息超过 15 分钟没有投递出去"
+          description: "Relay 在运行，但消息一直投递不出去。到日志查 event=event.delivery_failed 和 event=outbox.claim_lost。"

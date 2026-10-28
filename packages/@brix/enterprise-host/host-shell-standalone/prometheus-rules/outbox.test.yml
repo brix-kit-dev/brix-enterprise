@@ -1,0 +1,56 @@
+# promtool test rules outbox.test.yml
+rule_files:
+  - outbox.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      # 2 分钟时租户 Outbox 停放了一条消息，5 分钟时被重放。
+      - series: 'brix_outbox_messages{outbox="platform_tenant_outbox",status="parked"}'
+        values: '0 0 1 1 1 0 0'
+      - series: 'brix_outbox_messages{outbox="platform_tenant_outbox",status="pending"}'
+        values: '3 3 3 3 3 3 3'
+      # 其他 Outbox 没有停放的消息。
+      - series: 'brix_outbox_messages{outbox="platform_identity_outbox",status="parked"}'
+        values: '0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: BrixOutboxMessageParked
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: BrixOutboxMessageParked
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              category: reliability
+              outbox: platform_tenant_outbox
+            exp_annotations:
+              summary: "Outbox platform_tenant_outbox 有停放的消息"
+              description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放。"
+      - eval_time: 5m
+        alertname: BrixOutboxMessageParked
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      # 3 分钟起最早的待投递消息超过 15 分钟，持续 5 分钟后告警。
+      - series: 'brix_outbox_oldest_pending_age_seconds{outbox="platform_tenant_outbox"}'
+        values: '0 300 600 960 1020 1080 1140 1200 1260 1320'
+      - series: 'brix_outbox_oldest_pending_age_seconds{outbox="platform_identity_outbox"}'
+        values: '0 0 0 0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: BrixOutboxDeliveryStalled
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: BrixOutboxDeliveryStalled
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              outbox: platform_tenant_outbox
+            exp_annotations:
+              summary: "Outbox platform_tenant_outbox 有消息超过 15 分钟没有投递出去"
+              description: "Relay 在运行，但消息一直投递不出去。到日志查 event=event.delivery_failed 和 event=outbox.claim_lost。"
