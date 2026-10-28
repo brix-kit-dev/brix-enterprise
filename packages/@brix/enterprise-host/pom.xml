@@ -188,6 +188,11 @@
                 <artifactId>infra-adapter-outbox</artifactId>
                 <version>${infra-adapters.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.brix</groupId>
+                <artifactId>infra-adapter-idgen</artifactId>
+                <version>${infra-adapters.version}</version>
+            </dependency>
 
             <!-- Platform Commons -->
             <dependency>

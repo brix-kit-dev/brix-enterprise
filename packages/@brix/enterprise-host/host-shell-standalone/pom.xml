@@ -89,6 +89,11 @@
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-outbox</artifactId>
         </dependency>
+        <!-- IdGeneratorCapability (Snowflake): ids of the platform audit owner and of the runtime policy audit writer. -->
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-idgen</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-redis</artifactId>
@@ -172,6 +177,13 @@
         <dependency>
             <groupId>io.brix.platform</groupId>
             <artifactId>platform-identity</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <!-- Platform Audit: sole owner of sys_platform_audit_log (super-admin §1.3a); api and core come with it. -->
+        <dependency>
+            <groupId>io.brix.platform</groupId>
+            <artifactId>platform-audit-server</artifactId>
             <version>3.2.0</version>
         </dependency>
 

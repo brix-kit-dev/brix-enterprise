@@ -119,6 +119,18 @@ brix:
       - io.brix.platform.tenant.internal.TenantAdministration
       - io.brix.platform.identity.internal.PlatformBootstrapAdministration
       - io.brix.platform.identity.internal.PlatformIdentityAdministration
+      - io.brix.platform.audit.internal.PlatformAuditAdministration
+      - io.runtime.sdk.capability.IdGeneratorCapability
+  # IdGeneratorCapability (infra-adapter-idgen) gives the ids of the platform audit owner and of the
+  # runtime policy audit writer. sys_platform_audit_log keys on BIGINT, so the strategy stays snowflake.
+  # During the platform audit split platform-identity writes the same table with its own Snowflake
+  # generator, whose worker id (brix.identity.worker-id, default 1) sits in the same 10 node bits as
+  # datacenter-id * 32 + worker-id here (default 33). Keep the two different and the ids never collide.
+  idgen:
+    strategy: snowflake
+    snowflake:
+      datacenter-id: ${BRIX_IDGEN_DATACENTER_ID:1}
+      worker-id: ${BRIX_IDGEN_WORKER_ID:1}
   runtime-shell:
     enabled: true
     runtime-version: ${BRIX_RUNTIME_SHELL_VERSION:3.2.0}
@@ -130,6 +142,7 @@ brix:
       - platform-admin
     required-plugins:
       - platform-identity
+      - platform-audit
       - platform-tenant
       - app-booking
   outbox:
@@ -185,7 +198,8 @@ brix:
         modules:
           # Platform foundation (must run first — referenced by app-* migrations)
           - platform-auth        # creates auth_user / auth_role / auth_permission (referenced by app-identity V100)
-          - platform-identity    # owns sys_identity / sys_platform_admin / sys_bootstrap_state / sys_platform_audit_log
+          - platform-identity    # owns sys_identity / sys_platform_admin / sys_bootstrap_state; created sys_platform_audit_log
+          - platform-audit       # owns sys_platform_audit_log since 2026-10-28 (adopts the table, then expands it)
           - platform-tenant      # creates sys_tenant / sys_identity / sys_tenant_member etc.
           # Application modules
           - app-identity

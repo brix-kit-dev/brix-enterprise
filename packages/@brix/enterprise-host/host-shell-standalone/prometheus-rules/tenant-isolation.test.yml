@@ -38,3 +38,27 @@ tests:
       - eval_time: 19m
         alertname: BrixTenantIsolationViolation
         exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      # 2 分钟时第一次写入失败（序列首次出现），之后不再增加。
+      - series: 'brix_tenant_isolation_policy_audit_failures_total{policy="login-tenant-discovery",reason="integrity"}'
+        values: '_ _ 1 1 1 1 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: BrixPolicyAuditWriteFailure
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: BrixPolicyAuditWriteFailure
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              category: security
+              policy: login-tenant-discovery
+              reason: integrity
+            exp_annotations:
+              summary: "跨租户策略的平台审计写入失败：login-tenant-discovery / integrity"
+              description: "运行时写不进平台审计，这次跨租户访问已经失败；登录发现失败会让员工无法登录。到日志 brix.tenant.isolation.audit 中查 event=tenant.policy.audit_failed。"
+      - eval_time: 12m
+        alertname: BrixPolicyAuditWriteFailure
+        exp_alerts: []

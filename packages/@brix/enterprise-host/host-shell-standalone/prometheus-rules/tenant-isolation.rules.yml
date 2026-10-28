@@ -32,3 +32,20 @@ groups:
         annotations:
           summary: "租户隔离拒绝了数据访问：{{ $labels.owner }} / {{ $labels.reason }}"
           description: "持久化适配器在过去 5 分钟内拒绝了访问（{{ $labels.code }}），没有越界数据返回。到日志 brix.tenant.isolation.audit 中查 event=tenant.isolation.violation，判断是攻击还是缺陷。"
+
+      # 跨租户策略的平台审计写不进去，这次使用就失败（根 DATA-047，fail-closed）。
+      # 登录发现失败时员工无法登录，所以同样是 critical。
+      - alert: BrixPolicyAuditWriteFailure
+        expr: |
+          sum by (policy, reason) (increase(brix_tenant_isolation_policy_audit_failures_total[5m])) > 0
+          or
+          sum by (policy, reason) (
+            brix_tenant_isolation_policy_audit_failures_total
+            unless brix_tenant_isolation_policy_audit_failures_total offset 5m
+          ) > 0
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "跨租户策略的平台审计写入失败：{{ $labels.policy }} / {{ $labels.reason }}"
+          description: "运行时写不进平台审计，这次跨租户访问已经失败；登录发现失败会让员工无法登录。到日志 brix.tenant.isolation.audit 中查 event=tenant.policy.audit_failed。"

@@ -93,6 +93,12 @@
         </dependency>
         <dependency>
             <groupId>io.brix.platform</groupId>
+            <artifactId>platform-audit-server</artifactId>
+            <version>${platform-commons.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix.platform</groupId>
             <artifactId>platform-auth-operational</artifactId>
             <version>${platform-commons.version}</version>
             <scope>test</scope>
@@ -108,6 +114,12 @@
         <dependency>
             <groupId>io.brix</groupId>
             <artifactId>infra-adapter-persistence-jpa</artifactId>
+            <version>${infra-adapters.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brix</groupId>
+            <artifactId>infra-adapter-idgen</artifactId>
             <version>${infra-adapters.version}</version>
             <scope>test</scope>
         </dependency>

@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 
+import io.brix.platform.audit.internal.PlatformAuditAdministration;
 import io.brix.platform.identity.internal.PlatformBootstrapAdministration;
 import io.brix.platform.identity.internal.PlatformIdentityAdministration;
 import io.brix.platform.tenant.internal.TenantAdministration;
@@ -328,6 +329,7 @@ class RuntimeShellBootstrapContractTest {
         registry.register(TenantAdministration.class, throwingProxy(TenantAdministration.class));
         registry.register(PlatformBootstrapAdministration.class, throwingProxy(PlatformBootstrapAdministration.class));
         registry.register(PlatformIdentityAdministration.class, throwingProxy(PlatformIdentityAdministration.class));
+        registry.register(PlatformAuditAdministration.class, throwingProxy(PlatformAuditAdministration.class));
         return registry;
     }
 
