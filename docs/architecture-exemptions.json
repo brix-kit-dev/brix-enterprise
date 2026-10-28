@@ -37,6 +37,35 @@
         "recordRef": "user-authorization:2026-10-23:identity-auth-m1-plan",
         "approvedAt": "2026-10-23T18:33:53+09:00"
       }
+    },
+    {
+      "id": "EX-2026-003",
+      "title": "平台审计拆分期间 platform-identity 继续直接写自己的平台审计行",
+      "ruleIds": [
+        "BRX-RS-DATA-001",
+        "BRX-RS-DATA-027",
+        "super-admin §1.3a（sys_platform_audit_log 的唯一 Owner 是 platform-audit）"
+      ],
+      "artifacts": [
+        "brix platform-identity PlatformAuditLogEntry、PlatformAuditLogRepository",
+        "brix platform-identity RepositoryPlatformIdentityAuditService、AuditService、AuditEvent"
+      ],
+      "owner": "platform-identity / platform-audit",
+      "reason": "身份的审计行要与变更一起提交；改为同步调用 platform-audit，变更回滚时会留下错误的记录。不丢不错的做法是身份 Owner 的 Outbox（平台审计设计方案 P4），现在还没有。",
+      "risk": "两个持久化单元映射同一张表；platform-identity 的写入绕过 platform-audit 的写规则。",
+      "compensatingControls": [
+        "数据库默认值把 platform-identity 写入的行标为 writer=platform-identity",
+        "实体全部列不可更新，Repository 只有 save，只追加不修改",
+        "platform-audit 的 CHECK 约束禁止它写跨租户策略动作",
+        "P4 完成后删除这些组件并移除本豁免"
+      ],
+      "expiresOn": "2027-02-28",
+      "exitCriteria": "平台审计设计方案 P4 完成：身份 Owner 经 Outbox 发出审计事实，platform-audit 订阅入库；platform-identity 的审计组件删除，writer 列去掉默认值。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-10-28:rfc-008",
+        "approvedAt": "2026-10-28T13:18:15+09:00"
+      }
     }
   ]
 }
