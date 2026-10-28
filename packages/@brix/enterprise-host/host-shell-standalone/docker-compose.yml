@@ -152,7 +152,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      # 共享环境启动要 95～115 秒；宽限期内失败不计数，启动一完成就转为 healthy
+      start_period: 180s
 
   # ============================================================
   # PostgreSQL 数据库
