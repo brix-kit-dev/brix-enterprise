@@ -19,6 +19,12 @@ global:
 rule_files:
   - /etc/prometheus/rules/*.rules.yml
 
+# 告警发往 compose full profile 中的 alertmanager
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 scrape_configs:
   # Prometheus 自身指标
   - job_name: 'prometheus'
@@ -30,11 +36,11 @@ scrape_configs:
     static_configs:
       - targets: ['otel-collector:8889']
 
-  # 运行壳 Actuator 端点
+  # 运行壳 Actuator 端点（管理端口 9081，只在容器网络内可达）
   - job_name: 'host-shell-standalone'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host-shell:8081']
+      - targets: ['host-shell:9081']
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance

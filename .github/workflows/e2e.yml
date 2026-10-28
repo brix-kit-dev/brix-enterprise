@@ -124,10 +124,10 @@ jobs:
             > host.log 2>&1 &
           echo "HOST_PID=$!" >> $GITHUB_ENV
 
-      - name: Wait for backend on :8081
+      - name: Wait for backend (health on the management port :9081)
         run: |
           for i in $(seq 1 60); do
-            if curl -fsS http://localhost:8081/actuator/health >/dev/null 2>&1; then
+            if curl -fsS http://localhost:9081/actuator/health >/dev/null 2>&1; then
               echo "Backend is healthy."
               exit 0
             fi

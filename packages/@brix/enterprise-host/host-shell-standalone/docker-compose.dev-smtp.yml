@@ -30,6 +30,11 @@ services:
       mailpit:
         condition: service_started
 
+  # 告警邮件也发到 Mailpit（只在启动 full profile 的 alertmanager 时生效）
+  alertmanager:
+    volumes:
+      - ./alertmanager/alertmanager.dev-smtp.yml:/etc/alertmanager/alertmanager.yml:ro
+
   mailpit:
     image: axllent/mailpit:v1.29.7
     container_name: brix-mailpit

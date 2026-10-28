@@ -1,0 +1,24 @@
+# ============================================================
+# Alertmanager 配置（默认）
+# ============================================================
+#
+# 用途：接收 Prometheus 告警（prometheus-rules/*.rules.yml）并通知
+# 模块：host-shell-standalone
+#
+# 默认只有一个没有通知渠道的接收方：告警在 Alertmanager 中可见，但不会发出通知。
+# 正式部署必须换成真实的接收方（邮件、值班系统），做法与 docker-compose.dev-smtp.yml
+# 相同：在叠加文件里把另一份配置挂载到 /etc/alertmanager/alertmanager.yml。
+#
+# 检查：amtool check-config alertmanager.yml
+#
+# ============================================================
+
+route:
+  receiver: default
+  group_by: [alertname, owner, reason, code]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: default

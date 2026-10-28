@@ -7,8 +7,7 @@
 #       （Micrometer 计数器 brix.tenant.isolation.violations）
 # 标签：owner、scope、reason、code，取值都是有限集合
 #
-# 前提：Prometheus 能抓到 Host 的 /actuator/prometheus
-#       （Host 需要 micrometer-registry-prometheus）
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
 # 测试：promtool test rules tenant-isolation.test.yml
 #
 # ============================================================

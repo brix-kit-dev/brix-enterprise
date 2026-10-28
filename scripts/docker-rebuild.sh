@@ -460,10 +460,11 @@ wait_and_health_check() {
     return 0
   fi
 
+  # actuator is on the management port 9081, reachable only inside the container network.
   step "Checking host-shell health endpoint..."
   local body
   for _ in {1..30}; do
-    body="$(curl -fsS --max-time 3 "${APP_URL}/actuator/health" 2>/dev/null || true)"
+    body="$(run_compose exec -T host-shell wget -qO- -T 3 http://localhost:9081/actuator/health 2>/dev/null || true)"
     if [[ "$body" == *'"status":"UP"'* || "$body" == *'"status":"STARTING"'* ]]; then
       echo "$body" | head -c 500
       echo
@@ -473,7 +474,7 @@ wait_and_health_check() {
     sleep 2
   done
 
-  curl -fsS --max-time 5 "${APP_URL}/actuator/health" | head -c 500
+  run_compose exec -T host-shell wget -qO- -T 5 http://localhost:9081/actuator/health | head -c 500
   echo
   success "Health endpoint responded"
 }
@@ -495,7 +496,7 @@ print_summary() {
     info "SMTP: production .env notification config validated"
   fi
   info "Host Shell API: ${APP_URL}"
-  info "Health Check: ${APP_URL}/actuator/health"
+  info "Health Check: docker compose exec host-shell wget -qO- http://localhost:9081/actuator/health"
 }
 
 main() {

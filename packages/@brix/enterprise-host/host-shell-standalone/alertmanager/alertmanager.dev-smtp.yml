@@ -1,0 +1,28 @@
+# ============================================================
+# Alertmanager 配置（开发与共享测试环境：发到 Mailpit）
+# ============================================================
+#
+# 用途：docker-compose.dev-smtp.yml 挂载本文件，告警邮件发到 Mailpit
+# 收件人：ops-alerts@brix.local（Mailpit 收下所有邮件，不会真正外发）
+#
+# 检查：amtool check-config alertmanager.dev-smtp.yml
+#
+# ============================================================
+
+global:
+  smtp_smarthost: mailpit:1025
+  smtp_from: alertmanager@brix.local
+  smtp_require_tls: false
+
+route:
+  receiver: ops-mail
+  group_by: [alertname, owner, reason, code]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: ops-mail
+    email_configs:
+      - to: ops-alerts@brix.local
+        send_resolved: true

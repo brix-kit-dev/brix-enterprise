@@ -352,7 +352,13 @@ platform:
         client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
 
 # ==================== Actuator 配置 ====================
+# actuator 只在独立的管理端口上提供，业务端口 8081 上没有 /actuator。
+# 管理端口默认只监听本机；容器部署由 compose 改为监听容器网络，且不发布到宿主机，
+# 只有同一网络内的 Prometheus 和容器自身的健康检查能访问。
 management:
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:9081}
+    address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
   endpoints:
     web:
       exposure:
