@@ -1,0 +1,40 @@
+# promtool test rules tenant-isolation.test.yml
+rule_files:
+  - tenant-isolation.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      # 3 分钟时第一次被拒绝（序列首次出现），8 分钟时第二次。
+      - series: 'brix_tenant_isolation_violations_total{owner="platform-tenant",scope="tenant",reason="statement",code="persistence.tenant_scope_violation"}'
+        values: '_ _ _ 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2'
+      # 一直没有违规的序列不告警。
+      - series: 'brix_tenant_isolation_violations_total{owner="platform-identity",scope="none",reason="statement",code="persistence.tenant_scope_required"}'
+        values: '0x19'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: BrixTenantIsolationViolation
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: BrixTenantIsolationViolation
+        exp_alerts: &violation
+          - exp_labels:
+              severity: critical
+              category: security
+              owner: platform-tenant
+              reason: statement
+              code: persistence.tenant_scope_violation
+            exp_annotations:
+              summary: "租户隔离拒绝了数据访问：platform-tenant / statement"
+              description: "持久化适配器在过去 5 分钟内拒绝了访问（persistence.tenant_scope_violation），没有越界数据返回。到日志 brix.tenant.isolation.audit 中查 event=tenant.isolation.violation，判断是攻击还是缺陷。"
+      - eval_time: 7m
+        alertname: BrixTenantIsolationViolation
+        exp_alerts: *violation
+      - eval_time: 9m
+        alertname: BrixTenantIsolationViolation
+        exp_alerts: *violation
+      - eval_time: 19m
+        alertname: BrixTenantIsolationViolation
+        exp_alerts: []

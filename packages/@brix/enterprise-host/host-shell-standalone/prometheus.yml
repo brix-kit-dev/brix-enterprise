@@ -15,6 +15,10 @@ global:
     platform: brix
     environment: production
 
+# 告警规则：docker-compose 把 ./prometheus-rules 挂载到 /etc/prometheus/rules
+rule_files:
+  - /etc/prometheus/rules/*.rules.yml
+
 scrape_configs:
   # Prometheus 自身指标
   - job_name: 'prometheus'

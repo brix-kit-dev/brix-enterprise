@@ -1,0 +1,35 @@
+# ============================================================
+# Prometheus 告警规则：租户隔离
+# ============================================================
+#
+# 用途：持久化适配器拒绝数据访问时告警（租户隔离下沉设计方案 §4.6）
+# 指标：brix_tenant_isolation_violations_total
+#       （Micrometer 计数器 brix.tenant.isolation.violations）
+# 标签：owner、scope、reason、code，取值都是有限集合
+#
+# 前提：Prometheus 能抓到 Host 的 /actuator/prometheus
+#       （Host 需要 micrometer-registry-prometheus）
+# 测试：promtool test rules tenant-isolation.test.yml
+#
+# ============================================================
+
+groups:
+  - name: brix-tenant-isolation
+    rules:
+      # 任何一次拒绝都告警：访问已经失败（fail-closed），
+      # 要尽快判断是攻击还是缺陷。
+      # increase() 要两个样本，新出现的序列用 "unless ... offset" 补上第一次计数。
+      - alert: BrixTenantIsolationViolation
+        expr: |
+          sum by (owner, reason, code) (increase(brix_tenant_isolation_violations_total[5m])) > 0
+          or
+          sum by (owner, reason, code) (
+            brix_tenant_isolation_violations_total
+            unless brix_tenant_isolation_violations_total offset 5m
+          ) > 0
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "租户隔离拒绝了数据访问：{{ $labels.owner }} / {{ $labels.reason }}"
+          description: "持久化适配器在过去 5 分钟内拒绝了访问（{{ $labels.code }}），没有越界数据返回。到日志 brix.tenant.isolation.audit 中查 event=tenant.isolation.violation，判断是攻击还是缺陷。"
