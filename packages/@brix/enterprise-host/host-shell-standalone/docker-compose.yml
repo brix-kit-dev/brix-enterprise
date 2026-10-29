@@ -204,6 +204,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /var/lib/kafka/data
+      # broker 不自动建主题（Kafka 设计方案 D18、§13 K4）：事件主题与停放主题都由适配器按清单显式创建，
+      # 写错的主题名直接报错而不是悄悄多出一个主题。临时打开：.env 设 BRIX_KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${BRIX_KAFKA_AUTO_CREATE_TOPICS_ENABLE:-false}
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
