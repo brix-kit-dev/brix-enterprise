@@ -58,6 +58,7 @@ import io.runtime.sdk.capability.AuthCapability;
 import io.runtime.sdk.capability.AuthFlowCapability;
 import io.runtime.sdk.capability.DataScope;
 import io.runtime.sdk.capability.EventBusCapability;
+import io.runtime.sdk.capability.IdGeneratorCapability;
 import io.runtime.sdk.capability.PersistenceCapability;
 import io.runtime.sdk.capability.UnitOfWork;
 import io.runtime.sdk.internalcontract.InternalContractProvider;
@@ -326,6 +327,8 @@ class RuntimeShellBootstrapContractTest {
         registry.register(EventBusCapability.class, EventBusTestFactory.allImplementations()
             .findFirst()
             .orElseThrow());
+        // platform-audit's identity audit fact handler takes the Host's id generator when it is created (P4c).
+        registry.register(IdGeneratorCapability.class, throwingProxy(IdGeneratorCapability.class));
         registry.register(TenantAdministration.class, throwingProxy(TenantAdministration.class));
         registry.register(PlatformBootstrapAdministration.class, throwingProxy(PlatformBootstrapAdministration.class));
         registry.register(PlatformIdentityAdministration.class, throwingProxy(PlatformIdentityAdministration.class));
