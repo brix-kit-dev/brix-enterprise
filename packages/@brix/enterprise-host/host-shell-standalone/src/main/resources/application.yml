@@ -149,7 +149,9 @@ brix:
     relay:
       enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}
       owner: ${BRIX_OUTBOX_RELAY_OWNER:enterprise-shell}
-      # 进程内投递到订阅方 Owner 的 Inbox（P4 D11）；每个启用插件清单的 data.outbox 各一个 Relay
+      # in-process：进程内投递到订阅方 Owner 的 Inbox（P4 D11）；每个启用插件清单的 data.outbox 各一个 Relay。
+      # kafka：Relay 发到 Kafka 主题 brix.event.<eventType>，Runtime 为每个订阅建一个消费组接收（Kafka 设计方案 D17，
+      # 第一阶段验收后才切换）。发送端与消费端由这同一个开关打开。
       transport: ${BRIX_OUTBOX_RELAY_TRANSPORT:in-process}
       batch-size: ${BRIX_OUTBOX_RELAY_BATCH_SIZE:25}
       max-attempts: ${BRIX_OUTBOX_RELAY_MAX_ATTEMPTS:6}
@@ -181,6 +183,12 @@ brix:
       topic-prefix: ${BRIX_INFRA_KAFKA_TOPIC_PREFIX:}
       outbox:
         publish-timeout-ms: ${BRIX_INFRA_KAFKA_OUTBOX_PUBLISH_TIMEOUT_MS:30000}
+      # 统一信封的事件主题由适配器按启用插件的清单创建（Kafka 设计方案 §4.4、D18）：每种事件一个主题，
+      # 每个订阅一个压缩的停放主题。只在 brix.outbox.relay.transport=kafka 时生效。
+      events:
+        partitions: ${BRIX_INFRA_KAFKA_EVENTS_PARTITIONS:3}
+        replication-factor: ${BRIX_INFRA_KAFKA_EVENTS_REPLICATION_FACTOR:1}
+        retention: ${BRIX_INFRA_KAFKA_EVENTS_RETENTION:7d}
     minio:
       enabled: ${BRIX_INFRA_MINIO_ENABLED:true}
       endpoint: ${BRIX_INFRA_MINIO_ENDPOINT:http://localhost:9000}
@@ -378,11 +386,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,outbox
+        include: health,info,metrics,prometheus,outbox,events
   endpoint:
     # 停放消息：GET /actuator/outbox 列出，POST /actuator/outbox/{eventId} 重放（P4 §3）。
     # 只在管理端口；该端口不发布到宿主机。
     outbox:
+      access: unrestricted
+    # 订阅停放的事件：GET /actuator/events 列出，POST /actuator/events/{eventId} 重放（Kafka 设计方案 D20）。
+    # 传输是 kafka 时才有内容；同样只在管理端口。
+    events:
       access: unrestricted
     health:
       show-details: always

@@ -1,0 +1,97 @@
+# promtool test rules events.test.yml
+rule_files:
+  - events.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      # 2 分钟时审计的订阅停放了一个事件，5 分钟时被重放。
+      - series: 'brix_event_subscription_parked{subscription="platform-audit.identity-audit-fact-record.v1"}'
+        values: '0 0 1 1 1 0 0'
+      # 其他订阅没有停放的事件。
+      - series: 'brix_event_subscription_parked{subscription="platform-tenant.tenant-first-owner-projection.v1"}'
+        values: '0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: BrixEventParked
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: BrixEventParked
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              category: reliability
+              subscription: platform-audit.identity-audit-fact-record.v1
+            exp_annotations:
+              summary: "订阅 platform-audit.identity-audit-fact-record.v1 有停放的事件"
+              description: "事件重试耗尽或遇到永久错误，已不再投给这个订阅。到日志查 event=event.parked 看错误码；原因消除后在管理端口 POST /actuator/events/{eventId} 重放。"
+      - eval_time: 5m
+        alertname: BrixEventParked
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      # 3 分钟起队首事件失败超过 15 分钟，持续 5 分钟后告警。
+      - series: 'brix_event_subscription_stalled_age_seconds{subscription="platform-tenant.tenant-first-owner-projection.v1"}'
+        values: '0 300 600 960 1020 1080 1140 1200 1260 1320'
+    alert_rule_test:
+      - eval_time: 7m
+        alertname: BrixEventDeliveryStalled
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: BrixEventDeliveryStalled
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              subscription: platform-tenant.tenant-first-owner-projection.v1
+            exp_annotations:
+              summary: "订阅 platform-tenant.tenant-first-owner-projection.v1 有事件超过 15 分钟投递不出去"
+              description: "队首的事件一直失败，同一分区后面的事件在等它。到日志查 event=event.retry_scheduled 和 event=event.delivery_failed。"
+
+  - interval: 1m
+    input_series:
+      # 积压从 1 分钟起超过 1000 条，持续 15 分钟后告警；另一订阅的短暂积压不告警。
+      - series: 'brix_event_subscription_lag{subscription="platform-audit.identity-audit-fact-record.v1"}'
+        values: '0 1500x20'
+      - series: 'brix_event_subscription_lag{subscription="platform-tenant.tenant-first-owner-projection.v1"}'
+        values: '0 1500 1500 0x18'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: BrixEventConsumerLagging
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: BrixEventConsumerLagging
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              subscription: platform-audit.identity-audit-fact-record.v1
+            exp_annotations:
+              summary: "订阅 platform-audit.identity-audit-fact-record.v1 积压超过 1000 条"
+              description: "消费跟不上发布。查订阅方处理是否变慢（event=event.delivered 的间隔），或消费端是否在反复重启（event=event.consumer_failed）。"
+
+  - interval: 1m
+    input_series:
+      # 启动时等插件 1 分钟，不告警；7 分钟起 Kafka 连不上，持续 5 分钟后告警。
+      - series: 'brix_outbox_relay_waiting{outbox="platform_identity_outbox"}'
+        values: '1 0 0 0 0 0 0 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: BrixOutboxTransportUnavailable
+        exp_alerts: []
+      - eval_time: 11m
+        alertname: BrixOutboxTransportUnavailable
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: BrixOutboxTransportUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              outbox: platform_identity_outbox
+            exp_annotations:
+              summary: "Outbox platform_identity_outbox 的 Relay 在等传输"
+              description: "传输不能投递（例如 Kafka 连不上，或插件没有启动），Relay 暂停认领，消息留在 Outbox 里不会丢，也不消耗重试次数。到日志查 event=outbox.relay_waiting 和 event=kafka.broker_reachability。"

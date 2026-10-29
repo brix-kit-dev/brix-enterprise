@@ -1,0 +1,60 @@
+# ============================================================
+# Prometheus 告警规则：事件订阅（经中间件投递时）与 Relay 等待传输
+# ============================================================
+#
+# 用途：传输是 Kafka 时，每个订阅由 Runtime 的消费端接收。订阅停放了事件、
+#       队首事件长时间投递不出去、积压过多，或 Relay 因传输不可达而暂停时告警
+#       （事件总线收敛到 Kafka 设计方案 §4.5）。
+# 指标：brix_event_subscription_parked{subscription}：订阅当前停放的事件数
+#       brix_event_subscription_stalled_age_seconds{subscription}：队首事件已失败多久
+#       brix_event_subscription_lag{subscription}：消费位置之后还有多少条记录
+#       brix_outbox_relay_waiting{outbox}：Relay 因传输不能投递而暂停时为 1
+# 标签：subscription（插件 id.handlerId）、outbox（Owner 的 Outbox 表名），取值都是有限集合
+#
+# 处理：管理端口 GET /actuator/events 列出停放的事件；原因消除后
+#       POST /actuator/events/{eventId} 重放。eventId 不变，已提交过的订阅方靠 Inbox 跳过。
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules events.test.yml
+# ============================================================
+
+groups:
+  - name: brix-events
+    rules:
+      # 停放的事件一直计在 gauge 里，直到被重放，所以这条告警不会自己消失。
+      - alert: BrixEventParked
+        expr: max by (subscription) (brix_event_subscription_parked) > 0
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "订阅 {{ $labels.subscription }} 有停放的事件"
+          description: "事件重试耗尽或遇到永久错误，已不再投给这个订阅。到日志查 event=event.parked 看错误码；原因消除后在管理端口 POST /actuator/events/{eventId} 重放。"
+      # 队首事件一直失败、还没到停放的次数，同一分区后面的事件都在等它。
+      - alert: BrixEventDeliveryStalled
+        expr: max by (subscription) (brix_event_subscription_stalled_age_seconds) > 900
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "订阅 {{ $labels.subscription }} 有事件超过 15 分钟投递不出去"
+          description: "队首的事件一直失败，同一分区后面的事件在等它。到日志查 event=event.retry_scheduled 和 event=event.delivery_failed。"
+      - alert: BrixEventConsumerLagging
+        expr: max by (subscription) (brix_event_subscription_lag) > 1000
+        for: 15m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "订阅 {{ $labels.subscription }} 积压超过 1000 条"
+          description: "消费跟不上发布。查订阅方处理是否变慢（event=event.delivered 的间隔），或消费端是否在反复重启（event=event.consumer_failed）。"
+      # 主机刚启动时 Relay 会等插件启动几秒，所以要持续 5 分钟才告警。
+      - alert: BrixOutboxTransportUnavailable
+        expr: max by (outbox) (brix_outbox_relay_waiting) > 0
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "Outbox {{ $labels.outbox }} 的 Relay 在等传输"
+          description: "传输不能投递（例如 Kafka 连不上，或插件没有启动），Relay 暂停认领，消息留在 Outbox 里不会丢，也不消耗重试次数。到日志查 event=outbox.relay_waiting 和 event=kafka.broker_reachability。"
