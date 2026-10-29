@@ -183,8 +183,9 @@ brix:
       topic-prefix: ${BRIX_INFRA_KAFKA_TOPIC_PREFIX:}
       outbox:
         publish-timeout-ms: ${BRIX_INFRA_KAFKA_OUTBOX_PUBLISH_TIMEOUT_MS:30000}
-      # 统一信封的事件主题由适配器按启用插件的清单创建（Kafka 设计方案 §4.4、D18）：每种事件一个主题，
-      # 每个订阅一个压缩的停放主题。只在 brix.outbox.relay.transport=kafka 时生效。
+      # 统一信封的事件主题由适配器创建（Kafka 设计方案 §4.4、D18、§13 K2）：每种事件一个主题，每个订阅一个
+      # 压缩的停放主题。Relay 走 Kafka 时按启用插件的清单创建；直连总线发 BEST_EFFORT 事件前也按这些设置创建
+      # 该事件类型的主题，所以不依赖 broker 自动建主题。
       events:
         partitions: ${BRIX_INFRA_KAFKA_EVENTS_PARTITIONS:3}
         replication-factor: ${BRIX_INFRA_KAFKA_EVENTS_REPLICATION_FACTOR:1}
