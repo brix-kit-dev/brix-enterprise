@@ -416,6 +416,7 @@
                                             <!-- AMQP / JMS middleware clients -->
                                             <exclude>org.springframework.boot:spring-boot-starter-amqp</exclude>
                                             <exclude>org.springframework.amqp:spring-rabbit</exclude>
+                                            <exclude>org.springframework.amqp:spring-amqp</exclude>
                                             <exclude>com.rabbitmq:amqp-client</exclude>
                                             <exclude>org.springframework.boot:spring-boot-starter-activemq</exclude>
                                             <exclude>org.springframework.boot:spring-boot-starter-artemis</exclude>
@@ -443,6 +444,7 @@
                                             
                                             <!-- Direct infra-adapters are assembled by Host, not enterprise plugins. -->
                                             <exclude>io.brix:infra-adapter-kafka</exclude>
+                                            <exclude>io.brix:infra-adapter-kafka-core</exclude>
                                             <exclude>io.brix:infra-adapter-redis</exclude>
                                             <exclude>io.brix:infra-adapter-minio</exclude>
                                             <exclude>io.brix:infra-adapter-otel</exclude>

@@ -193,6 +193,25 @@ jobs:
             exit 1
           fi
 
+      - name: Plugin modules must not use message broker clients
+        # Root A-1, MESSAGE-029, MANIFEST-029: the runtime owns every producer and consumer. A plugin module, core or
+        # server, publishes through its owner's outbox and subscribes through its manifest (Kafka design §13 K7).
+        run: |
+          set -euo pipefail
+          PLUGINS=(packages/@brix/enterprise-solutions/app-* packages/@brix/enterprise-solutions/shared-events)
+          if grep -RInE --include=pom.xml \
+            '<artifactId>(kafka-clients|spring-kafka|spring-rabbit|spring-amqp|amqp-client|spring-boot-starter-amqp|infra-adapter-kafka[a-z-]*)</artifactId>' \
+            "${PLUGINS[@]}"; then
+            echo "Plugin modules must not depend on Kafka or AMQP clients; the runtime carries their events."
+            exit 1
+          fi
+          if grep -RInE --include='*.java' \
+            'import (static )?(org\.apache\.kafka|org\.springframework\.kafka|org\.springframework\.amqp|com\.rabbitmq)\.|@(KafkaListener|RabbitListener)\b' \
+            "${PLUGINS[@]}"; then
+            echo "Plugin code must not use Kafka or AMQP clients or listeners; its subscriptions come from its manifest."
+            exit 1
+          fi
+
       - name: Case UI must use injected RuntimeContext capabilities
         run: |
           set -euo pipefail
