@@ -123,9 +123,9 @@ brix:
       - io.runtime.sdk.capability.IdGeneratorCapability
   # IdGeneratorCapability (infra-adapter-idgen) gives the ids of the platform audit owner and of the
   # runtime policy audit writer. sys_platform_audit_log keys on BIGINT, so the strategy stays snowflake.
-  # During the platform audit split platform-identity writes the same table with its own Snowflake
-  # generator, whose worker id (brix.identity.worker-id, default 1) sits in the same 10 node bits as
-  # datacenter-id * 32 + worker-id here (default 33). Keep the two different and the ids never collide.
+  # Since P4c (2026-10-29) only these two write the table. Rows platform-identity wrote before then carry
+  # ids from its own Snowflake generator (brix.identity.worker-id, default 1), whose 10 node bits differ
+  # from datacenter-id * 32 + worker-id here (default 33), so old and new ids never collide.
   idgen:
     strategy: snowflake
     snowflake:
