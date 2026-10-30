@@ -227,7 +227,6 @@ create_dev_env_if_needed() {
       printf '\nBRIX_OUTBOX_RELAY_ENABLED=true\n' >> .env
       printf 'BRIX_OUTBOX_RELAY_OWNER=enterprise-shell\n' >> .env
       printf 'BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED=true\n' >> .env
-      printf 'BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=platform_tenant_outbox\n' >> .env
       chmod 600 .env
       success "Added missing Outbox Relay settings to existing .env"
     fi
@@ -269,7 +268,6 @@ BRIX_PLATFORM_ADMIN_SETUP_LOGGING_NOTIFICATION_ENABLED=false
 BRIX_OUTBOX_RELAY_ENABLED=true
 BRIX_OUTBOX_RELAY_OWNER=enterprise-shell
 BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED=true
-BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=platform_tenant_outbox
 
 SPRING_MAIL_HOST=
 SPRING_MAIL_PORT=
@@ -431,15 +429,13 @@ verify_dev_smtp_overlay() {
 
 verify_outbox_relay_environment() {
   step "Verifying canonical Outbox Relay reached host-shell container..."
-  local relay_enabled relay_owner persistence_enabled persistence_table
+  local relay_enabled relay_owner persistence_enabled
   relay_enabled="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_ENABLED=' | cut -d= -f2-)"
   relay_owner="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_OWNER=' | cut -d= -f2-)"
   persistence_enabled="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED=' | cut -d= -f2-)"
-  persistence_table="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=' | cut -d= -f2-)"
 
-  if [[ "$relay_enabled" != "true" || -z "$relay_owner" \
-      || "$persistence_enabled" != "true" || "$persistence_table" != "platform_tenant_outbox" ]]; then
-    fail "Expected canonical Outbox Relay env, got enabled=$relay_enabled owner=$relay_owner persistence=$persistence_enabled table=$persistence_table"
+  if [[ "$relay_enabled" != "true" || -z "$relay_owner" || "$persistence_enabled" != "true" ]]; then
+    fail "Expected canonical Outbox Relay env, got enabled=$relay_enabled owner=$relay_owner persistence=$persistence_enabled"
     exit 1
   fi
 

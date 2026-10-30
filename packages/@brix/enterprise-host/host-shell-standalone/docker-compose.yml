@@ -54,7 +54,6 @@ services:
       - BRIX_OUTBOX_RELAY_ENABLED=${BRIX_OUTBOX_RELAY_ENABLED:-true}
       - BRIX_OUTBOX_RELAY_OWNER=${BRIX_OUTBOX_RELAY_OWNER:-enterprise-shell}
       - BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED=${BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED:-true}
-      - BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=${BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE:-platform_tenant_outbox}
       # in-process（默认）或 kafka：切到 kafka 时 Relay 发到 Kafka、订阅由 Runtime 的消费端接收（Kafka 设计方案 D17、§4.7）
       - BRIX_OUTBOX_RELAY_TRANSPORT=${BRIX_OUTBOX_RELAY_TRANSPORT:-in-process}
       # MinIO 文件存储能力 (Layer 2C Adapter — provides FileStorageCapability contract,

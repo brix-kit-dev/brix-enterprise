@@ -159,9 +159,16 @@ brix:
       retry-backoff-base: ${BRIX_OUTBOX_RELAY_RETRY_BACKOFF_BASE:5s}
       retry-jitter-max: ${BRIX_OUTBOX_RELAY_RETRY_JITTER_MAX:5s}
       poll-delay: ${BRIX_OUTBOX_RELAY_POLL_DELAY:1s}
+      # 消息表的保留期（Kafka 设计方案 D34）：Outbox 已发布和已丢弃的行留 14 天，期间可按 eventId 重发；
+      # Inbox 与命令幂等记录留 30 天；每小时分批清理一轮。Inbox 保留期短于 Outbox 保留期加 Kafka 保留期时
+      # 主机启动失败。停放的消息不清理，等人工重放或丢弃。
+      retention:
+        enabled: ${BRIX_OUTBOX_RELAY_RETENTION_ENABLED:true}
+        outbox: ${BRIX_OUTBOX_RELAY_RETENTION_OUTBOX:14d}
+        inbox: ${BRIX_OUTBOX_RELAY_RETENTION_INBOX:30d}
+      # 各 Owner 的 Outbox 表由插件 manifest 的 data.outbox 声明，Relay 逐个读取，这里不配置表名。
       persistence:
         enabled: ${BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED:true}
-        table-name: ${BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE:platform_tenant_outbox}
   # Fallback Adapter — provides dev/test stand-ins for required capabilities that
   # have no production-grade Adapter wired yet (auth, observability, etc.).
   # Triple-gated by infra-adapter-fallback (Profile != production AND explicit
@@ -186,9 +193,13 @@ brix:
       # 统一信封的事件主题由适配器创建（Kafka 设计方案 §4.4、D18、§13 K2）：每种事件一个主题，每个订阅一个
       # 压缩的停放主题。Relay 走 Kafka 时按启用插件的清单创建；直连总线发 BEST_EFFORT 事件前也按这些设置创建
       # 该事件类型的主题，所以不依赖 broker 自动建主题。
+      # 生产 Profile（prod、production）要求副本数 ≥ 3、min-insync-replicas ≥ 2，并要求客户端用 TLS 加客户端证书：
+      # 在 brix.infra.kafka.client.* 下给出 security.protocol: SSL 和 ssl.keystore.*、ssl.truststore.*，否则启动失败
+      # （Kafka 设计方案 D35、§14 K24）。共享环境不是生产 Profile，保持单节点、PLAINTEXT。
       events:
         partitions: ${BRIX_INFRA_KAFKA_EVENTS_PARTITIONS:3}
         replication-factor: ${BRIX_INFRA_KAFKA_EVENTS_REPLICATION_FACTOR:1}
+        min-insync-replicas: ${BRIX_INFRA_KAFKA_EVENTS_MIN_INSYNC_REPLICAS:1}
         retention: ${BRIX_INFRA_KAFKA_EVENTS_RETENTION:7d}
     minio:
       enabled: ${BRIX_INFRA_MINIO_ENABLED:true}
@@ -389,12 +400,14 @@ management:
       exposure:
         include: health,info,metrics,prometheus,outbox,events
   endpoint:
-    # 停放消息：GET /actuator/outbox 列出，POST /actuator/outbox/{eventId} 重放（P4 §3）。
-    # 只在管理端口；该端口不发布到宿主机。
+    # 停放消息：GET /actuator/outbox 列出，POST /actuator/outbox/{eventId} 重放，DELETE 丢弃；
+    # 已发布的消息在保留期内 POST /actuator/outbox/{eventId}/republish 重发（P4 §3、Kafka 设计方案 D33、D34）。
+    # 每个操作都要操作人和原因，先写平台审计再生效。只在管理端口；该端口不发布到宿主机。
     outbox:
       access: unrestricted
-    # 订阅停放的事件：GET /actuator/events 列出，POST /actuator/events/{eventId} 重放（Kafka 设计方案 D20）。
-    # 传输是 kafka 时才有内容；同样只在管理端口。
+    # 订阅停放的事件：GET /actuator/events 列出，POST /actuator/events/{subscription}/{eventId} 重放一条，
+    # POST /actuator/events/{subscription} 重放这个订阅的全部，DELETE /actuator/events/{subscription}/{eventId} 丢弃
+    # （Kafka 设计方案 D20、D33）；同样要操作人和原因并写平台审计。传输是 kafka 时才有内容；只在管理端口。
     events:
       access: unrestricted
     health:

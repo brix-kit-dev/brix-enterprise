@@ -321,15 +321,13 @@ verify_outbox_relay_environment() {
   [[ "$DRY_RUN" == "true" ]] && { info "Dry run: skipping Outbox Relay verification."; return 0; }
 
   step "Verifying canonical Outbox Relay reached host-shell container..."
-  local relay_enabled relay_owner persistence_enabled persistence_table
+  local relay_enabled relay_owner persistence_enabled
   relay_enabled="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_ENABLED=' | cut -d= -f2-)"
   relay_owner="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_OWNER=' | cut -d= -f2-)"
   persistence_enabled="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_PERSISTENCE_ENABLED=' | cut -d= -f2-)"
-  persistence_table="$(docker inspect brix-host-shell-standalone --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^BRIX_OUTBOX_RELAY_PERSISTENCE_TABLE=' | cut -d= -f2-)"
 
-  if [[ "$relay_enabled" != "true" || -z "$relay_owner" \
-      || "$persistence_enabled" != "true" || "$persistence_table" != "platform_tenant_outbox" ]]; then
-    fail "Expected canonical Outbox Relay env, got enabled=$relay_enabled owner=$relay_owner persistence=$persistence_enabled table=$persistence_table"
+  if [[ "$relay_enabled" != "true" || -z "$relay_owner" || "$persistence_enabled" != "true" ]]; then
+    fail "Expected canonical Outbox Relay env, got enabled=$relay_enabled owner=$relay_owner persistence=$persistence_enabled"
     exit 1
   fi
 
