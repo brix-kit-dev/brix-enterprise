@@ -1,0 +1,40 @@
+# ============================================================
+# Prometheus 告警规则：消息表的保留与清理
+# ============================================================
+#
+# 用途：Runtime 按保留期分批清理 Outbox 已发布/已丢弃的行（14 天）和 Inbox、命令幂等记录（30 天）
+#       （事件总线收敛到 Kafka 设计方案 D34、§14 K16）。某张表清理失败，或清理任务长时间没跑完一轮时告警；
+#       不处理的话表会一直变大。
+# 指标：brix_messaging_retention_failures_total{table}：清理失败的次数
+#       brix_messaging_retention_deleted_total{table}：删掉的行数
+#       brix_messaging_retention_last_pass_seconds：最近一轮清理结束的时间（epoch 秒，每小时一轮）
+# 标签：table（Owner 的 Outbox、Inbox、命令幂等表名），取值是有限集合
+#
+# 处理：到日志查 event=messaging.retention_failed 的 table 和异常；常见原因是表不存在或数据库不可用。
+#       保留期由 brix.outbox.relay.retention.* 配置，Inbox 保留期必须不短于 Outbox 保留期加 Kafka 保留期，
+#       否则主机启动失败。
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules messaging-retention.test.yml
+# ============================================================
+
+groups:
+  - name: brix-messaging-retention
+    rules:
+      - alert: BrixMessagingRetentionFailing
+        expr: sum by (table) (increase(brix_messaging_retention_failures_total[2h])) > 0
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "消息表 {{ $labels.table }} 清理失败"
+          description: "过期的行没有删掉，表会一直变大。到日志查 event=messaging.retention_failed table={{ $labels.table }}。"
+      # 每小时一轮；超过 3 小时没跑完一轮，说明清理任务停了。主机刚启动、还没跑完第一轮时指标是 0，不告警。
+      - alert: BrixMessagingRetentionStale
+        expr: max(brix_messaging_retention_last_pass_seconds) > 0 and time() - max(brix_messaging_retention_last_pass_seconds) > 3 * 3600
+        for: 10m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "消息表超过 3 小时没有清理"
+          description: "清理任务没有按时跑完一轮。到日志查 event=messaging.retention_failed code=RETENTION_PASS_FAILED 和 event=messaging.retention_started。"

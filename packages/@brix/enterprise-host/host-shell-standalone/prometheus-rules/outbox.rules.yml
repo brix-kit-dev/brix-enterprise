@@ -10,8 +10,10 @@
 # 标签：outbox（Owner 的 Outbox 表名）、status（pending、in_flight、parked），取值都是有限集合
 #
 # 处理：管理端口 GET /actuator/outbox 列出停放的消息；原因消除后
-#       POST /actuator/outbox/{eventId} 重放。eventId 不变，已提交过的订阅方靠 Inbox 跳过。
-#       操作步骤见 TESTING-LOCAL.md。
+#       POST /actuator/outbox/{eventId} 重放，无法重放的用 DELETE /actuator/outbox/{eventId} 丢弃；
+#       已发布、在 Outbox 保留期（14 天）内的消息可用 POST /actuator/outbox/{eventId}/republish 重发。
+#       都要带操作人和原因（请求体 {"operator": ..., "reason": ...}，DELETE 用查询参数），先写平台审计
+#       再生效（D33、D34）。eventId 不变，已提交过的订阅方靠 Inbox 跳过。操作步骤见 TESTING-LOCAL.md。
 # 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
 # 测试：promtool test rules outbox.test.yml
 # ============================================================
@@ -27,7 +29,7 @@ groups:
           category: reliability
         annotations:
           summary: "Outbox {{ $labels.outbox }} 有停放的消息"
-          description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放。"
+          description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放，无法重放的用 DELETE 丢弃，都要填操作人和原因。"
       # Relay 在运行，但最早的消息超过 15 分钟仍未投递（例如订阅方一直失败、还没到停放的次数）。
       - alert: BrixOutboxDeliveryStalled
         expr: max by (outbox) (brix_outbox_oldest_pending_age_seconds) > 900

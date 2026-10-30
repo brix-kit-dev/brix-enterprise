@@ -26,7 +26,7 @@ tests:
               subscription: platform-audit.identity-audit-fact-record.v1
             exp_annotations:
               summary: "订阅 platform-audit.identity-audit-fact-record.v1 有停放的事件"
-              description: "事件重试耗尽或遇到永久错误，已不再投给这个订阅。到日志查 event=event.parked 看错误码；原因消除后在管理端口 POST /actuator/events/{eventId} 重放。"
+              description: "事件重试耗尽或遇到永久错误，已不再投给这个订阅。到日志查 event=event.parked 看错误码；原因消除后在管理端口 POST /actuator/events/{subscription}/{eventId} 重放，无法重放的用 DELETE 丢弃，都要填操作人和原因。"
       - eval_time: 5m
         alertname: BrixEventParked
         exp_alerts: []
@@ -95,3 +95,45 @@ tests:
             exp_annotations:
               summary: "Outbox platform_identity_outbox 的 Relay 在等传输"
               description: "传输不能投递（例如 Kafka 连不上，或插件没有启动），Relay 暂停认领，消息留在 Outbox 里不会丢，也不消耗重试次数。到日志查 event=outbox.relay_waiting 和 event=kafka.broker_reachability。"
+
+  - interval: 1m
+    input_series:
+      # 消费端 2 分钟时停了，起不来；另一订阅的消费端重启了一次，1 分钟后又在跑。
+      - series: 'brix_event_subscription_consumer_running{subscription="platform-audit.identity-audit-fact-record.v1"}'
+        values: '1 1 0x10'
+      - series: 'brix_event_subscription_consumer_running{subscription="platform-tenant.tenant-first-owner-projection.v1"}'
+        values: '1 1 0 1x9'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: BrixEventConsumerStopped
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: BrixEventConsumerStopped
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              category: reliability
+              subscription: platform-audit.identity-audit-fact-record.v1
+            exp_annotations:
+              summary: "订阅 platform-audit.identity-audit-fact-record.v1 的消费端停了"
+              description: "这个订阅收不到新事件。到日志查 event=event.consumer_failed 和 event=event.consumer_stopped；订阅组的健康检查（/actuator/health 的 eventSubscriptions）同时为 DOWN。"
+
+  - interval: 1m
+    input_series:
+      # 一次投递从 0 分钟起一直没有返回。
+      - series: 'brix_event_subscription_handling_age_seconds{subscription="platform-audit.identity-audit-fact-record.v1"}'
+        values: '0+60x15'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: BrixEventHandlerHanging
+        exp_alerts: []
+      - eval_time: 11m
+        alertname: BrixEventHandlerHanging
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              subscription: platform-audit.identity-audit-fact-record.v1
+            exp_annotations:
+              summary: "订阅 platform-audit.identity-audit-fact-record.v1 的一次投递已处理超过 5 分钟"
+              description: "Handler 超过截止时间仍未返回，同一分区后面的事件在等它。查 Handler 是否阻塞在不可中断的调用上（线程栈：管理端口 /actuator/threaddump 若已开放，或 jstack）。"

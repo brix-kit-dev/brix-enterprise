@@ -1,0 +1,47 @@
+# promtool test rules messaging-retention.test.yml
+rule_files:
+  - messaging-retention.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      # Inbox 表在 3 分钟时清理失败一次；Outbox 表一直正常。
+      - series: 'brix_messaging_retention_failures_total{table="platform_audit_inbox"}'
+        values: '0 0 0 1 1 1 1'
+      - series: 'brix_messaging_retention_failures_total{table="platform_tenant_outbox"}'
+        values: '0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: BrixMessagingRetentionFailing
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: BrixMessagingRetentionFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: capacity
+              table: platform_audit_inbox
+            exp_annotations:
+              summary: "消息表 platform_audit_inbox 清理失败"
+              description: "过期的行没有删掉，表会一直变大。到日志查 event=messaging.retention_failed table=platform_audit_inbox。"
+
+  - interval: 1m
+    input_series:
+      # 最后一轮在 0 时刻结束，之后再没有新的一轮（gauge 停在 0 时刻的值）。
+      - series: 'brix_messaging_retention_last_pass_seconds'
+        values: '1+0x240'
+    alert_rule_test:
+      - eval_time: 3h10m
+        alertname: BrixMessagingRetentionStale
+        exp_alerts: []
+      - eval_time: 3h12m
+        alertname: BrixMessagingRetentionStale
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: capacity
+            exp_annotations:
+              summary: "消息表超过 3 小时没有清理"
+              description: "清理任务没有按时跑完一轮。到日志查 event=messaging.retention_failed code=RETENTION_PASS_FAILED 和 event=messaging.retention_started。"

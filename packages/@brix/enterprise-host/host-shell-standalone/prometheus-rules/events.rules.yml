@@ -3,16 +3,21 @@
 # ============================================================
 #
 # 用途：传输是 Kafka 时，每个订阅由 Runtime 的消费端接收。订阅停放了事件、
-#       队首事件长时间投递不出去、积压过多，或 Relay 因传输不可达而暂停时告警
-#       （事件总线收敛到 Kafka 设计方案 §4.5）。
+#       队首事件长时间投递不出去、积压过多、消费端停了、Handler 卡住不返回，
+#       或 Relay 因传输不可达而暂停时告警（事件总线收敛到 Kafka 设计方案 §4.5、§14 K10）。
 # 指标：brix_event_subscription_parked{subscription}：订阅当前停放的事件数
 #       brix_event_subscription_stalled_age_seconds{subscription}：队首事件已失败多久
 #       brix_event_subscription_lag{subscription}：消费位置之后还有多少条记录
+#       brix_event_subscription_consumer_running{subscription}：消费端在跑为 1，停了为 0
+#       brix_event_subscription_handling_age_seconds{subscription}：当前这次投递已经处理了多久
 #       brix_outbox_relay_waiting{outbox}：Relay 因传输不能投递而暂停时为 1
 # 标签：subscription（插件 id.handlerId）、outbox（Owner 的 Outbox 表名），取值都是有限集合
 #
-# 处理：管理端口 GET /actuator/events 列出停放的事件；原因消除后
-#       POST /actuator/events/{eventId} 重放。eventId 不变，已提交过的订阅方靠 Inbox 跳过。
+# 处理：管理端口 GET /actuator/events 列出停放的事件。原因消除后
+#       POST /actuator/events/{subscription}/{eventId} 重放一条，POST /actuator/events/{subscription}
+#       按停放顺序重放这个订阅的全部；无法重放的用 DELETE /actuator/events/{subscription}/{eventId} 丢弃。
+#       都要带操作人和原因（请求体 {"operator": ..., "reason": ...}，DELETE 用查询参数），先写平台审计
+#       再生效，审计写不进去时拒绝（D33）。eventId 不变，已提交过的订阅方靠 Inbox 跳过。
 # 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
 # 测试：promtool test rules events.test.yml
 # ============================================================
@@ -28,7 +33,7 @@ groups:
           category: reliability
         annotations:
           summary: "订阅 {{ $labels.subscription }} 有停放的事件"
-          description: "事件重试耗尽或遇到永久错误，已不再投给这个订阅。到日志查 event=event.parked 看错误码；原因消除后在管理端口 POST /actuator/events/{eventId} 重放。"
+          description: "事件重试耗尽或遇到永久错误，已不再投给这个订阅。到日志查 event=event.parked 看错误码；原因消除后在管理端口 POST /actuator/events/{subscription}/{eventId} 重放，无法重放的用 DELETE 丢弃，都要填操作人和原因。"
       # 队首事件一直失败、还没到停放的次数，同一分区后面的事件都在等它。
       - alert: BrixEventDeliveryStalled
         expr: max by (subscription) (brix_event_subscription_stalled_age_seconds) > 900
@@ -48,6 +53,26 @@ groups:
         annotations:
           summary: "订阅 {{ $labels.subscription }} 积压超过 1000 条"
           description: "消费跟不上发布。查订阅方处理是否变慢（event=event.delivered 的间隔），或消费端是否在反复重启（event=event.consumer_failed）。"
+      # 消费端出错后按退避重启，短暂为 0 不告警；持续 5 分钟说明它起不来（K10）。
+      - alert: BrixEventConsumerStopped
+        expr: min by (subscription) (brix_event_subscription_consumer_running) == 0
+        for: 5m
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "订阅 {{ $labels.subscription }} 的消费端停了"
+          description: "这个订阅收不到新事件。到日志查 event=event.consumer_failed 和 event=event.consumer_stopped；订阅组的健康检查（/actuator/health 的 eventSubscriptions）同时为 DOWN。"
+      # Handler 到截止时间会被取消并算一次失败；处理时长一直涨，说明 Handler 不响应取消，消费线程被它占着。
+      - alert: BrixEventHandlerHanging
+        expr: max by (subscription) (brix_event_subscription_handling_age_seconds) > 300
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "订阅 {{ $labels.subscription }} 的一次投递已处理超过 5 分钟"
+          description: "Handler 超过截止时间仍未返回，同一分区后面的事件在等它。查 Handler 是否阻塞在不可中断的调用上（线程栈：管理端口 /actuator/threaddump 若已开放，或 jstack）。"
       # 主机刚启动时 Relay 会等插件启动几秒，所以要持续 5 分钟才告警。
       - alert: BrixOutboxTransportUnavailable
         expr: max by (outbox) (brix_outbox_relay_waiting) > 0

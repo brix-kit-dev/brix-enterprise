@@ -28,7 +28,7 @@ tests:
               outbox: platform_tenant_outbox
             exp_annotations:
               summary: "Outbox platform_tenant_outbox 有停放的消息"
-              description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放。"
+              description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放，无法重放的用 DELETE 丢弃，都要填操作人和原因。"
       - eval_time: 5m
         alertname: BrixOutboxMessageParked
         exp_alerts: []
