@@ -8,7 +8,7 @@
 # 指标：brix_messaging_retention_failures_total{table}：清理失败的次数
 #       brix_messaging_retention_deleted_total{table}：删掉的行数
 #       brix_messaging_retention_last_pass_seconds：最近一轮清理结束的时间（epoch 秒，每小时一轮）
-# 标签：table（Owner 的 Outbox、Inbox、命令幂等表名），取值是有限集合
+# 标签：table（Owner 的 Outbox、Inbox、命令幂等表名；整轮失败时为 all），取值是有限集合
 #
 # 处理：到日志查 event=messaging.retention_failed 的 table 和异常；常见原因是表不存在或数据库不可用。
 #       保留期由 brix.outbox.relay.retention.* 配置，Inbox 保留期必须不短于 Outbox 保留期加 Kafka 保留期，
@@ -28,7 +28,8 @@ groups:
         annotations:
           summary: "消息表 {{ $labels.table }} 清理失败"
           description: "过期的行没有删掉，表会一直变大。到日志查 event=messaging.retention_failed table={{ $labels.table }}。"
-      # 每小时一轮；超过 3 小时没跑完一轮，说明清理任务停了。主机刚启动、还没跑完第一轮时指标是 0，不告警。
+      # 每小时一轮，主机启动 5 分钟后跑第一轮；超过 3 小时没跑完一轮，说明清理任务停了。第一轮跑完之前没有这个指标，
+      # 不告警；从第一轮起就整轮失败的，由上一条告警以 table=all 报出。
       - alert: BrixMessagingRetentionStale
         expr: max(brix_messaging_retention_last_pass_seconds) > 0 and time() - max(brix_messaging_retention_last_pass_seconds) > 3 * 3600
         for: 10m
