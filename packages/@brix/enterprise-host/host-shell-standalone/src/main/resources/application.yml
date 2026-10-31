@@ -145,6 +145,11 @@ brix:
       - platform-audit
       - platform-tenant
       - app-booking
+  # 插件之间的同步查询（typed Query，同步查询通道标准化设计方案 §5.3）。max-deadline 是每次查询的硬上限，必须配置：
+  # 没有它，提供或调用查询的插件不能启动（根 BRX-RS-MESSAGE-005），platform-tenant 提供 TenantReferenceQuery。
+  # query-interactive 缺省 2 秒、query-background 缺省 10 秒，都不超过这个上限；每个查询最多 32 个并发调用。
+  query:
+    max-deadline: ${BRIX_QUERY_MAX_DEADLINE:10s}
   outbox:
     relay:
       enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}

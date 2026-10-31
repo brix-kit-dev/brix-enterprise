@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.security.Principal;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +55,12 @@ import io.runtime.orchestrator.plugin.PluginRuntimeException;
 import io.runtime.orchestrator.plugin.PluginRuntimeManager;
 import io.runtime.orchestrator.plugin.PluginRuntimeState;
 import io.runtime.orchestrator.plugin.ServiceLoaderPluginDiscovery;
+import io.runtime.orchestrator.query.InProcessQueryTransport;
+import io.runtime.orchestrator.query.QueryGateway;
+import io.runtime.orchestrator.query.QueryMetrics;
+import io.runtime.orchestrator.query.QueryRuntime;
+import io.runtime.orchestrator.query.QuerySettings;
+import io.runtime.orchestrator.query.QueryTracing;
 import io.runtime.sdk.capability.AuthCapability;
 import io.runtime.sdk.capability.AuthFlowCapability;
 import io.runtime.sdk.capability.DataScope;
@@ -285,7 +292,18 @@ class RuntimeShellBootstrapContractTest {
             ignored -> { },
             RuntimeShellBootstrapContractTest::internalContractProviders,
             internalContracts,
-            ownerPersistence);
+            ownerPersistence,
+            hostQueries(ownerPersistence));
+    }
+
+    /**
+     * The typed queries of the host profile: {@code brix.query.max-deadline: 10s} in application.yml, without which
+     * platform-tenant, the provider of TenantReferenceQuery, does not start (root BRX-RS-MESSAGE-005).
+     */
+    private static QueryRuntime hostQueries(OwnerPersistenceProvider ownerPersistence) {
+        return QueryRuntime.of(new QueryGateway(QuerySettings.defaults(Duration.ofSeconds(10)),
+            new InProcessQueryTransport(ownerPersistence, QueryTracing.NOOP, Clock.systemUTC()),
+            QueryTracing.NOOP, QueryMetrics.NOOP, Clock.systemUTC()));
     }
 
     private static OperationalModuleRuntimeManager operationalManager(
