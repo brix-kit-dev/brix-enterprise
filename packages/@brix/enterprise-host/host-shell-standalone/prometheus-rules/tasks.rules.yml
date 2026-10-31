@@ -1,0 +1,51 @@
+# ============================================================
+# Prometheus 告警规则：插件与运维模块的定时任务（Runtime Scheduler）
+# ============================================================
+#
+# 用途：任务连续失败、到期没有成功运行、或无法在 Owner 的任务运行表里认领触发时告警（标准链路收尾方案 L6.6）。
+# 指标：brix_task_runs_seconds_count{module,task,outcome}：任务运行次数，outcome 为 succeeded、failed 或 cancelled
+#       brix_task_consecutive_failures{module,task}：本机自上次成功以来失败的运行数
+#       brix_task_last_success_seconds{module,task}：本机上次成功的时间（纪元秒），成功前为发布时间
+#       brix_task_interval_seconds{module,task}：触发的最短间隔
+#       brix_task_skipped_total{module,task,reason}：本机没有运行的触发，reason 为 overlap、claimed、not_started 或 claim_failed
+# 标签：module（插件或运维模块 id）、task（taskId），取值都是有限集合；不带租户、用户或载荷（根 BRX-RS-OTEL-006）
+#
+# 处理：到日志查 event=task.run（带 trigger、outcome、attempts、error_code、instance）与 event=task.attempt_failed
+#       （带异常）。task-trigger 的任务每个触发只有一台主机运行，所以失败与成功按任务汇总所有主机后判断。
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules tasks.test.yml
+# ============================================================
+
+groups:
+  - name: brix-tasks
+    rules:
+      # 各主机的连续失败相加：task-trigger 的触发分散在各主机上运行。
+      - alert: BrixTaskFailing
+        expr: sum by (module, task) (brix_task_consecutive_failures) >= 3
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "{{ $labels.module }} 的任务 {{ $labels.task }} 连续失败 {{ $value }} 次"
+          description: "到日志查 event=task.attempt_failed 看错误码与异常；task.deadline_exceeded 表示运行超过截止时间被取消。"
+      # 所有主机里最近一次成功距今超过三个触发间隔，说明任务没有在跑或一直失败。
+      - alert: BrixTaskOverdue
+        expr: |
+          (time() - max by (module, task) (brix_task_last_success_seconds))
+            > 3 * max by (module, task) (brix_task_interval_seconds)
+        for: 10m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "{{ $labels.module }} 的任务 {{ $labels.task }} 超过三个触发间隔没有成功运行"
+          description: "到日志查 event=task.run 与 event=task.skipped：没有运行（插件未启动、一直重叠）还是运行失败。"
+      # 认领失败多半是 Owner 的数据库不可用；这期间任务的触发都被跳过。
+      - alert: BrixTaskClaimFailing
+        expr: sum by (module, task) (increase(brix_task_skipped_total{reason="claim_failed"}[15m])) > 0
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "{{ $labels.module }} 的任务 {{ $labels.task }} 无法认领触发"
+          description: "在 Owner 的任务运行表里认领触发失败，这些触发没有运行。到日志查 event=task.skipped reason=claim_failed 看异常。"

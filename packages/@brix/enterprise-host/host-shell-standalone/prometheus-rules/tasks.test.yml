@@ -1,0 +1,77 @@
+# promtool test rules tasks.test.yml
+rule_files:
+  - tasks.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # 连续失败按任务汇总各主机：两台各失败 2 次也告警；一台成功后清零。
+  - interval: 1m
+    input_series:
+      - series: 'brix_task_consecutive_failures{module="sample-orders",task="sample-orders.heartbeat",instance="host-a"}'
+        values: '0 1 2 2 2'
+      - series: 'brix_task_consecutive_failures{module="sample-orders",task="sample-orders.heartbeat",instance="host-b"}'
+        values: '0 0 1 2 0'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: BrixTaskFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              module: sample-orders
+              task: sample-orders.heartbeat
+            exp_annotations:
+              summary: "sample-orders 的任务 sample-orders.heartbeat 连续失败 3 次"
+              description: "到日志查 event=task.attempt_failed 看错误码与异常；task.deadline_exceeded 表示运行超过截止时间被取消。"
+      - eval_time: 4m
+        alertname: BrixTaskFailing
+        exp_alerts: []
+
+  # 每小时一次的任务：一台主机 3 小时以上没有成功，另一台刚成功过，不告警；所有主机都 3 小时以上没有成功才告警。
+  - interval: 1m
+    input_series:
+      - series: 'brix_task_interval_seconds{module="sample-orders",task="sample-orders.report",instance="host-a"}'
+        values: '3600x300'
+      - series: 'brix_task_last_success_seconds{module="sample-orders",task="sample-orders.report",instance="host-a"}'
+        values: '0x300'
+      - series: 'brix_task_last_success_seconds{module="sample-orders",task="sample-orders.report",instance="host-b"}'
+        values: '0x60 3600x240'
+    alert_rule_test:
+      - eval_time: 3h30m
+        alertname: BrixTaskOverdue
+        exp_alerts: []
+      - eval_time: 4h30m
+        alertname: BrixTaskOverdue
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              module: sample-orders
+              task: sample-orders.report
+            exp_annotations:
+              summary: "sample-orders 的任务 sample-orders.report 超过三个触发间隔没有成功运行"
+              description: "到日志查 event=task.run 与 event=task.skipped：没有运行（插件未启动、一直重叠）还是运行失败。"
+
+  # 认领失败（数据库不可用）在 15 分钟窗口里出现就告警；只是被别的主机认领（claimed）不告警。
+  - interval: 1m
+    input_series:
+      - series: 'brix_task_skipped_total{module="sample-orders",task="sample-orders.heartbeat",reason="claimed",instance="host-b"}'
+        values: '0+5x30'
+      - series: 'brix_task_skipped_total{module="sample-orders",task="sample-orders.heartbeat",reason="claim_failed",instance="host-a"}'
+        values: '0x10 1x20'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: BrixTaskClaimFailing
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: BrixTaskClaimFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              module: sample-orders
+              task: sample-orders.heartbeat
+            exp_annotations:
+              summary: "sample-orders 的任务 sample-orders.heartbeat 无法认领触发"
+              description: "在 Owner 的任务运行表里认领触发失败，这些触发没有运行。到日志查 event=task.skipped reason=claim_failed 看异常。"
