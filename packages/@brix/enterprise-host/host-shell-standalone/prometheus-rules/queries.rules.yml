@@ -1,0 +1,57 @@
+# ============================================================
+# Prometheus 告警规则：插件之间的同步查询（typed Query）
+# ============================================================
+#
+# 用途：某个调用方与查询的熔断打开、查询的故障比例偏高、或查询因并发上限被拒绝过多时告警
+#       （同步查询通道标准化设计方案 §5.7）。
+# 指标：brix_query_calls_seconds_count{consumer,query,outcome}：查询调用次数，outcome 为 ok 或稳定错误码
+#       brix_query_circuit_open{consumer,query}：熔断打开时为 1
+#       brix_query_in_flight{query}：正在执行的调用数
+# 标签：consumer（调用方插件 id）、query（查询类型）、outcome（ok 或 query.* 错误码），取值都是有限集合；
+#       不带租户、用户或请求内容（根 BRX-RS-OTEL-006）
+#
+# 处理：到日志查 event=query.failed（带调用方、提供方、查询、错误码、原因和 trace），
+#       provider_failed 的原因只在日志里。熔断按调用方与查询分开，打开 10 秒后放行试探调用，自己会恢复。
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules queries.test.yml
+# ============================================================
+
+groups:
+  - name: brix-queries
+    rules:
+      # 熔断开开合合是正常的保护；持续 5 分钟打开，说明提供方一直答不上来。
+      - alert: BrixQueryCircuitOpen
+        expr: max by (consumer, query) (brix_query_circuit_open) == 1
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "{{ $labels.consumer }} 调用 {{ $labels.query }} 的熔断已打开超过 5 分钟"
+          description: "提供方持续失败或超时，调用方拿到的是 query.circuit_open。到日志查 event=query.failed 看提供方的错误码与原因。"
+      # 只算提供方一侧的故障：拒绝、无权限、请求无效是调用方的问题，不计入。
+      - alert: BrixQueryFailing
+        expr: |
+          (
+            sum by (query) (rate(brix_query_calls_seconds_count{outcome=~"query.provider_failed|query.deadline_exceeded|query.serialization_failed"}[5m]))
+            /
+            sum by (query) (rate(brix_query_calls_seconds_count[5m]))
+          ) > 0.05
+          and sum by (query) (rate(brix_query_calls_seconds_count[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "查询 {{ $labels.query }} 超过 5% 的调用失败或超时"
+          description: "提供方失败、超时或返回了契约之外的结果。到日志查 event=query.failed；超时多时先看提供方的数据库是否变慢。"
+      # 并发上限是保护提供方的；持续被拒绝说明上限偏小，或调用方在循环里逐条调用。
+      - alert: BrixQueryRejected
+        expr: sum by (query) (rate(brix_query_calls_seconds_count{outcome="query.rejected"}[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          category: capacity
+        annotations:
+          summary: "查询 {{ $labels.query }} 持续被拒绝"
+          description: "多数是并发上限已满（日志 reason=capacity）。查是否有调用方在循环里逐条调用（应改用按 ID 列表的查询），再评估 brix.query.standard-concurrency。"

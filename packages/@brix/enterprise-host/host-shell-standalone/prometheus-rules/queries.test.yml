@@ -1,0 +1,77 @@
+# promtool test rules queries.test.yml
+rule_files:
+  - queries.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # 熔断打开 5 分钟以上才告警；短暂打开不告警。
+  - interval: 1m
+    input_series:
+      - series: 'brix_query_circuit_open{consumer="sample-orders",query="sample-shipping.find-shipment"}'
+        values: '1x10'
+      - series: 'brix_query_circuit_open{consumer="sample-orders",query="tenant.reference"}'
+        values: '1 1 0x8'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: BrixQueryCircuitOpen
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: BrixQueryCircuitOpen
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              consumer: sample-orders
+              query: sample-shipping.find-shipment
+            exp_annotations:
+              summary: "sample-orders 调用 sample-shipping.find-shipment 的熔断已打开超过 5 分钟"
+              description: "提供方持续失败或超时，调用方拿到的是 query.circuit_open。到日志查 event=query.failed 看提供方的错误码与原因。"
+
+  # 提供方一侧的故障超过 5%：每分钟 60 次调用里 6 次超时（10%）。
+  - interval: 1m
+    input_series:
+      - series: 'brix_query_calls_seconds_count{consumer="sample-orders",query="sample-shipping.find-shipment",outcome="ok"}'
+        values: '0+54x30'
+      - series: 'brix_query_calls_seconds_count{consumer="sample-orders",query="sample-shipping.find-shipment",outcome="query.deadline_exceeded"}'
+        values: '0+6x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: BrixQueryFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              query: sample-shipping.find-shipment
+            exp_annotations:
+              summary: "查询 sample-shipping.find-shipment 超过 5% 的调用失败或超时"
+              description: "提供方失败、超时或返回了契约之外的结果。到日志查 event=query.failed；超时多时先看提供方的数据库是否变慢。"
+
+  # 调用方一侧的问题（无权限）不算提供方故障。
+  - interval: 1m
+    input_series:
+      - series: 'brix_query_calls_seconds_count{consumer="sample-orders",query="sample-shipping.find-shipment",outcome="ok"}'
+        values: '0+54x30'
+      - series: 'brix_query_calls_seconds_count{consumer="sample-orders",query="sample-shipping.find-shipment",outcome="query.access_denied"}'
+        values: '0+6x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: BrixQueryFailing
+        exp_alerts: []
+
+  # 每秒超过 0.5 次被拒绝，持续 10 分钟。
+  - interval: 1m
+    input_series:
+      - series: 'brix_query_calls_seconds_count{consumer="sample-orders",query="sample-shipping.find-shipment",outcome="query.rejected"}'
+        values: '0+60x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: BrixQueryRejected
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: capacity
+              query: sample-shipping.find-shipment
+            exp_annotations:
+              summary: "查询 sample-shipping.find-shipment 持续被拒绝"
+              description: "多数是并发上限已满（日志 reason=capacity）。查是否有调用方在循环里逐条调用（应改用按 ID 列表的查询），再评估 brix.query.standard-concurrency。"
