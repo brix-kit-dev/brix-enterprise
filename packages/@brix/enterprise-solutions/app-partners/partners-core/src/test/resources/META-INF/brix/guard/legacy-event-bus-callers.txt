@@ -1,0 +1,3 @@
+# Classes of this module that still call the retired RuntimeContext.getEventBus() (standard-link plan L2.3).
+# Remove a class when it migrates to the PluginContext's bus; do not add any.
+io.brix.enterprise.app.partners.PartnersModule
