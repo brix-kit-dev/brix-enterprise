@@ -150,6 +150,15 @@ brix:
   # query-interactive 缺省 2 秒、query-background 缺省 10 秒，都不超过这个上限；每个查询最多 32 个并发调用。
   query:
     max-deadline: ${BRIX_QUERY_MAX_DEADLINE:10s}
+  # 插件调用的外部服务目录（标准链路收尾方案 L8.3）：键是插件清单 externalServices[].baseUrlRef。生产 Profile 只接受 https；
+  # 解析到本机（回环、本机网卡地址、链路本地）的地址让插件启动失败。google-oauth-jwks 是 platform-auth 读取 Google
+  # 签名公钥的服务（"使用 Google 登录"）。
+  external-services:
+    google-oauth-jwks:
+      base-url: ${GOOGLE_OAUTH_JWKS_BASE_URL:https://www.googleapis.com}
+  # 本 Host 的对外地址（容器、代理或 NAT 后面的公网地址，网卡上看不到）：解析到这些地址的外部服务同样被拒绝。
+  external-http:
+    self-addresses: ${BRIX_EXTERNAL_HTTP_SELF_ADDRESSES:}
   outbox:
     relay:
       enabled: ${BRIX_OUTBOX_RELAY_ENABLED:true}
