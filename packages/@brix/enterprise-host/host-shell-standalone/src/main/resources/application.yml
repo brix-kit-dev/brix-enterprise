@@ -207,9 +207,10 @@ brix:
       # 统一信封的事件主题由适配器创建（Kafka 设计方案 §4.4、D18、§13 K2）：每种事件一个主题，每个订阅一个
       # 压缩的停放主题。Relay 走 Kafka 时按启用插件的清单创建；直连总线发 BEST_EFFORT 事件前也按这些设置创建
       # 该事件类型的主题，所以不依赖 broker 自动建主题。
-      # 生产 Profile（prod、production）要求副本数 ≥ 3、min-insync-replicas ≥ 2，并要求客户端用 TLS 加客户端证书：
-      # 在 brix.infra.kafka.client.* 下给出 security.protocol: SSL 和 ssl.keystore.*、ssl.truststore.*，否则启动失败
-      # （Kafka 设计方案 D35、§14 K24）。共享环境不是生产 Profile，保持单节点、PLAINTEXT。
+      # 生产 Profile（prod、production）要求每个事件、命令主题至少 12 个分区、副本数 ≥ 3、min-insync-replicas ≥ 2，
+      # 并要求客户端用 TLS 加客户端证书：在 brix.infra.kafka.client.* 下给出 security.protocol: SSL 和
+      # ssl.keystore.*、ssl.truststore.*，否则启动失败（Kafka 设计方案 D35、§14 K24；标准链路收尾方案第 5 点）。
+      # 分区数、副本数的生产值写在文件末尾的 prod 段。共享环境不是生产 Profile，保持单节点、PLAINTEXT。
       events:
         partitions: ${BRIX_INFRA_KAFKA_EVENTS_PARTITIONS:3}
         replication-factor: ${BRIX_INFRA_KAFKA_EVENTS_REPLICATION_FACTOR:1}
@@ -500,3 +501,26 @@ brix:
 logging:
   level:
     io.brix.platform.slowquery: WARN
+
+---
+# ============================================================
+# prod / production profile — Kafka production baseline
+# ============================================================
+# 每个事件、命令主题至少 12 个分区：同一订阅最多 12 台主机并行处理。副本 3 个，每次写入至少 2 个副本确认
+# （Kafka 设计方案 D35；标准链路收尾方案第 5 点）。
+# 分区数上线后只能在积压清空后增加：已有主题少于 12 个分区时，消息链路不收不发，健康状态为 DOWN，直到分区加够。
+# 客户端证书与信任库是部署方的密钥，不在这里给默认值：在 brix.infra.kafka.client.* 下给出
+# security.protocol: SSL 和 ssl.keystore.*、ssl.truststore.*，否则主机启动失败。
+# ============================================================
+spring:
+  config:
+    activate:
+      on-profile: prod | production
+
+brix:
+  infra:
+    kafka:
+      events:
+        partitions: ${BRIX_INFRA_KAFKA_EVENTS_PARTITIONS:12}
+        replication-factor: ${BRIX_INFRA_KAFKA_EVENTS_REPLICATION_FACTOR:3}
+        min-insync-replicas: ${BRIX_INFRA_KAFKA_EVENTS_MIN_INSYNC_REPLICAS:2}
