@@ -68,7 +68,7 @@
 
 - **[BRX-RS-MESSAGE-014]** Handler MUST 使用 `(handlerId, commandId)` Inbox 唯一键，并在同一 Owner 本地事务内写去重记录、变更自身数据及需要的结果 Event outbox。业务幂等另以 `(handlerId, idempotencyScope, idempotencyKey)` 记录：
   1. `idempotencyScope` MUST 由 Runtime 按已验证的发送方插件、tenant 与命令类型派生。发送方 MUST NOT 指定它，也 MUST NOT 能占用其他发送方或其他 tenant 的键；
-  2. 键由第一个以 `SUCCEEDED`（MESSAGE-030）结束的命令占用。占用记录 MUST 与该命令的本地事务一起提交，并保存请求指纹：规范化载荷的 SHA-256。规范化按 RFC 8785，并去掉值为 null 的对象成员；信封字段、`schemaVersion` 与发起人不计入；
+  2. 键由第一个以 `SUCCEEDED`（MESSAGE-030）结束的命令占用。占用记录 MUST 与该命令的本地事务一起提交，并保存请求指纹：规范化载荷的 SHA-256。规范化的结构按 RFC 8785，数字取精确的十进制值、不转成双精度，并去掉值为 null 的对象成员；信封字段、`schemaVersion` 与发起人不计入；
   3. 同一个键、同一指纹的后续命令是重复：Handler MUST NOT 执行，其结果 MUST 指向占用该键的命令；
   4. 同一个键、不同指纹的后续命令 MUST 以稳定错误 `command.idempotency_conflict` 结束：Handler MUST NOT 执行，Runtime MUST NOT 重试或停放它，结果 MUST 在 MESSAGE-031 的状态中可见；
   5. 幂等记录 MUST NOT 保存载荷；重复提交 MUST NOT 重复产生副作用。
