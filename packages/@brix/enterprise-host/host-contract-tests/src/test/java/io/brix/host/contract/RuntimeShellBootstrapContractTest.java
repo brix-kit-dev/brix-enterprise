@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 import io.brix.platform.audit.internal.PlatformAuditAdministration;
 import io.brix.platform.identity.internal.PlatformBootstrapAdministration;
@@ -44,6 +45,11 @@ import io.runtime.orchestrator.bootstrap.RuntimeShellBootstrapHandle;
 import io.runtime.orchestrator.capability.DefaultCapabilityRegistry;
 import io.runtime.orchestrator.endpoint.DefaultPluginEndpointDispatcher;
 import io.runtime.orchestrator.endpoint.EndpointAccessDeniedException;
+import io.runtime.orchestrator.endpoint.EndpointInvocationBoundary;
+import io.runtime.orchestrator.endpoint.EndpointMetrics;
+import io.runtime.orchestrator.endpoint.EndpointPolicies;
+import io.runtime.orchestrator.endpoint.EndpointTracing;
+import io.runtime.orchestrator.endpoint.OwnerEndpointIdempotency;
 import io.runtime.orchestrator.internalcontract.InternalContractBinder;
 import io.runtime.orchestrator.internalcontract.ServiceLoaderInternalContractProviderDiscovery;
 import io.runtime.orchestrator.operational.OperationalModuleRuntimeManager;
@@ -98,7 +104,7 @@ class RuntimeShellBootstrapContractTest {
 
     @Test
     void phase1RuntimeHostBootstrapDiscoversAndStartsRequiredComposition() {
-        DefaultPluginEndpointDispatcher dispatcher = new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30));
+        DefaultPluginEndpointDispatcher dispatcher = dispatcher();
         RuntimeShellBootstrap bootstrap = hostBootstrap(
             dispatcher,
             List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
@@ -156,7 +162,7 @@ class RuntimeShellBootstrapContractTest {
 
     @Test
     void manifestGrantsAuthorizeTenantStaffAndRejectEndUsersBeforeHandlers() {
-        DefaultPluginEndpointDispatcher dispatcher = new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30));
+        DefaultPluginEndpointDispatcher dispatcher = dispatcher();
         RuntimeShellBootstrap bootstrap = hostBootstrap(
             dispatcher,
             List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
@@ -202,7 +208,7 @@ class RuntimeShellBootstrapContractTest {
         RuntimeShellBootstrap bootstrap = new RuntimeShellBootstrap(runtimeManager(
             registryWithHostRequiredCapabilities(),
             List.of("missing-required-plugin"),
-            new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30)),
+            dispatcher(),
             null,
             OWNER_PERSISTENCE));
 
@@ -241,13 +247,21 @@ class RuntimeShellBootstrapContractTest {
     @Test
     void identityRequiresItsOwnerPersistenceUnit() {
         RuntimeShellBootstrap bootstrap = hostBootstrap(
-            new DefaultPluginEndpointDispatcher(Duration.ofSeconds(30)),
+            dispatcher(),
             List.of(PLATFORM_IDENTITY_PLUGIN_ID, PLATFORM_TENANT_PLUGIN_ID, APP_BOOKING_PLUGIN_ID),
             List.of(PLATFORM_AUTH_FLOW_MODULE_ID, PLATFORM_ADMIN_MODULE_ID),
             OwnerPersistenceProvider.none());
 
         assertThatThrownBy(bootstrap::start)
             .hasMessageContaining(PersistenceCapability.class.getName());
+    }
+
+    /** platform-tenant's FIRST_OWNER acceptance replays its answer, so a host needs the owners' store to publish it. */
+    private static DefaultPluginEndpointDispatcher dispatcher() {
+        OwnerEndpointIdempotency answers = throwingProxy(OwnerEndpointIdempotency.class);
+        return new DefaultPluginEndpointDispatcher(EndpointPolicies.Limits.defaults(Duration.ofSeconds(30)),
+            EndpointInvocationBoundary.direct(), JsonMapper.builder().build(), EndpointTracing.NOOP, EndpointMetrics.NOOP,
+            () -> answers);
     }
 
     private static RuntimeShellBootstrap hostBootstrap(
