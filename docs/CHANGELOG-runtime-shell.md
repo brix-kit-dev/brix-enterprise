@@ -4,6 +4,14 @@
 
 ---
 
+## v3.3.0-changelog-gate（2026-11-05）— ACTIVE 版本必须有变更记录
+
+- 来源：`BRX-RS-GOVERNANCE-009` 要求每次修订都有 Changelog，但 2026-10-28 那批 5 个版本都漏记了，一周多没有检查发现。
+- `validate_changelogs`：每个 ACTIVE 蓝图的完整 SHA-256 必须出现在对应的日志里，根蓝图看本文，专项看 `CHANGELOG-architecture-specialized.md`。写的是别的版本的哈希不算。每次运行都执行。
+- 不检查退役版本：frontend 1.0、super-admin 2.0、multi-tenant 3.1.3 和未获批准的 3.0.11 早于这种写法，它们的条目不补。
+
+---
+
 ## v3.3.0-line-endings（2026-11-05）— Git 不再改写锁定蓝图的换行
 
 - 来源：蓝图按字节锁定，而 Git 会按 `core.autocrlf` 转换换行。`core.autocrlf=input` 时，用 `mv` 加 `git add` 移动 CRLF 蓝图，提交里的字节变成 LF，本地校验通过，干净检出才失败。`core.autocrlf=true`（Git for Windows 的默认值）时，LF 蓝图检出成 CRLF，校验器直接失败。两种情况都在当时的 `main` 上复现过。

@@ -26,6 +26,10 @@ ARCHIVE_PREFIX = "docs/archived/"
 ARCHIVE_INDEX = ARCHIVE_PREFIX + "README.md"
 ENTRY_PAGE = "docs/README.md"
 ENTRY_PAGE_BLUEPRINTS = "## 当前生效的蓝图"
+CHANGELOGS = {
+    "ROOT": "docs/CHANGELOG-runtime-shell.md",
+    "SPECIALIZED": "docs/CHANGELOG-architecture-specialized.md",
+}
 MARKDOWN_LINK = re.compile(r"\]\(([^)\s]+)\)")
 REQUIRED_INSTRUCTION_FILES = ("AGENTS.md", "CLAUDE.md")
 REQUIRED_INSTRUCTION_MARKERS = (
@@ -431,6 +435,26 @@ def validate_archive_index(repo_root: Path, lock: dict[str, Any]) -> None:
             )
 
 
+def validate_changelogs(repo_root: Path, lock: dict[str, Any]) -> None:
+    """Require a changelog entry for the locked bytes of each ACTIVE blueprint.
+
+    Root BRX-RS-GOVERNANCE-009 requires a changelog for every revision. The full
+    SHA-256 names those exact bytes, so an entry for another version does not count.
+    """
+    changelogs = {kind: read_page(repo_root, path) for kind, path in CHANGELOGS.items()}
+    missing = [
+        blueprint["id"]
+        for blueprint in lock["blueprints"]
+        if blueprint["status"] == "ACTIVE"
+        and blueprint["sha256"] not in changelogs[blueprint["kind"]]
+    ]
+    if missing:
+        raise BaselineValidationError(
+            f"No changelog entry states the locked SHA-256 of {missing} "
+            "(BRX-RS-GOVERNANCE-009)"
+        )
+
+
 def validate_line_endings_protected(repo_root: Path, lock: dict[str, Any]) -> None:
     """Keep Git from rewriting the line endings of hash-locked blueprints."""
     paths = [blueprint["path"] for blueprint in lock["blueprints"]]
@@ -524,6 +548,7 @@ def main() -> int:
             validate_blueprint(repo_root, blueprint)
         validate_entry_page(repo_root, lock)
         validate_archive_index(repo_root, lock)
+        validate_changelogs(repo_root, lock)
         validate_line_endings_protected(repo_root, lock)
         if args.require_active and any(
             blueprint["status"] == "CANDIDATE" and blueprint["effective"]

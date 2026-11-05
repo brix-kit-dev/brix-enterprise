@@ -615,6 +615,93 @@ class ArchiveIndexTest(unittest.TestCase):
         self.assert_rejected("must state version")
 
 
+class ChangelogTest(unittest.TestCase):
+    """Each ACTIVE blueprint has an entry stating its locked SHA-256."""
+
+    root_hash = "a" * 64
+    special_hash = "b" * 64
+
+    def setUp(self) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        (self.root / "docs").mkdir()
+        self.lock = {
+            "blueprints": [
+                {
+                    "id": "runtime-shell-3.3.0",
+                    "kind": "ROOT",
+                    "status": "ACTIVE",
+                    "sha256": self.root_hash,
+                },
+                {
+                    "id": "frontend-1.2.1",
+                    "kind": "SPECIALIZED",
+                    "status": "ACTIVE",
+                    "sha256": self.special_hash,
+                },
+                {
+                    "id": "runtime-shell-3.2.0",
+                    "kind": "ROOT",
+                    "status": "SUPERSEDED",
+                    "sha256": "c" * 64,
+                },
+                {
+                    "id": "frontend-1.3",
+                    "kind": "SPECIALIZED",
+                    "status": "CANDIDATE",
+                    "sha256": "d" * 64,
+                },
+            ]
+        }
+        self.write(self.root_hash, self.special_hash)
+
+    def write(self, runtime: str, specialized: str) -> None:
+        (self.root / "docs/CHANGELOG-runtime-shell.md").write_text(runtime, encoding="utf-8")
+        (self.root / "docs/CHANGELOG-architecture-specialized.md").write_text(
+            specialized, encoding="utf-8"
+        )
+
+    def assert_rejected(self, message: str) -> None:
+        with self.assertRaisesRegex(VALIDATOR.BaselineValidationError, message):
+            VALIDATOR.validate_changelogs(self.root, self.lock)
+
+    def test_active_records_with_entries_pass(self) -> None:
+        VALIDATOR.validate_changelogs(self.root, self.lock)
+
+    def test_retired_and_candidate_records_need_no_entry(self) -> None:
+        VALIDATOR.validate_changelogs(self.root, self.lock)
+        self.lock["blueprints"][2]["status"] = "ACTIVE"
+        self.assert_rejected("runtime-shell-3.2.0")
+
+    def test_active_root_without_an_entry_is_rejected(self) -> None:
+        self.write("nothing here", self.special_hash)
+        self.assert_rejected("runtime-shell-3.3.0")
+
+    def test_active_specialized_without_an_entry_is_rejected(self) -> None:
+        self.write(self.root_hash, "nothing here")
+        self.assert_rejected("frontend-1.2.1")
+
+    def test_an_entry_in_the_other_changelog_does_not_count(self) -> None:
+        self.write(self.special_hash, self.root_hash)
+        self.assert_rejected("runtime-shell-3.3.0")
+
+    def test_a_partial_hash_does_not_count(self) -> None:
+        self.write(self.root_hash[:63], self.special_hash)
+        self.assert_rejected("runtime-shell-3.3.0")
+
+    def test_every_missing_record_is_named(self) -> None:
+        self.write("nothing here", "nothing here")
+        with self.assertRaises(VALIDATOR.BaselineValidationError) as caught:
+            VALIDATOR.validate_changelogs(self.root, self.lock)
+        self.assertIn("runtime-shell-3.3.0", str(caught.exception))
+        self.assertIn("frontend-1.2.1", str(caught.exception))
+
+    def test_missing_changelog_is_rejected(self) -> None:
+        (self.root / "docs/CHANGELOG-runtime-shell.md").unlink()
+        self.assert_rejected("Cannot read docs/CHANGELOG-runtime-shell.md")
+
+
 class LineEndingProtectionTest(unittest.TestCase):
     """Git must not convert the line endings of a hash-locked blueprint."""
 
@@ -692,6 +779,9 @@ class MainRunsThePageChecksTest(unittest.TestCase):
 
     def test_main_checks_the_archive_index(self) -> None:
         self.assert_main_runs("validate_archive_index")
+
+    def test_main_checks_the_changelogs(self) -> None:
+        self.assert_main_runs("validate_changelogs")
 
     def test_main_checks_the_line_ending_protection(self) -> None:
         self.assert_main_runs("validate_line_endings_protected")
