@@ -615,8 +615,61 @@ class ArchiveIndexTest(unittest.TestCase):
         self.assert_rejected("must state version")
 
 
+class LineEndingProtectionTest(unittest.TestCase):
+    """Git must not convert the line endings of a hash-locked blueprint."""
+
+    paths = ("docs/root.md", "docs/archived/old（退役）.md", "docs/archived/old candidate.md")
+
+    def setUp(self) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        subprocess.run(["git", "-C", str(self.root), "init", "-q"], check=True)
+        self.lock = {"blueprints": [{"path": path} for path in self.paths]}
+
+    def attributes(self, text: str) -> None:
+        (self.root / ".gitattributes").write_text(text, encoding="utf-8")
+
+    def assert_rejected(self, message: str) -> None:
+        with self.assertRaisesRegex(VALIDATOR.BaselineValidationError, message):
+            VALIDATOR.validate_line_endings_protected(self.root, self.lock)
+
+    def test_protected_paths_pass(self) -> None:
+        self.attributes("docs/*.md -text\ndocs/archived/** -text\n")
+        VALIDATOR.validate_line_endings_protected(self.root, self.lock)
+
+    def test_no_attributes_are_rejected(self) -> None:
+        self.assert_rejected("line endings")
+
+    def test_a_path_left_out_is_rejected(self) -> None:
+        self.attributes("docs/archived/** -text\n")
+        self.assert_rejected("docs/root.md")
+
+    def test_the_rejection_names_only_what_is_left_out(self) -> None:
+        self.attributes("docs/*.md -text\n")
+        with self.assertRaises(VALIDATOR.BaselineValidationError) as caught:
+            VALIDATOR.validate_line_endings_protected(self.root, self.lock)
+        self.assertNotIn("docs/root.md", str(caught.exception))
+        self.assertIn("old candidate.md", str(caught.exception))
+
+    def test_text_auto_is_rejected(self) -> None:
+        self.attributes("docs/*.md text=auto\ndocs/archived/** -text\n")
+        self.assert_rejected("docs/root.md")
+
+    def test_text_set_is_rejected(self) -> None:
+        self.attributes("docs/*.md text\ndocs/archived/** -text\n")
+        self.assert_rejected("docs/root.md")
+
+    def test_a_directory_that_is_no_repository_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as outside:
+            with self.assertRaisesRegex(
+                VALIDATOR.BaselineValidationError, "Cannot read Git attributes"
+            ):
+                VALIDATOR.validate_line_endings_protected(Path(outside), self.lock)
+
+
 class MainRunsThePageChecksTest(unittest.TestCase):
-    """A page check that main does not call protects nothing."""
+    """A check that main does not call protects nothing."""
 
     def assert_main_runs(self, check: str) -> None:
         marker = f"{check} ran"
@@ -639,6 +692,9 @@ class MainRunsThePageChecksTest(unittest.TestCase):
 
     def test_main_checks_the_archive_index(self) -> None:
         self.assert_main_runs("validate_archive_index")
+
+    def test_main_checks_the_line_ending_protection(self) -> None:
+        self.assert_main_runs("validate_line_endings_protected")
 
 
 if __name__ == "__main__":

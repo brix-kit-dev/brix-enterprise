@@ -4,6 +4,15 @@
 
 ---
 
+## v3.3.0-line-endings（2026-11-05）— Git 不再改写锁定蓝图的换行
+
+- 来源：蓝图按字节锁定，而 Git 会按 `core.autocrlf` 转换换行。`core.autocrlf=input` 时，用 `mv` 加 `git add` 移动 CRLF 蓝图，提交里的字节变成 LF，本地校验通过，干净检出才失败。`core.autocrlf=true`（Git for Windows 的默认值）时，LF 蓝图检出成 CRLF，校验器直接失败。两种情况都在当时的 `main` 上复现过。
+- `.gitattributes`：`docs/*.md` 和 `docs/archived/**` 设为 `-text`，覆盖 lock schema 允许的全部蓝图路径。
+- `validate_line_endings_protected`：每条注册蓝图都必须是 `-text`，否则校验失败。每次运行都执行。
+- `architecture-check.yml` 的触发路径加上 `.gitattributes`，只改这个文件的提交也会经过校验。
+
+---
+
 ## v3.3.0-docs-gates（2026-11-05）— 校验器守住入口页和历史索引
 
 - 来源：`docs-dev/README.md` 曾把退役的 v3.0.10 写成当前唯一入口，没有检查发现。负责人 2026-11-05 同意由校验器守住入口，防止文档再堆积。

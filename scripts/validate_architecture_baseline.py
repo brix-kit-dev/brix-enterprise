@@ -431,6 +431,31 @@ def validate_archive_index(repo_root: Path, lock: dict[str, Any]) -> None:
             )
 
 
+def validate_line_endings_protected(repo_root: Path, lock: dict[str, Any]) -> None:
+    """Keep Git from rewriting the line endings of hash-locked blueprints."""
+    paths = [blueprint["path"] for blueprint in lock["blueprints"]]
+    try:
+        output = subprocess.run(
+            ["git", "-C", str(repo_root), "check-attr", "-z", "text", "--", *paths],
+            check=True,
+            capture_output=True,
+        ).stdout.decode("utf-8")
+    except subprocess.CalledProcessError as error:
+        stderr = error.stderr.decode("utf-8", errors="replace").strip()
+        raise BaselineValidationError(f"Cannot read Git attributes: {stderr}") from error
+    fields = output.split("\0")
+    unprotected = [
+        path
+        for path, value in zip(fields[0::3], fields[2::3])
+        if value != "unset"
+    ]
+    if unprotected:
+        raise BaselineValidationError(
+            f"Git may rewrite the line endings of {unprotected}; "
+            "mark them -text in .gitattributes"
+        )
+
+
 def relative_to_repo(repo_root: Path, path: Path) -> str:
     """Return a POSIX repository-relative path or fail clearly."""
     try:
@@ -499,6 +524,7 @@ def main() -> int:
             validate_blueprint(repo_root, blueprint)
         validate_entry_page(repo_root, lock)
         validate_archive_index(repo_root, lock)
+        validate_line_endings_protected(repo_root, lock)
         if args.require_active and any(
             blueprint["status"] == "CANDIDATE" and blueprint["effective"]
             for blueprint in lock["blueprints"]

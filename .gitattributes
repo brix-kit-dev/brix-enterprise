@@ -1,0 +1,4 @@
+# Blueprints are hash-locked byte for byte in docs/architecture-baselines.lock.yaml, so Git must
+# never convert their line endings, whatever core.autocrlf says. The validator checks this.
+docs/*.md -text
+docs/archived/** -text
