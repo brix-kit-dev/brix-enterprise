@@ -74,7 +74,7 @@ import io.brix.architecture.guard.BrixArchitectureRules;
  * </ol>
  *
  * @see BrixArchitectureRules for rule implementations
- * @see <a href="docs/v3.0.4-运行壳架构设计蓝图.md">v3.0.4 Architecture Blueprint</a>
+ * @see <a href="docs/README.md">The blueprints in force</a>
  * @author Brix Platform Team
  * @version 3.0.0-SNAPSHOT
  * @since 2026-02-24

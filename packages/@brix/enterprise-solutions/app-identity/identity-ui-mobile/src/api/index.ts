@@ -214,7 +214,7 @@ export const userApi = {
   }): Promise<PageResponse<UserDTO>> {
     throw new Error(
       '[架构红线] 禁止直接使用 userApi，请通过 createUserApiService(http) 创建服务实例。' +
-        '参考文档: v3.0.4-运行壳架构设计蓝图.md#R3'
+        '参考文档: docs/README.md'
     );
   },
   async getByUserId(_userId: string): Promise<UserDTO> {

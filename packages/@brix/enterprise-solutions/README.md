@@ -173,7 +173,7 @@ mvn test -Dtest=ArchitectureTest
 
 ## 迁移指南
 
-从旧 `plugins/plugin-xxx` 迁移到新架构，请参考 [v3.0-代码改造清单.md](../platform-host-web/docs/v3.0-代码改造清单.md) 中的"改造五：业务模块迁移"章节。
+从旧 `plugins/plugin-xxx` 迁移到新架构的施工方案，见[文档入口](../../../docs/README.md)的“在用的施工方案”。
 
 ## 许可证
 

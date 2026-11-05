@@ -12,7 +12,7 @@
  *   Red Line 9 — Plugins must obtain UI components via useUI(), not import MUI/Ant Design directly
  *
  * @see @brix-sdk/eslint-config-architecture
- * @see docs/v3.0.9-运行壳架构设计蓝图.md §9.1 Architecture Red Lines
+ * @see docs/README.md, the ACTIVE root blueprint §11.1 (the numbers above are from v3.0.9)
  */
 const architectureRules = require('@brix-sdk/eslint-config-architecture');
 

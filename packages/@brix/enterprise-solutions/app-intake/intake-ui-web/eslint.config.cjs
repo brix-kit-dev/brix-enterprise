@@ -15,7 +15,7 @@
  *   CI/CD pipeline will fail on any violations.
  * 
  * @see @brix-sdk/eslint-config-architecture for rule implementations
- * @see docs/v3.0.4-运行壳架构设计蓝图.md §9.1 Architecture Red Lines
+ * @see docs/README.md, the ACTIVE root blueprint §11.1 (the numbers above are from v3.0.4)
  * @author Brix Team
  * @version 3.0.0-SNAPSHOT
  * @since 2026-02-24

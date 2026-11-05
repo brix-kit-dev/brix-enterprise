@@ -11,7 +11,7 @@
  *   红线7 — 禁止 console.log（允许 warn/error）
  * 
  * @see @brix-sdk/eslint-config-architecture
- * @see docs/v3.0-运行壳架构设计蓝图.md §9.1 架构红线
+ * @see docs/README.md 当前根蓝图 §11.1 架构红线（上面的编号沿用 v3.0）
  */
 const architectureRules = require('@brix-sdk/eslint-config-architecture');
 

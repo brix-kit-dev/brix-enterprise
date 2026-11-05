@@ -47,7 +47,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  * before submission.</p>
  *
  * @see BrixArchitectureRules#hostProfile()
- * @see <a href="docs/v3.0.10-运行壳架构设计蓝图.md">v3.0.10 Runtime Shell Architecture Blueprint</a>
+ * @see <a href="docs/README.md">The blueprints in force</a>
  */
 @AnalyzeClasses(packages = "io.brix.enterprise.host.standalone")
 public class ArchitectureTest {
