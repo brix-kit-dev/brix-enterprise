@@ -68,10 +68,11 @@ python3 scripts/validate_architecture_baseline.py --require-active --check-instr
 
 ## 其他资料
 
-开发参考资料见 [docs-dev/README.md](../docs-dev/README.md)。历史文档放在 `docs/archived/`，只用于追溯，不指导开发。
+开发参考资料见 [docs-dev/README.md](../docs-dev/README.md)。历史文档放在 `docs/archived/`，只用于追溯，不指导开发；该目录的 `README.md` 是历史文档索引。
 
 ## 维护规则
 
 - 蓝图发布新版本或退役时，同一次提交更新本页。
 - 方案开工、暂停或关闭时，更新“在用的施工方案”。
+- 文档不再使用时，搬进 `docs/archived/` 并保留原文件名，在该目录的 `README.md` 登记。
 - 本页不链接退役蓝图和 `docs/archived/` 下的文档（根蓝图 `BRX-RS-AUTH-007`）。

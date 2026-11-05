@@ -4,7 +4,7 @@
 > **状态**：已批准（2026-10-27，architecture-committee、security、SRE，决定记录 `user-authorization:2026-10-27:rfc-006`）。本文是决策背景，**不指导施工**；施工依据是设计方案与本文 §3 的迁移说明
 > **起草日期**：2026-10-27
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；multi-tenant 5.1.1（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0（ACTIVE）
-> **来源**：[租户隔离下沉持久化适配器设计方案](../v5.1.1-多租户-租户隔离下沉持久化适配器-设计方案.md) §8 R2
+> **来源**：[租户隔离下沉持久化适配器设计方案](../archived/v5.1.1-多租户-租户隔离下沉持久化适配器-设计方案.md) §8 R2
 > **拟决定**：`TenantAccessCapability`（runtime-sdk-api）的三个方法不走完整弃用期，在本次施工中立即停用，下一个 Major 删除。不修订根蓝图、专项蓝图或任何红线
 
 本文沿用根蓝图的 RFC 2119 关键词约定。

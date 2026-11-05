@@ -4,7 +4,7 @@
 > **状态**：已批准（2026-10-28，architecture-committee、security、SRE，决定记录 `user-authorization:2026-10-28:rfc-008`）。条款已并入根蓝图 v3.3.0；本文是决策背景，**不指导施工**，施工依据是根蓝图 v3.3.0 与设计方案
 > **起草日期**：2026-10-28
 > **依据基线**：runtime-shell 3.2.0（ACTIVE 根蓝图）；super-admin 4.0、multi-tenant 5.1.2（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0、frontend 1.2（ACTIVE）
-> **来源**：[平台审计 Owner 拆分与策略使用审计设计方案](../v4.0-平台超管-平台审计Owner拆分与策略使用审计-设计方案.md) §8 R1。§7 的 D1～D6 已于 2026-10-28 由负责人确认按推荐项执行（D1 选路线 D）
+> **来源**：[平台审计 Owner 拆分与策略使用审计设计方案](../archived/v4.0-平台超管-平台审计Owner拆分与策略使用审计-设计方案.md) §8 R1。§7 的 D1～D6 已于 2026-10-28 由负责人确认按推荐项执行（D1 选路线 D）
 > **拟决定**：根蓝图新增受托写入登记（Manifest `data.custodialWrites`）、Runtime 策略审计写入器和跨租户策略审计的失败语义，发布根 v3.3.0；四份 ACTIVE 专项蓝图各发布一个只改继承版本的 Patch 版本；确认 super-admin §1.3a 一处红线的适用范围
 
 本文沿用根蓝图的 RFC 2119 关键词约定。
