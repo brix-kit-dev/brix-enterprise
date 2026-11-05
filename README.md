@@ -8,6 +8,10 @@
 > **CONFIDENTIAL**: This repository contains proprietary code.
 > Unauthorized distribution is strictly prohibited.
 
+## Documentation
+
+Start at [docs/README.md](docs/README.md). It lists the blueprints in force and the plans in use.
+
 ## Architecture
 
 Brix Enterprise extends the open-source [Brix](https://github.com/brix-framework/brix) framework with:
