@@ -1,5 +1,51 @@
 # Specialized Architecture Changelog
 
+## 2026-10-28
+
+These four entries were recorded on 2026-11-05. The freeze left them out, so they are written from the lock, the freeze evidence and the text differences between versions.
+
+### Identity Auth 1.0.1 Architecture Frozen
+
+- Supersession target: `identity-auth-1.0`.
+- Patch revision (runtime-shell §12.2): the inherited root moves from 3.2.0 to 3.3.0, because the validator requires every ACTIVE specialized blueprint to inherit the ACTIVE root. Compatibility epoch remains `1`.
+- Rules and red lines are unchanged; appendix B records the change. `rebaseRequired` stays `false`.
+- Decision background: RFC-008, approved under `user-authorization:2026-10-28:rfc-008`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-28:identity-auth-1.0.1-freeze`.
+- Locked at commit `00b2f8fa9c019cd6a487bc8480998876b305e91a`, SHA-256 `2ee48f3c7eb1ffd208b2c1faf638f97aac8c9675e941f299505c37d9cff21632`, Git blob `4052b0acdfd893d7ea5829453e9ec66d173587a2`, effective 2026-10-28.
+- Registered as the unique ACTIVE identity-auth blueprint; identity-auth 1.0 is SUPERSEDED and remains byte-for-byte unchanged.
+
+### Frontend 1.2.1 Architecture Frozen
+
+- Supersession target: `frontend-1.2`.
+- Patch revision (runtime-shell §12.2): the inherited root moves from 3.2.0 to 3.3.0, for the same reason. Compatibility epoch remains `1`.
+- Rules are unchanged. `rebaseRequired` stays `false`.
+- Decision background: RFC-008, approved under `user-authorization:2026-10-28:rfc-008`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-28:frontend-1.2.1-freeze`.
+- Locked at commit `00b2f8fa9c019cd6a487bc8480998876b305e91a`, SHA-256 `c5ffd5390d765e017ac14c4020fe4234fe22fe8e97644ca4f55c1be99ed96fac`, Git blob `71d0de056cb78e6999f856c3588133e6f654e7e3`, effective 2026-10-28.
+- Registered as the unique ACTIVE frontend blueprint; frontend 1.2 is SUPERSEDED and remains byte-for-byte unchanged.
+
+### Super Admin 4.0.1 Architecture Frozen
+
+- Supersession target: `super-admin-4.0`.
+- Patch revision (runtime-shell §12.2): the inherited root moves from 3.2.0 to 3.3.0, for the same reason. Compatibility epoch remains `3`.
+- Rules and red lines are unchanged; §18.0a records the change. It also notes that the next rebase review writes the RFC-008 §4 reading into the text: the §1.3a red line binds `platform-admin` audit writes and does not exclude the custodial writes registered under root DATA-045 and DATA-047.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Decision background: RFC-008, approved under `user-authorization:2026-10-28:rfc-008`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-28:super-admin-4.0.1-freeze`.
+- Locked at commit `00b2f8fa9c019cd6a487bc8480998876b305e91a`, SHA-256 `a2cd70e7580ec822ecb1c0bb912b0b52dfed044eba37527a999688be99f39689`, Git blob `0ac2a98b5dfcc0deb3a5e43ad121ed6d94be5439`, effective 2026-10-28.
+- Registered as the unique ACTIVE super-admin blueprint; super-admin 4.0 is SUPERSEDED and remains byte-for-byte unchanged.
+
+### Multi Tenant 5.1.3 Architecture Frozen
+
+- Supersession target: `multi-tenant-5.1.2`.
+- Patch revision (runtime-shell §12.2): the inherited root moves from 3.2.0 to 3.3.0, for the same reason. Compatibility epoch remains `3`.
+- DDL, red lines T-1 to T-30, token structure, the permission catalog and default grants, and the §6.4 cross-tenant register are unchanged; appendix H records the change.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Decision background: RFC-008, approved under `user-authorization:2026-10-28:rfc-008`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-10-28:multi-tenant-5.1.3-freeze`.
+- Locked at commit `00b2f8fa9c019cd6a487bc8480998876b305e91a`, SHA-256 `573d7101d8d176897a2d6289a401685427bf6ae1bf2e30474319e8c356f2d99a`, Git blob `14ec1b0e4ddea8ba644e98e244597e47d8681065`, effective 2026-10-28.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 5.1.2 is SUPERSEDED and remains byte-for-byte unchanged.
+
 ## 2026-10-27
 
 ### Multi Tenant 5.1.2 Architecture Frozen

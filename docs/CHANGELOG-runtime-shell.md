@@ -1,6 +1,6 @@
 # Brix Platform 运行壳架构蓝图 — 变更日志
 
-> 与 [v3.2.0-运行壳架构设计蓝图.md](./archived/v3.2.0-运行壳架构设计蓝图.md)（当前 ACTIVE）配套；[v3.1.0](./archived/v3.1.0-运行壳架构设计蓝图.md) 与 [v3.0.10](./archived/v3.0.10-运行壳架构设计蓝图.md) 已转为 SUPERSEDED。蓝图正文不再内嵌历史版本日志。
+> 记录运行壳根蓝图和校验器控制面的变更。当前生效的版本见 [docs/README.md](README.md)，历史版本在 `docs/archived/`。蓝图正文不再内嵌历史版本日志。
 
 ---
 
@@ -21,6 +21,19 @@
 - `validate_blueprint`：退役记录在 `docs/archived/` 时，到冻结提交的 `docs/<文件名>` 核对登记的字节。
 - 不变：改名、搬到别处、搬回来、移动 ACTIVE 记录、改 `sha256`、`gitBlob` 或 `version`、删除记录都仍然失败；蓝图内容、版本、状态、批准记录和 lock schema 都不改。
 - 搬移：校验器合入后，13 份退役蓝图搬进 `docs/archived/`，注册表只改这 13 条记录的 `path`。ACTIVE 蓝图里指向旧版的 7 条链接（超管 5 条、前端 1 条、多租户 1 条）因此失效；冻结文件不能改，要等下一版修。
+
+---
+
+## v3.3.0（2026-10-28）— 受托写入登记与 Runtime 策略审计写入器
+
+> 本条是 2026-11-05 补记的。冻结时漏记了变更日志，这里依据 lock、`docs/architecture-freeze-evidence/runtime-shell-3.3.0.md` 和两版蓝图的文本差异写成。
+
+- 来源：`docs/rfc/RFC-008-运行壳-受托写入登记与策略审计写入器（Draft）.md`，负责人 2026-10-28 批准（`user-authorization:2026-10-28:rfc-008`）。multi-tenant §6.3、§6.4 要求跨租户访问写平台审计，根蓝图此前没有定义受托写入的登记格式和审计失败语义。
+- 替代 v3.2.0。Minor 修订，`compatibilityEpoch` 保持 1。
+- 新增 §7.8：`BRX-RS-DATA-045`（Owner 在 Manifest `data.custodialWrites` 的登记是受托写入的唯一授权，只允许 INSERT）、`BRX-RS-DATA-046`（受托记录 Schema 的版本与兼容）、`BRX-RS-DATA-047`（Runtime 策略审计写入器 `runtime.tenant-policy-audit`，写不进去即本次使用失败）、`BRX-RS-MANIFEST-031`（Manifest 校验）。
+- 附录 A 增加 `manifest.custodialWrites` 定义，附录 B 增加说明，`BRX-RS-GOVERNANCE-026` 记录裁决，其中确认 super-admin §1.3a 约束的是 `platform-admin` 的写入，不排除登记的受托写入。其余正文沿用 v3.2.0。
+- 四份专项各发布一个只改继承版本的 Patch：identity-auth 1.0.1、frontend 1.2.1、super-admin 4.0.1、multi-tenant 5.1.3，见 `CHANGELOG-architecture-specialized.md`。
+- 状态：Architecture Frozen，自 2026-10-28 生效。Architecture Committee、Security、SRE 三个批准角色均由 `jsq` 明确批准（`user-authorization:2026-10-28:runtime-shell-3.3.0-freeze`）；冻结正文 commit 为 `00b2f8fa9c019cd6a487bc8480998876b305e91a`，raw bytes SHA-256 为 `2ab132bfde67330e161b3b53bf3d03de8b7066864f1850cb71efc23ed47d769b`，Git blob 为 `996ff8270cf9fb56a9196b70498b7ab353addd9d`。v3.2.0 转为 SUPERSEDED，字节不变。
 
 ---
 
