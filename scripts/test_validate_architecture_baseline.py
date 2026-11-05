@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 MODULE_PATH = Path(__file__).with_name("validate_architecture_baseline.py")
@@ -326,12 +330,315 @@ class FrozenCommitAfterArchiveMoveTest(unittest.TestCase):
             )
 
     def test_record_under_docs_is_still_read_at_its_registered_path(self) -> None:
-        (self.root / "docs/other.md").write_bytes(self.content)
+        content = b"v1.0 Architecture Frozen\n"
+        (self.root / "docs/other.md").write_bytes(content)
 
         with self.assertRaisesRegex(VALIDATOR.BaselineValidationError, "Cannot read"):
             VALIDATOR.validate_blueprint(
-                self.root, self.record(self.content, path="docs/other.md")
+                self.root,
+                self.record(content, status="ACTIVE", kind="SPECIALIZED", path="docs/other.md"),
             )
+
+
+class RetiredBlueprintLocationTest(unittest.TestCase):
+    """A retired blueprint leaves docs/ in the change that retires it."""
+
+    content = b"v1.0 blueprint (Freeze Candidate)\n"
+
+    def setUp(self) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        (self.root / "docs/archived").mkdir(parents=True)
+        (self.root / "docs/root.md").write_bytes(self.content)
+        (self.root / "docs/archived/root.md").write_bytes(self.content)
+
+    def record(self, status: str, path: str) -> dict[str, object]:
+        return {
+            "id": "runtime-shell-1.0",
+            "kind": "SPECIALIZED",
+            "status": status,
+            "path": path,
+            "version": "1.0",
+            "sha256": VALIDATOR.sha256_bytes(self.content),
+            "gitBlob": VALIDATOR.git_blob_id(self.content),
+            "gitCommit": None,
+            "approvals": [],
+        }
+
+    def test_retired_blueprint_outside_the_archive_is_rejected(self) -> None:
+        for status in ("SUPERSEDED", "ARCHIVED"):
+            with self.assertRaisesRegex(
+                VALIDATOR.BaselineValidationError, "must live under docs/archived"
+            ):
+                VALIDATOR.validate_blueprint(self.root, self.record(status, "docs/root.md"))
+
+    def test_retired_blueprint_in_the_archive_passes(self) -> None:
+        for status in ("SUPERSEDED", "ARCHIVED"):
+            VALIDATOR.validate_blueprint(self.root, self.record(status, "docs/archived/root.md"))
+
+    def test_candidate_may_stay_under_docs(self) -> None:
+        VALIDATOR.validate_blueprint(self.root, self.record("CANDIDATE", "docs/root.md"))
+
+
+ENTRY_PAGE = """# Entry
+
+The [registry](lock.yaml), [the site](https://example.invalid/old.md), [a heading](#top).
+History stays in `docs/archived/`.
+
+## 当前生效的蓝图
+
+| 领域 | 蓝图 | 版本 | 生效日期 | 实施状态 | 待重基线 |
+|---|---|---|---|---|---|
+| Root | [root](root.md) | 1.1 | 2026-01-02 | `pending` | 否 |
+| Frontend | [frontend](frontend%20v2.md) | 2.0 | 2026-01-03 | `not-assessed` | 是 |
+
+Prose in the section.
+
+## Plans
+
+| Plan | State |
+|---|---|
+| [plan](plan.md) | running |
+"""
+
+
+class EntryPageTest(unittest.TestCase):
+    """docs/README.md equals the ACTIVE records and links nothing retired."""
+
+    def setUp(self) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        (self.root / "docs/archived").mkdir(parents=True)
+        for name in (
+            "lock.yaml",
+            "root.md",
+            "frontend v2.md",
+            "plan.md",
+            "next.md",
+            "archived/old.md",
+            "archived/notes.md",
+        ):
+            (self.root / "docs" / name).write_text("x", encoding="utf-8")
+        self.lock = {
+            "blueprints": [
+                {
+                    "id": "root-1.1",
+                    "status": "ACTIVE",
+                    "path": "docs/root.md",
+                    "version": "1.1",
+                    "effectiveDate": "2026-01-02",
+                    "implementationStatus": "pending",
+                    "rebaseRequired": False,
+                },
+                {
+                    "id": "frontend-2.0",
+                    "status": "ACTIVE",
+                    "path": "docs/frontend v2.md",
+                    "version": "2.0",
+                    "effectiveDate": "2026-01-03",
+                    "implementationStatus": "not-assessed",
+                    "rebaseRequired": True,
+                },
+                {"id": "root-1.0", "status": "SUPERSEDED", "path": "docs/archived/old.md"},
+                {"id": "root-1.2", "status": "CANDIDATE", "path": "docs/next.md"},
+            ]
+        }
+        self.write(ENTRY_PAGE)
+
+    def write(self, text: str) -> None:
+        (self.root / "docs/README.md").write_text(text, encoding="utf-8")
+
+    def edit(self, old: str, new: str) -> None:
+        self.assertIn(old, ENTRY_PAGE)
+        self.write(ENTRY_PAGE.replace(old, new))
+
+    def assert_rejected(self, message: str) -> None:
+        with self.assertRaisesRegex(VALIDATOR.BaselineValidationError, message):
+            VALIDATOR.validate_entry_page(self.root, self.lock)
+
+    def test_page_equal_to_the_lock_passes(self) -> None:
+        VALIDATOR.validate_entry_page(self.root, self.lock)
+
+    def test_a_link_with_an_anchor_resolves(self) -> None:
+        self.edit("[plan](plan.md)", "[plan](plan.md#state)")
+        VALIDATOR.validate_entry_page(self.root, self.lock)
+
+    def test_missing_page_is_rejected(self) -> None:
+        (self.root / "docs/README.md").unlink()
+        self.assert_rejected("Cannot read docs/README.md")
+
+    def test_missing_section_is_rejected(self) -> None:
+        self.edit("## 当前生效的蓝图", "## Blueprints")
+        self.assert_rejected("lacks")
+
+    def test_missing_row_is_rejected(self) -> None:
+        self.edit("| Root | [root](root.md) | 1.1 | 2026-01-02 | `pending` | 否 |\n", "")
+        self.assert_rejected("each ACTIVE blueprint once")
+
+    def test_repeated_row_is_rejected(self) -> None:
+        row = "| Root | [root](root.md) | 1.1 | 2026-01-02 | `pending` | 否 |\n"
+        self.edit(row, row + row)
+        self.assert_rejected("each ACTIVE blueprint once")
+
+    def test_row_for_a_file_that_is_not_active_is_rejected(self) -> None:
+        self.edit("Prose in the section.", "| Extra | [plan](plan.md) | 1 | 2 | 3 | 4 |")
+        self.assert_rejected("each ACTIVE blueprint once")
+
+    def test_wrong_version_is_rejected(self) -> None:
+        self.edit("| 1.1 |", "| 1.0 |")
+        self.assert_rejected("the lock says")
+
+    def test_wrong_effective_date_is_rejected(self) -> None:
+        self.edit("| 2026-01-02 |", "| 2026-01-01 |")
+        self.assert_rejected("the lock says")
+
+    def test_wrong_implementation_status_is_rejected(self) -> None:
+        self.edit("`pending`", "`accepted`")
+        self.assert_rejected("the lock says")
+
+    def test_wrong_rebase_flag_is_rejected(self) -> None:
+        self.edit("`not-assessed` | 是 |", "`not-assessed` | 否 |")
+        self.assert_rejected("the lock says")
+
+    def test_link_to_a_retired_blueprint_is_rejected(self) -> None:
+        self.edit("Prose in the section.", "See [old](archived/old.md).")
+        self.assert_rejected("BRX-RS-AUTH-007")
+
+    def test_link_to_a_candidate_is_rejected(self) -> None:
+        self.edit("Prose in the section.", "See [next](next.md).")
+        self.assert_rejected("BRX-RS-AUTH-007")
+
+    def test_link_into_the_archive_is_rejected(self) -> None:
+        self.edit("Prose in the section.", "See [notes](archived/notes.md).")
+        self.assert_rejected("BRX-RS-AUTH-007")
+
+    def test_dead_link_is_rejected(self) -> None:
+        self.edit("[plan](plan.md)", "[plan](gone.md)")
+        self.assert_rejected("dead links")
+
+
+ARCHIVE_INDEX = """# Index
+
+Back to the [entry](../README.md).
+
+| Domain | Version | Status | File |
+|---|---|---|---|
+| Root | 1.0 | `SUPERSEDED` | [old.md](old.md) |
+| Root | 1.0.1 | `ARCHIVED`, never approved | [old candidate.md](old%20candidate.md) |
+
+| File | Note |
+|---|---|
+| [prompt.txt](prompt.txt) | a prompt |
+"""
+
+
+class ArchiveIndexTest(unittest.TestCase):
+    """docs/archived/README.md lists the folder and agrees with the registry."""
+
+    def setUp(self) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        (self.root / "docs/archived").mkdir(parents=True)
+        (self.root / "docs/README.md").write_text("x", encoding="utf-8")
+        for name in ("old.md", "old candidate.md", "prompt.txt"):
+            (self.root / "docs/archived" / name).write_text("x", encoding="utf-8")
+        self.lock = {
+            "blueprints": [
+                {
+                    "id": "root-1.0",
+                    "status": "SUPERSEDED",
+                    "path": "docs/archived/old.md",
+                    "version": "1.0",
+                },
+                {
+                    "id": "root-1.0.1",
+                    "status": "ARCHIVED",
+                    "path": "docs/archived/old candidate.md",
+                    "version": "1.0.1",
+                },
+                {"id": "root-1.1", "status": "ACTIVE", "path": "docs/root.md", "version": "1.1"},
+            ]
+        }
+        self.write(ARCHIVE_INDEX)
+
+    def write(self, text: str) -> None:
+        (self.root / "docs/archived/README.md").write_text(text, encoding="utf-8")
+
+    def edit(self, old: str, new: str) -> None:
+        self.assertIn(old, ARCHIVE_INDEX)
+        self.write(ARCHIVE_INDEX.replace(old, new))
+
+    def assert_rejected(self, message: str) -> None:
+        with self.assertRaisesRegex(VALIDATOR.BaselineValidationError, message):
+            VALIDATOR.validate_archive_index(self.root, self.lock)
+
+    def test_index_equal_to_the_folder_passes(self) -> None:
+        VALIDATOR.validate_archive_index(self.root, self.lock)
+
+    def test_missing_index_is_rejected(self) -> None:
+        (self.root / "docs/archived/README.md").unlink()
+        self.assert_rejected("Cannot read docs/archived/README.md")
+
+    def test_unlisted_file_is_rejected(self) -> None:
+        (self.root / "docs/archived/new.md").write_text("x", encoding="utf-8")
+        self.assert_rejected("each archived file once")
+
+    def test_file_listed_twice_is_rejected(self) -> None:
+        row = "| [prompt.txt](prompt.txt) | a prompt |\n"
+        self.edit(row, row + row)
+        self.assert_rejected("each archived file once")
+
+    def test_row_for_a_missing_file_is_rejected(self) -> None:
+        (self.root / "docs/archived/prompt.txt").unlink()
+        self.assert_rejected("dead links")
+
+    def test_dead_link_out_of_the_folder_is_rejected(self) -> None:
+        (self.root / "docs/README.md").unlink()
+        self.assert_rejected("dead links")
+
+    def test_wrong_version_of_a_registered_record_is_rejected(self) -> None:
+        self.edit("| Root | 1.0 |", "| Root | 0.9 |")
+        self.assert_rejected("must state version")
+
+    def test_wrong_status_of_a_registered_record_is_rejected(self) -> None:
+        self.edit("`SUPERSEDED`", "`ARCHIVED`")
+        self.assert_rejected("must state version")
+
+    def test_registered_record_outside_a_table_is_rejected(self) -> None:
+        self.write(
+            ARCHIVE_INDEX.replace("| Root | 1.0 | `SUPERSEDED` | [old.md](old.md) |\n", "")
+            + "\nSee [old.md](old.md).\n"
+        )
+        self.assert_rejected("must state version")
+
+
+class MainRunsThePageChecksTest(unittest.TestCase):
+    """A page check that main does not call protects nothing."""
+
+    def assert_main_runs(self, check: str) -> None:
+        marker = f"{check} ran"
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(
+                VALIDATOR, check, side_effect=VALIDATOR.BaselineValidationError(marker)
+            ),
+            mock.patch.object(
+                sys, "argv", ["validator", "--repo-root", str(MODULE_PATH.parents[1])]
+            ),
+            contextlib.redirect_stderr(stderr),
+        ):
+            result = VALIDATOR.main()
+        self.assertEqual(result, 1)
+        self.assertIn(marker, stderr.getvalue())
+
+    def test_main_checks_the_entry_page(self) -> None:
+        self.assert_main_runs("validate_entry_page")
+
+    def test_main_checks_the_archive_index(self) -> None:
+        self.assert_main_runs("validate_archive_index")
 
 
 if __name__ == "__main__":

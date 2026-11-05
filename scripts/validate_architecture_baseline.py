@@ -6,11 +6,15 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import posixpath
+import re
 import subprocess
 import sys
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 from jsonschema import Draft202012Validator, FormatChecker
 
@@ -19,6 +23,10 @@ REQUIRED_APPROVAL_ROLES = {"architecture-committee", "security", "sre"}
 IMMUTABLE_FIELDS = ("domain", "kind", "path", "version", "sha256", "gitBlob")
 RETIRED_STATUSES = {"SUPERSEDED", "ARCHIVED"}
 ARCHIVE_PREFIX = "docs/archived/"
+ARCHIVE_INDEX = ARCHIVE_PREFIX + "README.md"
+ENTRY_PAGE = "docs/README.md"
+ENTRY_PAGE_BLUEPRINTS = "## 当前生效的蓝图"
+MARKDOWN_LINK = re.compile(r"\]\(([^)\s]+)\)")
 REQUIRED_INSTRUCTION_FILES = ("AGENTS.md", "CLAUDE.md")
 REQUIRED_INSTRUCTION_MARKERS = (
     "docs/architecture-baselines.lock.yaml",
@@ -168,6 +176,13 @@ def validate_blueprint(
             f"ACTIVE blueprint {blueprint['id']} cannot live under docs/archived"
         )
 
+    if blueprint["status"] in RETIRED_STATUSES and not blueprint["path"].startswith(
+        ARCHIVE_PREFIX
+    ):
+        raise BaselineValidationError(
+            f"Retired blueprint {blueprint['id']} must live under docs/archived"
+        )
+
     if blueprint["kind"] == "ROOT" and blueprint["status"] == "ACTIVE":
         roles = [approval["role"] for approval in blueprint["approvals"]]
         if len(roles) != len(set(roles)) or set(roles) != REQUIRED_APPROVAL_ROLES:
@@ -304,6 +319,118 @@ def validate_instructions(repo_root: Path) -> None:
             )
 
 
+def read_page(repo_root: Path, relative_path: str) -> str:
+    """Read a navigation page or fail clearly."""
+    try:
+        return (repo_root / relative_path).read_text(encoding="utf-8")
+    except OSError as error:
+        raise BaselineValidationError(f"Cannot read {relative_path}: {error}") from error
+
+
+def local_links(page: str, text: str) -> list[str]:
+    """Return the repository-relative targets of the local links in a page's text."""
+    targets = []
+    for target in MARKDOWN_LINK.findall(text):
+        if target.startswith(("http://", "https://", "mailto:", "#")):
+            continue
+        path = unquote(target.partition("#")[0])
+        targets.append(posixpath.normpath(posixpath.join(posixpath.dirname(page), path)))
+    return targets
+
+
+def table_rows(page: str, text: str) -> list[tuple[str, list[str]]]:
+    """Return each table row that links a file, as its first target and its cells."""
+    rows = []
+    for line in text.splitlines():
+        targets = local_links(page, line)
+        if line.startswith("|") and targets:
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            rows.append((targets[0], cells))
+    return rows
+
+
+def validate_links_resolve(repo_root: Path, page: str, links: list[str]) -> None:
+    """Reject a navigation page that sends its reader to a missing file."""
+    dead = sorted(link for link in links if not (repo_root / link).exists())
+    if dead:
+        raise BaselineValidationError(f"{page} has dead links: {dead}")
+
+
+def validate_entry_page(repo_root: Path, lock: dict[str, Any]) -> None:
+    """Keep the documentation entry page equal to the ACTIVE records (BRX-RS-AUTH-007)."""
+    page = read_page(repo_root, ENTRY_PAGE)
+    links = local_links(ENTRY_PAGE, page)
+    validate_links_resolve(repo_root, ENTRY_PAGE, links)
+
+    active = {b["path"]: b for b in lock["blueprints"] if b["status"] == "ACTIVE"}
+    registered = {b["path"] for b in lock["blueprints"]}
+    barred = sorted(
+        link
+        for link in links
+        if link.startswith(ARCHIVE_PREFIX) or (link in registered and link not in active)
+    )
+    if barred:
+        raise BaselineValidationError(
+            f"{ENTRY_PAGE} may link only ACTIVE baselines, not {barred} (BRX-RS-AUTH-007)"
+        )
+
+    _, heading, rest = page.partition(ENTRY_PAGE_BLUEPRINTS + "\n")
+    if not heading:
+        raise BaselineValidationError(f"{ENTRY_PAGE} lacks {ENTRY_PAGE_BLUEPRINTS}")
+    rows = table_rows(ENTRY_PAGE, rest.partition("\n## ")[0])
+    if sorted(path for path, _ in rows) != sorted(active):
+        raise BaselineValidationError(
+            f"{ENTRY_PAGE} must list each ACTIVE blueprint once: "
+            f"listed={sorted(path for path, _ in rows)} active={sorted(active)}"
+        )
+    for path, cells in rows:
+        blueprint = active[path]
+        expected = [
+            blueprint["version"],
+            blueprint["effectiveDate"],
+            f"`{blueprint['implementationStatus']}`",
+            "是" if blueprint["rebaseRequired"] else "否",
+        ]
+        if cells[2:] != expected:
+            raise BaselineValidationError(
+                f"{ENTRY_PAGE} says {cells[2:]} for {blueprint['id']}, the lock says {expected}"
+            )
+
+
+def validate_archive_index(repo_root: Path, lock: dict[str, Any]) -> None:
+    """Keep the history index equal to the archive folder and the registry."""
+    page = read_page(repo_root, ARCHIVE_INDEX)
+    links = local_links(ARCHIVE_INDEX, page)
+    validate_links_resolve(repo_root, ARCHIVE_INDEX, links)
+
+    listed = Counter(link for link in links if link.startswith(ARCHIVE_PREFIX))
+    stored = {
+        ARCHIVE_PREFIX + item.name
+        for item in (repo_root / ARCHIVE_PREFIX).iterdir()
+        if item.is_file()
+    } - {ARCHIVE_INDEX}
+    wrong = sorted(path for path in stored if listed[path] != 1)
+    if wrong:
+        raise BaselineValidationError(
+            f"{ARCHIVE_INDEX} must list each archived file once: {wrong}"
+        )
+
+    rows = dict(table_rows(ARCHIVE_INDEX, page))
+    for blueprint in lock["blueprints"]:
+        if not blueprint["path"].startswith(ARCHIVE_PREFIX):
+            continue
+        cells = rows.get(blueprint["path"])
+        if (
+            cells is None
+            or cells[1] != blueprint["version"]
+            or not cells[2].startswith(f"`{blueprint['status']}`")
+        ):
+            raise BaselineValidationError(
+                f"{ARCHIVE_INDEX} row for {blueprint['id']} must state version "
+                f"{blueprint['version']} and status `{blueprint['status']}`"
+            )
+
+
 def relative_to_repo(repo_root: Path, path: Path) -> str:
     """Return a POSIX repository-relative path or fail clearly."""
     try:
@@ -370,6 +497,8 @@ def main() -> int:
         validate_registry(lock)
         for blueprint in lock["blueprints"]:
             validate_blueprint(repo_root, blueprint)
+        validate_entry_page(repo_root, lock)
+        validate_archive_index(repo_root, lock)
         if args.require_active and any(
             blueprint["status"] == "CANDIDATE" and blueprint["effective"]
             for blueprint in lock["blueprints"]

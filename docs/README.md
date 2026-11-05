@@ -72,7 +72,7 @@ python3 scripts/validate_architecture_baseline.py --require-active --check-instr
 
 ## 维护规则
 
-- 蓝图发布新版本或退役时，同一次提交更新本页。
-- 方案开工、暂停或关闭时，更新“在用的施工方案”。
-- 文档不再使用时，搬进 `docs/archived/` 并保留原文件名，在该目录的 `README.md` 登记。
-- 本页不链接退役蓝图和 `docs/archived/` 下的文档（根蓝图 `BRX-RS-AUTH-007`）。
+- 蓝图发布新版本时，同一次提交做三件事：用 `git mv` 把旧版搬进 `docs/archived/`，更新本页的蓝图表，在该目录的 `README.md` 登记。漏了任何一件，校验器都会失败。
+- 方案开工、暂停或关闭时，更新“在用的施工方案”。这张表校验器不检查。
+- 其他文档不再使用时，搬进 `docs/archived/` 并保留原文件名，在该目录的 `README.md` 登记。
+- 本页不链接退役蓝图和 `docs/archived/` 下的文档（根蓝图 `BRX-RS-AUTH-007`），校验器会检查。

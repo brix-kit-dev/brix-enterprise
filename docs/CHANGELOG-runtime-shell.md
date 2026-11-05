@@ -4,6 +4,16 @@
 
 ---
 
+## v3.3.0-docs-gates（2026-11-05）— 校验器守住入口页和历史索引
+
+- 来源：`docs-dev/README.md` 曾把退役的 v3.0.10 写成当前唯一入口，没有检查发现。负责人 2026-11-05 同意由校验器守住入口，防止文档再堆积。
+- `validate_blueprint`：退役蓝图必须在 `docs/archived/`，所以新版本发布时旧版要在同一次改动里搬走。
+- `validate_entry_page`：`docs/README.md` 的蓝图表必须与 ACTIVE 记录一一对应，版本、生效日期、实施状态和待重基线都要一致；页面不得链接非 ACTIVE 的蓝图和 `docs/archived/` 下的文档（`BRX-RS-AUTH-007`），也不得有死链。
+- `validate_archive_index`：`docs/archived/README.md` 必须把目录下的文件各列一次，注册记录的版本和状态要一致。
+- 这些检查每次运行都执行，不需要新参数。发版时的步骤写在 `AGENTS.md`。
+
+---
+
 ## v3.3.0-archive-move（2026-11-05）— 退役蓝图可以搬进 archived
 
 - 来源：负责人 2026-11-05 要求收敛 `docs/` 下的蓝图，只保留当前生效的文档。校验器此前把 `path` 当作不可变字段，退役蓝图不能移动。同日负责人批准放开这一种移动（`user-authorization:2026-11-05:archive-retired-blueprints`，负责人回复 `同意，开始第 1 点`）。
