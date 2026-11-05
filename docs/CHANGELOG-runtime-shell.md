@@ -4,6 +4,15 @@
 
 ---
 
+## v3.3.0-archive-move（2026-11-05）— 退役蓝图可以搬进 archived
+
+- 来源：负责人 2026-11-05 要求收敛 `docs/` 下的蓝图，只保留当前生效的文档。校验器此前把 `path` 当作不可变字段，退役蓝图不能移动。同日负责人批准放开这一种移动（`user-authorization:2026-11-05:archive-retired-blueprints`，负责人回复 `同意，开始第 1 点`）。
+- `validate_transition`：改动后状态为 `SUPERSEDED` 或 `ARCHIVED` 的记录，可以从 `docs/` 搬进 `docs/archived/`，文件名不变。新版本发布时，被取代的记录可以在同一次改动里搬。
+- `validate_blueprint`：退役记录在 `docs/archived/` 时，到冻结提交的 `docs/<文件名>` 核对登记的字节。
+- 不变：改名、搬到别处、搬回来、移动 ACTIVE 记录、改 `sha256`、`gitBlob` 或 `version`、删除记录都仍然失败；蓝图内容、版本、状态、批准记录和 lock schema 都不改。本次只改校验器，不移动蓝图。
+
+---
+
 ## v3.2.0（2026-10-22）— 统一身份认证与登录架构
 
 - 来源：`docs/rfc/RFC-002-身份认证-统一登录架构与认证专项（Draft）.md`。负责人裁决：Q1 托管登录 + 授权码 + PKCE + BFF；Q5 全体租户员工强制双因素；Q7 首批第三方登录只接 Google，并实现第三方登录通用层；其余问题（Q2 内嵌 Spring Authorization Server 作为 L2C Adapter、Q3 新增 identity-auth 专项、Q4 超管只用防钓鱼认证器、Q6 会话默认值、Q8 保留前缀、Q9 托管登录页为独立前端模块、Q10 Spring Boot 4.1、Q11 版本号、Q12 第三方登录归 Open Core）按 RFC 建议采纳。

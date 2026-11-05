@@ -17,6 +17,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 REQUIRED_APPROVAL_ROLES = {"architecture-committee", "security", "sre"}
 IMMUTABLE_FIELDS = ("domain", "kind", "path", "version", "sha256", "gitBlob")
+RETIRED_STATUSES = {"SUPERSEDED", "ARCHIVED"}
+ARCHIVE_PREFIX = "docs/archived/"
 REQUIRED_INSTRUCTION_FILES = ("AGENTS.md", "CLAUDE.md")
 REQUIRED_INSTRUCTION_MARKERS = (
     "docs/architecture-baselines.lock.yaml",
@@ -122,6 +124,18 @@ def validate_document_state(document: str, blueprint: dict[str, Any]) -> None:
         )
 
 
+def frozen_path(blueprint: dict[str, Any]) -> str:
+    """Return where a blueprint's frozen commit holds it.
+
+    A retired blueprint may move into docs/archived after its freeze, so the
+    commit recorded at the freeze still holds it directly under docs/.
+    """
+    path = blueprint["path"]
+    if blueprint["status"] in RETIRED_STATUSES and path.startswith(ARCHIVE_PREFIX):
+        return "docs/" + path.removeprefix(ARCHIVE_PREFIX)
+    return path
+
+
 def validate_blueprint(
     repo_root: Path,
     blueprint: dict[str, Any],
@@ -166,7 +180,7 @@ def validate_blueprint(
         return
 
     committed_bytes = git_file_bytes(
-        repo_root, blueprint["gitCommit"], blueprint["path"]
+        repo_root, blueprint["gitCommit"], frozen_path(blueprint)
     )
     if sha256_bytes(committed_bytes) != blueprint["sha256"]:
         raise BaselineValidationError(
@@ -224,6 +238,14 @@ def load_lock_from_git(repo_root: Path, revision: str, relative_path: str) -> An
         ) from error
 
 
+def is_archive_move(old: dict[str, Any], new: dict[str, Any]) -> bool:
+    """Tell whether a record, retired after this change, moves into docs/archived unrenamed."""
+    return (
+        new["status"] in RETIRED_STATUSES
+        and new["path"] == ARCHIVE_PREFIX + Path(old["path"]).name
+    )
+
+
 def validate_transition(previous: Any, current: dict[str, Any]) -> None:
     """Reject in-place mutation and illegal activation across revisions."""
     if not previous or previous.get("schemaVersion") != 2:
@@ -238,12 +260,14 @@ def validate_transition(previous: Any, current: dict[str, Any]) -> None:
                 f"Blueprint history is append-only; missing record {blueprint_id}"
             )
         changed = [field for field in IMMUTABLE_FIELDS if old[field] != new[field]]
+        if changed == ["path"] and is_archive_move(old, new):
+            changed = []
         if old["status"] != "CANDIDATE" and changed:
             raise BaselineValidationError(
                 f"Frozen blueprint record {blueprint_id} changed immutable fields: "
                 f"{changed}; add a new version instead"
             )
-        if old["status"] in {"SUPERSEDED", "ARCHIVED"} and new["status"] == "ACTIVE":
+        if old["status"] in RETIRED_STATUSES and new["status"] == "ACTIVE":
             raise BaselineValidationError(
                 f"Historical record {blueprint_id} cannot be reactivated in place"
             )
