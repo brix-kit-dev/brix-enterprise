@@ -14,7 +14,7 @@ Start at [docs/README.md](docs/README.md). It lists the blueprints in force and 
 
 ## Architecture
 
-Brix Enterprise extends the open-source [Brix](https://github.com/brix-framework/brix) framework with:
+Brix Enterprise extends the open-source [Brix](https://github.com/brix-kit-dev/brix) framework with:
 
 - **Enterprise Host Assemblies**: Production-ready capability orchestration
 - **Business Solutions**: Industry-specific plugin implementations
