@@ -6,8 +6,9 @@
 #       停放的消息不会再自动投递，要查清原因后人工重放。
 # 指标：brix_outbox_messages{outbox,status}：Relay 每一轮读到的各状态行数
 #       brix_outbox_oldest_pending_age_seconds{outbox}：最早一条待投递消息的等待时长
-#       （Micrometer brix.outbox.messages、brix.outbox.oldest.pending.age，按 Owner 的 Outbox 表统计）
-# 标签：outbox（Owner 的 Outbox 表名）、status（pending、in_flight、parked），取值都是有限集合
+#       brix_outbox_waits_total{outbox,type,code}：接收方现在收不下、不扣次数继续等待的投递次数
+#       （Micrometer brix.outbox.messages、brix.outbox.oldest.pending.age、brix.outbox.waits，按 Owner 的 Outbox 表统计）
+# 标签：outbox（Owner 的 Outbox 表名）、status（pending、in_flight、parked）、type（消息类型）、code（错误码），取值都是有限集合
 #
 # 处理：管理端口 GET /actuator/outbox 列出停放的消息；原因消除后
 #       POST /actuator/outbox/{eventId} 重放，无法重放的用 DELETE /actuator/outbox/{eventId} 丢弃；
@@ -30,6 +31,17 @@ groups:
         annotations:
           summary: "Outbox {{ $labels.outbox }} 有停放的消息"
           description: "消息重试耗尽或遇到永久错误，已停止投递。到日志查 event=outbox.parked 看错误码；原因消除后在管理端口 POST /actuator/outbox/{eventId} 重放，无法重放的用 DELETE 丢弃，都要填操作人和原因。"
+      # 接收方一直收不下（broker 拒绝写入、权限、订阅方不可用）：这些消息不扣次数、不停放，所以上面的停放告警不会响
+      # （标准链路收尾方案 §10.28）。短暂的抖动不告警。
+      - alert: BrixOutboxDeliveryWaiting
+        expr: sum by (outbox, code) (increase(brix_outbox_waits_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "Outbox {{ $labels.outbox }} 的消息一直在等接收方（{{ $labels.code }}）"
+          description: "接收方一直收不下这些消息。KAFKA_ACCESS_DENIED 查 ACL 和客户端身份；KAFKA_BROKER_UNAVAILABLE、KAFKA_SEND_TIMEOUT 查副本和 leader；KAFKA_TOPIC_UNAVAILABLE 查主题。消息不扣次数、不停放，原因消除后自动继续。到日志查 event=outbox.delivery_waiting。"
       # Relay 在运行，但最早的消息超过 15 分钟仍未投递（例如订阅方一直失败、还没到停放的次数）。
       - alert: BrixOutboxDeliveryStalled
         expr: max by (outbox) (brix_outbox_oldest_pending_age_seconds) > 900
@@ -39,4 +51,4 @@ groups:
           category: reliability
         annotations:
           summary: "Outbox {{ $labels.outbox }} 有消息超过 15 分钟没有投递出去"
-          description: "Relay 在运行，但消息一直投递不出去。到日志查 event=event.delivery_failed 和 event=outbox.claim_lost。"
+          description: "Relay 在运行，但消息一直投递不出去。到日志查 event=outbox.delivery_waiting、event=event.delivery_failed 和 event=outbox.claim_lost。"

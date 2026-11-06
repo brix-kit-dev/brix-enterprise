@@ -53,4 +53,33 @@ tests:
               outbox: platform_tenant_outbox
             exp_annotations:
               summary: "Outbox platform_tenant_outbox 有消息超过 15 分钟没有投递出去"
-              description: "Relay 在运行，但消息一直投递不出去。到日志查 event=event.delivery_failed 和 event=outbox.claim_lost。"
+              description: "Relay 在运行，但消息一直投递不出去。到日志查 event=outbox.delivery_waiting、event=event.delivery_failed 和 event=outbox.claim_lost。"
+
+  - interval: 1m
+    input_series:
+      # 1 分钟起 broker 拒绝写入，两种消息类型都在等；10 分钟时恢复。
+      - series: 'brix_outbox_waits_total{outbox="platform_tenant_outbox",type="TenantCreated",code="KAFKA_ACCESS_DENIED"}'
+        values: '0 12 24 36 48 60 72 84 96 108 120 120 120 120 120 120 120 120 120 120'
+      - series: 'brix_outbox_waits_total{outbox="platform_tenant_outbox",type="TenantActivated",code="KAFKA_ACCESS_DENIED"}'
+        values: '0 12 24 36 48 60 72 84 96 108 120 120 120 120 120 120 120 120 120 120'
+      # 另一个 Outbox 只抖了一下，不告警。
+      - series: 'brix_outbox_waits_total{outbox="platform_identity_outbox",type="IdentityLocked",code="KAFKA_SEND_TIMEOUT"}'
+        values: '0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: BrixOutboxDeliveryWaiting
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: BrixOutboxDeliveryWaiting
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              outbox: platform_tenant_outbox
+              code: KAFKA_ACCESS_DENIED
+            exp_annotations:
+              summary: "Outbox platform_tenant_outbox 的消息一直在等接收方（KAFKA_ACCESS_DENIED）"
+              description: "接收方一直收不下这些消息。KAFKA_ACCESS_DENIED 查 ACL 和客户端身份；KAFKA_BROKER_UNAVAILABLE、KAFKA_SEND_TIMEOUT 查副本和 leader；KAFKA_TOPIC_UNAVAILABLE 查主题。消息不扣次数、不停放，原因消除后自动继续。到日志查 event=outbox.delivery_waiting。"
+      - eval_time: 17m
+        alertname: BrixOutboxDeliveryWaiting
+        exp_alerts: []
