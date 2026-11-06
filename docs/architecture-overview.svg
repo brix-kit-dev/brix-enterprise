@@ -1,0 +1,312 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="756" viewBox="0 0 1320 756" role="img" aria-labelledby="overview-title overview-desc">
+  <!-- Hand-drawn navigation aid, not a specification. docs/README.md says when to update it. -->
+  <title id="overview-title">Brix 总体架构图</title>
+  <desc id="overview-desc">Brix 总体架构图。业务插件在中间，运行壳包在外面：请求由 L2B 的 HTTP Dispatcher 送进插件；插件只能穿过 L2A 契约层往外走，经 L2B 代理和 L2C 适配器到达基础设施；插件之间不能直连，只能走 Query、Command、Event。</desc>
+  <style>
+    svg { color: #14233A; }
+    .sheet { fill: #FAFBFD; }
+    .frame { fill: none; stroke: #A4560F; stroke-width: 2; }
+    .plan { fill: none; stroke: #55647A; stroke-width: 1.2; stroke-dasharray: 6 4; }
+    .box { fill: none; stroke: #C6D1DF; stroke-width: 1.2; }
+    .oss { fill: #E2EDF9; stroke: #1D5FA6; stroke-width: 1.2; }
+    .ent { fill: #FBEDDA; stroke: #A4560F; stroke-width: 1.2; }
+    .inf { fill: #E6EAF0; stroke: #4C596C; stroke-width: 1.2; }
+    .todo { fill: none; stroke: #A4560F; stroke-width: 1.2; stroke-dasharray: 4 3; }
+    .grp-ent { fill: none; stroke: #A4560F; stroke-width: 1.2; }
+    .grp-oss { fill: none; stroke: #1D5FA6; stroke-width: 1.2; }
+    .cell { fill: #FAFBFD; stroke: #A4560F; stroke-width: 1; }
+    .slot { fill: #FAFBFD; }
+    .run { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .asm { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-dasharray: 5 4; }
+    .ban { fill: none; stroke: #BF2B2B; stroke-width: 1.8; }
+    .ban-line { fill: none; stroke: #BF2B2B; stroke-width: 1.4; stroke-dasharray: 4 3; }
+    text { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; font-size: 12.5px; fill: #55647A; }
+    text.c, text.cb, text.cs, text.lc, text.lv { font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace; }
+    text.h { font-size: 14px; font-weight: 700; fill: #14233A; }
+    text.c { font-size: 12px; font-weight: 500; fill: #14233A; }
+    text.cb { font-size: 12px; font-weight: 600; fill: #14233A; }
+    text.cs { font-size: 11px; fill: #55647A; }
+    text.lc { font-size: 11.5px; font-weight: 500; fill: #14233A; }
+    text.lb { font-size: 12.5px; font-weight: 500; fill: #14233A; }
+    text.lv { font-size: 15px; font-weight: 600; fill: #14233A; }
+    text.no { font-size: 12.5px; font-weight: 700; fill: #BF2B2B; }
+    @media (prefers-color-scheme: dark) {
+      svg { color: #DDE6F1; }
+      .sheet { fill: #121C2A; }
+      .frame { stroke: #EBAF6F; }
+      .plan { stroke: #98A9BE; }
+      .box { stroke: #34465D; }
+      .oss { fill: #16304E; stroke: #7FB4EE; }
+      .ent { fill: #3A2813; stroke: #EBAF6F; }
+      .inf { fill: #212D3C; stroke: #A6B4C6; }
+      .todo { stroke: #EBAF6F; }
+      .grp-ent { stroke: #EBAF6F; }
+      .grp-oss { stroke: #7FB4EE; }
+      .cell { fill: #121C2A; stroke: #EBAF6F; }
+      .slot { fill: #121C2A; }
+      .ban { stroke: #F28B8B; }
+      .ban-line { stroke: #F28B8B; }
+      text { fill: #98A9BE; }
+      text.h { fill: #DDE6F1; }
+      text.c { fill: #DDE6F1; }
+      text.cb { fill: #DDE6F1; }
+      text.cs { fill: #98A9BE; }
+      text.lc { fill: #DDE6F1; }
+      text.lb { fill: #DDE6F1; }
+      text.lv { fill: #DDE6F1; }
+      text.no { fill: #F28B8B; }
+    }
+  </style>
+  <rect class="sheet" width="1320" height="756"/>
+
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <!-- Layer names, shared by both columns -->
+  <text class="lv" x="14" y="34">L4</text><text x="14" y="52">组合</text>
+  <text class="lv" x="14" y="112">L3</text><text x="14" y="130">Host</text>
+  <text class="lv" x="14" y="206">L1</text><text x="14" y="224">插件</text>
+  <text class="lv" x="14" y="338">L2A</text><text x="14" y="356">契约</text>
+  <text class="lv" x="14" y="428">L2B</text><text x="14" y="446">运行时</text>
+  <text class="cs" x="14" y="464">runtime-</text><text class="cs" x="14" y="478">orchestrator</text>
+  <text class="lv" x="14" y="552">L2C</text><text x="14" y="570">适配器</text>
+  <text class="cs" x="14" y="588">infra-</text><text class="cs" x="14" y="602">adapter-*</text>
+  <text class="lv" x="14" y="676">L0</text><text x="14" y="694">基础设施</text>
+
+  <!-- L4 -->
+  <rect class="plan" x="100" y="14" width="1208" height="46" rx="2"/>
+  <text class="h" x="114" y="42">Composition</text>
+  <text x="214" y="42">选 Host Profile、要装的插件和运维模块、能力约束。构建和启动时定好，运行中不再增减。</text>
+  <path class="asm" marker-end="url(#ah)" d="M260 60V90"/>
+  <path class="asm" marker-end="url(#ah)" d="M924 60V90"/>
+  <text class="lb" x="934" y="81">静态组装</text>
+
+  <!-- L3 frames -->
+  <rect class="frame" x="100" y="92" width="320" height="524" rx="2"/>
+  <text class="h" x="114" y="114">前端 Host</text>
+  <text class="c" x="190" y="114">host-shell-standalone-web</text>
+  <text x="114" y="132">在浏览器里运行 · 细则见蓝图「前端 1.2.1」</text>
+
+  <rect class="frame" x="540" y="92" width="768" height="524" rx="2"/>
+  <text class="h" x="554" y="114">后端 Host</text>
+  <text class="c" x="630" y="114">host-shell-standalone</text>
+  <text x="554" y="132">一个 JVM、一个 ClassLoader，加减插件要重启。Host 只组装，不写业务。</text>
+
+  <!-- Front end: L1 -->
+  <rect class="box" x="114" y="140" width="292" height="146" rx="2"/>
+  <rect class="oss" x="126" y="150" width="268" height="28" rx="2"/>
+  <text class="c" x="138" y="169">platform-admin-web</text>
+  <rect class="oss" x="126" y="184" width="268" height="28" rx="2"/>
+  <text class="c" x="138" y="203">platform-tenant-web</text>
+  <rect class="todo" x="126" y="218" width="268" height="28" rx="2"/>
+  <text class="c" x="138" y="237">app-*-ui-web</text>
+  <text x="382" y="237" text-anchor="end">业务页面</text>
+  <text class="cs" x="126" y="272">Page → Hook → Repository</text>
+
+  <!-- Front end: L2A -->
+  <rect class="oss" x="114" y="316" width="292" height="52" rx="2"/>
+  <rect class="slot" x="353" y="317" width="18" height="50"/>
+  <text class="c" x="126" y="338">runtime-sdk-api-web</text>
+  <text class="c" x="126" y="356">runtime-sdk-react</text>
+
+  <!-- Front end: L2B -->
+  <rect class="oss" x="114" y="398" width="292" height="92" rx="2"/>
+  <text class="h" x="126" y="420">共享运行时</text>
+  <text class="c" x="126" y="442">shared-runtime-web</text>
+  <text class="c" x="126" y="460">platform-frame-web</text>
+  <text x="126" y="480">React、Router、Auth、Theme 各一份</text>
+
+  <!-- Front end: L2C -->
+  <rect class="oss" x="114" y="520" width="196" height="84" rx="2"/>
+  <text class="h" x="126" y="542">UI、路由、状态</text>
+  <text class="c" x="126" y="564">ui-mui · router-web</text>
+  <text class="c" x="126" y="584">state-web · mf-web</text>
+  <rect class="oss" x="318" y="520" width="88" height="84" rx="2"/>
+  <text class="c" x="362" y="566" text-anchor="middle">http-web</text>
+
+  <!-- Front-end path -->
+  <path class="run" marker-end="url(#ah)" d="M362 286V396"/>
+  <path class="run" marker-end="url(#ah)" d="M362 490V518"/>
+  <text class="lb" x="352" y="306" text-anchor="end">调 Capability</text>
+
+  <!-- Back end: L1 business plugins -->
+  <rect class="grp-ent" x="554" y="140" width="511" height="146" rx="2"/>
+  <text class="h" x="566" y="160">业务插件</text>
+  <text class="c" x="630" y="160">enterprise-solutions</text>
+  <rect class="ent" x="566" y="170" width="226" height="106" rx="2"/>
+  <text class="cb" x="578" y="189">app-booking</text>
+  <rect class="cell" x="578" y="198" width="63" height="26"/>
+  <rect class="cell" x="647" y="198" width="63" height="26"/>
+  <rect class="cell" x="716" y="198" width="63" height="26"/>
+  <text class="c" x="609.5" y="216" text-anchor="middle">api</text>
+  <text class="c" x="678.5" y="216" text-anchor="middle">core</text>
+  <text class="c" x="747.5" y="216" text-anchor="middle">server</text>
+  <text x="578" y="244">plugin-manifest.yaml 声明依赖</text>
+  <text x="578" y="264">自有业务逻辑和数据</text>
+  <text x="804" y="181">其余 8 个还在旧 module-manifest</text>
+  <rect class="todo" x="804" y="192" width="79" height="24" rx="2"/><text class="c" x="843.5" y="209" text-anchor="middle">identity</text>
+  <rect class="todo" x="887" y="192" width="79" height="24" rx="2"/><text class="c" x="926.5" y="209" text-anchor="middle">products</text>
+  <rect class="todo" x="970" y="192" width="79" height="24" rx="2"/><text class="c" x="1009.5" y="209" text-anchor="middle">partners</text>
+  <rect class="todo" x="804" y="220" width="79" height="24" rx="2"/><text class="c" x="843.5" y="237" text-anchor="middle">messenger</text>
+  <rect class="todo" x="887" y="220" width="79" height="24" rx="2"/><text class="c" x="926.5" y="237" text-anchor="middle">carousel</text>
+  <rect class="todo" x="970" y="220" width="79" height="24" rx="2"/><text class="c" x="1009.5" y="237" text-anchor="middle">case</text>
+  <rect class="todo" x="804" y="248" width="79" height="24" rx="2"/><text class="c" x="843.5" y="265" text-anchor="middle">contracts</text>
+  <rect class="todo" x="887" y="248" width="79" height="24" rx="2"/><text class="c" x="926.5" y="265" text-anchor="middle">storage</text>
+
+  <!-- Back end: L1 platform plugins -->
+  <rect class="grp-oss" x="1101" y="140" width="193" height="146" rx="2"/>
+  <text class="h" x="1113" y="160">平台插件</text>
+  <text class="c" x="1177" y="160">platform-*</text>
+  <rect class="oss" x="1113" y="170" width="81" height="24" rx="2"/><text class="c" x="1153.5" y="187" text-anchor="middle">identity</text>
+  <rect class="oss" x="1201" y="170" width="81" height="24" rx="2"/><text class="c" x="1241.5" y="187" text-anchor="middle">tenant</text>
+  <rect class="oss" x="1113" y="200" width="81" height="24" rx="2"/><text class="c" x="1153.5" y="217" text-anchor="middle">auth</text>
+  <rect class="oss" x="1201" y="200" width="81" height="24" rx="2"/><text class="c" x="1241.5" y="217" text-anchor="middle">audit</text>
+  <text x="1113" y="246">tenant：多租户 5.1.3</text>
+  <text x="1113" y="266">identity：身份认证 1.0.1</text>
+
+  <!-- Red line between plugins -->
+  <path class="ban-line" d="M1067 215H1099"/>
+  <path class="ban" d="M1077 209L1089 221M1089 209L1077 221"/>
+  <text class="no" x="1083" y="241" text-anchor="middle">禁止</text>
+  <text class="no" x="1083" y="257" text-anchor="middle">直连</text>
+
+  <!-- Internal contract runs behind the contract wall -->
+  <path class="run" marker-end="url(#ah)" d="M1227 398V288"/>
+
+  <!-- Back end: L2A wall with its openings -->
+  <rect class="oss" x="554" y="316" width="740" height="52" rx="2"/>
+  <rect class="slot" x="615" y="317" width="18" height="50"/>
+  <rect class="slot" x="765" y="317" width="18" height="50"/>
+  <rect class="slot" x="1031" y="317" width="18" height="50"/>
+  <rect class="slot" x="1117" y="317" width="18" height="50"/>
+  <text class="cb" x="794" y="337">runtime-sdk-api</text>
+  <text x="912" y="337">19 项 Capability</text>
+  <text x="794" y="357">PluginContext 是取能力的唯一入口</text>
+  <text class="no" x="1146" y="347">插件不能绕过这层</text>
+
+  <!-- Back end: L2B -->
+  <rect class="oss" x="554" y="398" width="140" height="92" rx="2"/>
+  <text class="h" x="564" y="420">HTTP Dispatcher</text>
+  <text x="564" y="442">认证 → 租户 → 权限</text>
+  <text x="564" y="460">→ 幂等 → Handler</text>
+  <text x="564" y="478">所有 /api 都过这里</text>
+
+  <rect class="oss" x="704" y="398" width="140" height="92" rx="2"/>
+  <text class="h" x="714" y="420">Capability 代理</text>
+  <text x="714" y="442">Registry、插件容器</text>
+  <text x="714" y="460">注入身份、租户、</text>
+  <text x="714" y="478">Trace 和策略</text>
+
+  <rect class="oss" x="854" y="398" width="134" height="92" rx="2"/>
+  <text class="h" x="864" y="420">Outbox / Inbox</text>
+  <text x="864" y="442">消息先落 Outbox</text>
+  <text x="864" y="460">Relay 提交后发送</text>
+  <text x="864" y="478">消费方按 ID 去重</text>
+
+  <rect class="oss" x="1016" y="398" width="134" height="92" rx="2"/>
+  <text class="h" x="1026" y="420">跨插件通信</text>
+  <text x="1026" y="442">Query 同步只读</text>
+  <text x="1026" y="460">Command 异步命令</text>
+  <text x="1026" y="478">Event 异步事实</text>
+
+  <rect class="oss" x="1160" y="398" width="134" height="92" rx="2"/>
+  <text class="cb" x="1170" y="420">platform-admin</text>
+  <text x="1170" y="442">运维模块，不是插件</text>
+  <text class="lc" x="1170" y="460">/api/platform/**</text>
+  <text x="1170" y="478">平台超管 4.0.1</text>
+
+  <!-- Back end: L2C -->
+  <rect class="oss" x="554" y="520" width="140" height="84" rx="2"/>
+  <text class="h" x="564" y="540">身份协议面</text>
+  <text class="lc" x="564" y="558">identity-provider</text>
+  <text x="564" y="576">OIDC、登录页、BFF</text>
+  <text x="564" y="594">身份认证 1.0.1</text>
+
+  <rect class="oss" x="704" y="520" width="140" height="84" rx="2"/>
+  <text class="h" x="714" y="542">持久化</text>
+  <text class="c" x="714" y="564">persistence-jpa</text>
+  <text class="c" x="714" y="584">database</text>
+
+  <rect class="oss" x="854" y="520" width="134" height="84" rx="2"/>
+  <text class="h" x="864" y="542">消息</text>
+  <text class="c" x="864" y="564">kafka</text>
+  <text class="c" x="864" y="584">outbox</text>
+
+  <rect class="oss" x="1016" y="520" width="65" height="84" rx="2"/>
+  <text class="c" x="1048.5" y="556" text-anchor="middle">redis</text>
+  <text x="1048.5" y="576" text-anchor="middle">锁、状态</text>
+  <rect class="oss" x="1087" y="520" width="65" height="84" rx="2"/>
+  <text class="c" x="1119.5" y="556" text-anchor="middle">minio</text>
+  <text x="1119.5" y="576" text-anchor="middle">文件</text>
+  <rect class="oss" x="1158" y="520" width="65" height="84" rx="2"/>
+  <text class="c" x="1190.5" y="556" text-anchor="middle">smtp</text>
+  <text x="1190.5" y="576" text-anchor="middle">邮件</text>
+  <rect class="oss" x="1229" y="520" width="65" height="84" rx="2"/>
+  <text class="c" x="1261.5" y="556" text-anchor="middle">otel</text>
+  <text x="1261.5" y="576" text-anchor="middle">遥测</text>
+
+  <!-- L0 -->
+  <text x="554" y="682">只有 L2C 碰这一层</text>
+  <rect class="inf" x="704" y="650" width="140" height="56" rx="2"/>
+  <text class="h" x="774" y="674" text-anchor="middle">PostgreSQL</text>
+  <text x="774" y="694" text-anchor="middle">插件只写自己的表</text>
+  <rect class="inf" x="854" y="650" width="134" height="56" rx="2"/>
+  <text class="h" x="921" y="674" text-anchor="middle">Kafka</text>
+  <text x="921" y="694" text-anchor="middle">事件总线</text>
+  <rect class="inf" x="1016" y="650" width="65" height="56" rx="2"/>
+  <text class="h" x="1048.5" y="683" text-anchor="middle">Redis</text>
+  <rect class="inf" x="1087" y="650" width="65" height="56" rx="2"/>
+  <text class="h" x="1119.5" y="683" text-anchor="middle">MinIO</text>
+  <rect class="inf" x="1158" y="650" width="65" height="56" rx="2"/>
+  <text class="h" x="1190.5" y="683" text-anchor="middle">SMTP</text>
+  <rect class="inf" x="1229" y="650" width="65" height="56" rx="2"/>
+  <text class="h" x="1261.5" y="674" text-anchor="middle">OTel</text>
+  <text x="1261.5" y="694" text-anchor="middle">Collector</text>
+
+  <!-- Requests entering the back end -->
+  <path class="run" marker-end="url(#ah)" d="M406 540H486V444H552"/>
+  <text class="lc" x="478" y="498" text-anchor="end">/api/**</text>
+  <path class="run" marker-end="url(#ah)" d="M406 584H552"/>
+  <text class="lb" x="432" y="576">登录、会话</text>
+
+  <!-- Runtime paths -->
+  <path class="run" marker-end="url(#ah)" d="M624 398V288"/>
+  <text class="lc" x="632" y="306">EndpointHandler</text>
+  <path class="run" marker-end="url(#ah)" d="M774 286V396"/>
+  <text class="lc" x="782" y="306">require(Capability)</text>
+  <path class="run" marker-end="url(#ah)" d="M1040 286V396"/>
+  <text class="lb" x="1034" y="306" text-anchor="end">发起</text>
+  <path class="run" marker-end="url(#ah)" d="M1126 398V288"/>
+  <text class="lb" x="1132" y="306">送达</text>
+  <text class="lb" x="1221" y="306" text-anchor="end">内部契约</text>
+  <path class="run" marker-end="url(#ah)" d="M1016 444H990"/>
+
+  <path class="run" marker-end="url(#ah)" d="M624 520V492"/>
+  <text class="lb" x="632" y="510">会话 → Token</text>
+  <path class="run" marker-end="url(#ah)" d="M774 490V518"/>
+  <text class="lc" x="782" y="510">Provider</text>
+  <path class="run" marker-start="url(#ah)" marker-end="url(#ah)" d="M921 492V518"/>
+  <text class="lb" x="930" y="510">发布、消费</text>
+  <text x="1016" y="510">其余 Adapter 同样经代理调用</text>
+
+  <path class="run" marker-end="url(#ah)" d="M774 604V648"/>
+  <text class="lb" x="764" y="636" text-anchor="end">业务写 + outbox 同一本地事务</text>
+  <path class="run" marker-start="url(#ah)" marker-end="url(#ah)" d="M921 606V648"/>
+  <path class="run" marker-end="url(#ah)" d="M1048.5 604V648"/>
+  <path class="run" marker-end="url(#ah)" d="M1119.5 604V648"/>
+  <path class="run" marker-end="url(#ah)" d="M1190.5 604V648"/>
+  <path class="run" marker-end="url(#ah)" d="M1261.5 604V648"/>
+
+  <!-- Key -->
+  <rect class="oss" x="100" y="642" width="18" height="13"/><text x="124" y="653">开源仓 brix</text>
+  <rect class="ent" x="236" y="642" width="18" height="13"/><text x="260" y="653">商业仓 brix-enterprise</text>
+  <rect class="inf" x="100" y="666" width="18" height="13"/><text x="124" y="677">基础设施，产品由部署决定</text>
+  <rect class="todo" x="100" y="690" width="18" height="13"/><text x="124" y="701">虚线框：还没按蓝图接入</text>
+
+  <!-- What the drawing rests on -->
+  <path class="box" d="M14 722H1306"/>
+  <text x="14" y="743">Brix 总体架构图。依据 ACTIVE 蓝图：运行壳 3.3.0、身份认证 1.0.1、前端 1.2.1、平台超管 4.0.1、多租户 5.1.3。画的是蓝图目标，不是代码现状。只做导航，规范以蓝图原文为准。2026-11-06</text>
+</svg>

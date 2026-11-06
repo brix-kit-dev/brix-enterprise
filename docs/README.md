@@ -19,6 +19,21 @@
 - 待重基线为“是”的蓝图仍然有效，但复核完成前不能据此宣称 Implementation Accepted 或 GA。
 - 这五份蓝图的正文里还留着旧版本号，因为冻结文件不能改，要等下一版才能修。根蓝图 §0.6、附录 A、附录 B 写的专项版本是 1.0、1.2、4.0、5.0；超管、前端、多租户蓝图有 7 条链接指向旧版，旧版搬进 `docs/archived/` 后这些链接打不开，按文件名在那里能找到。当前版本以上表为准。
 
+## 总体架构图
+
+![Brix 总体架构图。业务插件在中间，运行壳包在外面：请求由 L2B 的 HTTP Dispatcher 送进插件；插件只能穿过 L2A 契约层往外走，经 L2B 代理和 L2C 适配器到达基础设施；插件之间不能直连，只能走 Query、Command、Event。](architecture-overview.svg)
+
+这张图把上面五份蓝图画到一起，帮助看懂结构。它不是规范，不作施工依据，与蓝图不一致时以蓝图为准。图是矢量的，字小就放大页面看。
+
+- 怎么读：业务插件在中间，运行壳包在外面。请求由 L2B 送进插件；插件要用外部资源，只能穿过 L2A 这层的开口，最后由 L2C 碰到基础设施。箭头是运行时的调用方向；L1、L2B、L2C 的源码依赖都指向 L2A（根蓝图 §3.2）。
+- 图上没画：Embedded 和 Local 两种 Host Profile，移动端（`*-mobile` 包，分层相同），以及在 CI 里检查红线的 `platform-devtools`。
+
+图画的是蓝图目标，不是代码现状。到 2026-11-06 为止，代码和图还差这些：
+
+- 后端 Host 装了 9 个业务插件，只有 `app-booking` 用 `plugin-manifest.yaml` 接入，其余 8 个还是旧的 `module-manifest.yaml`。
+- 前端已有 `standalone-web.composition.ts`。后端还没有 Composition 文件，装什么由 Host 的 `pom.xml` 和 `application.yml` 决定。
+- 前端 Host 现在只组合了 `platform-admin-web` 和 `platform-tenant-web`，业务 UI 还没接进来。
+
 ## 在用的施工方案
 
 方案只安排施工，不创造架构决定；与蓝图冲突时以蓝图为准。
@@ -74,5 +89,6 @@ python3 scripts/validate_architecture_baseline.py --require-active --check-instr
 
 - 蓝图发布新版本时，同一次提交做四件事：用 `git mv` 把旧版搬进 `docs/archived/`，更新本页的蓝图表，在该目录的 `README.md` 登记，在变更日志里写上新版本的完整 SHA-256。漏了任何一件，校验器都会失败。
 - 方案开工、暂停或关闭时，更新“在用的施工方案”。这张表校验器不检查。
+- 蓝图发布新版本，或者图上的虚线框接入后，更新 `architecture-overview.svg` 和“总体架构图”一节。这张图是手画的，校验器只检查文件存在，不检查内容。
 - 其他文档不再使用时，搬进 `docs/archived/` 并保留原文件名，在该目录的 `README.md` 登记。
 - 本页不链接退役蓝图和 `docs/archived/` 下的文档（根蓝图 `BRX-RS-AUTH-007`），校验器会检查。
