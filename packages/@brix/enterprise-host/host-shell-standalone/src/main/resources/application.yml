@@ -172,6 +172,9 @@ brix:
       lease-duration: ${BRIX_OUTBOX_RELAY_LEASE_DURATION:30s}
       retry-backoff-base: ${BRIX_OUTBOX_RELAY_RETRY_BACKOFF_BASE:5s}
       retry-jitter-max: ${BRIX_OUTBOX_RELAY_RETRY_JITTER_MAX:5s}
+      # 接收方暂时收不了时（订阅方没启动、它的数据库不可用、broker 拒写），消息最多等这么久，到了就停放，
+      # 要人工重放。必须短于事件主题的保留期（默认 7 天），否则主机启动失败。
+      max-wait: ${BRIX_OUTBOX_RELAY_MAX_WAIT:24h}
       poll-delay: ${BRIX_OUTBOX_RELAY_POLL_DELAY:1s}
       # 消息表的保留期（Kafka 设计方案 D34）：Outbox 已发布和已丢弃的行留 14 天，期间可按 eventId 重发；
       # Inbox 与命令幂等记录留 30 天；每小时分批清理一轮。Inbox 保留期短于 Outbox 保留期加 Kafka 保留期时
