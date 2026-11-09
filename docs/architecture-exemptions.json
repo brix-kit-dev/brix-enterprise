@@ -65,6 +65,36 @@
         "recordRef": "user-authorization:2026-11-02:standard-link-point-1",
         "approvedAt": "2026-11-02T11:37:31+09:00"
       }
+    },
+    {
+      "id": "EX-2026-005",
+      "title": "开 Bootstrap 会话的回答带会话令牌，交给 BFF 之前保留",
+      "ruleIds": [
+        "S-20",
+        "BRX-RS-SECURITY-012",
+        "BRX-SA-SEC-004"
+      ],
+      "artifacts": [
+        "brix platform-admin platform-operational.yaml：POST /api/platform/bootstrap/session，OpenBootstrapSessionHandler 的回答带 accessToken",
+        "brix platform-admin-web usePlatformBootstrap、PlatformBootstrapRepository：令牌放在 hook 的内存里，建首位超管时作为 Bearer 发出",
+        "brix-enterprise scripts/remote-deploy/bootstrap-e2e.sh：从开会话的回答里取令牌"
+      ],
+      "owner": "platform-admin / platform-identity / platform-admin-web",
+      "reason": "把 Bootstrap 会话交给 BFF 要改 super-admin §6 的入口表、给身份认证专项加 BFF 端点（RFC-013），只能在根 3.4.0 那一批发布之后施工；在那之前继续用现有的开会话入口（标准链路收尾方案 §10.41 D113）。",
+      "risk": "全新安装时，Web 客户端在回答正文里收到 BOOTSTRAP_SETUP 会话令牌，页面脚本读得到；令牌有效的几分钟里，拿到它的人可以建首位超管。",
+      "compensatingControls": [
+        "只在 Stage A 签发：首位正式超管完成设置后 Bootstrap 永久关闭，开会话答 409；共享环境已在 Stage B",
+        "令牌一次性、短期（默认 300 秒），只有 Bootstrap 入口接受，其余入口都拒收（第 10b-7a 点 D97）；被消费后只能取回原来的答案（D95）",
+        "开会话要高熵的 setup code；后开的会话替换先开的，单例行只认最后一个",
+        "控制台只把令牌放在 hook 的内存里，不写浏览器存储；主机日志里没有 setup code 和会话令牌（第 10b-7a 点的一次性回归核对过）"
+      ],
+      "expiresOn": "2027-02-28",
+      "exitCriteria": "RFC-013 随根 3.4.0 发布并施工完成：开会话改在身份协议面（POST /bff/bootstrap/session），令牌只在服务端的 BFF 会话里，/api/platform/bootstrap/session 删除；本豁免移除。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-11-09:bootstrap-session-delivery-d113",
+        "approvedAt": "2026-11-09T15:55:01+09:00"
+      }
     }
   ]
 }
