@@ -1,0 +1,62 @@
+# promtool test rules notifications.test.yml
+rule_files:
+  - notifications.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # 启动时四种结果都是 0：第 5 分钟一次拒收就告警，15 分钟内没有新的失败就恢复；送出的不告警。
+  - interval: 1m
+    input_series:
+      - series: 'brix_notification_sends_seconds_count{template="tenant.owner.invitation.initial",outcome="sent",instance="host-shell:9081"}'
+        values: '0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30'
+      - series: 'brix_notification_sends_seconds_count{template="tenant.owner.invitation.initial",outcome="rejected",instance="host-shell:9081"}'
+        values: '0x4 1x26'
+      - series: 'brix_notification_sends_seconds_count{template="tenant.owner.invitation.initial",outcome="timeout",instance="host-shell:9081"}'
+        values: '0x30'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: BrixNotificationDeliveryFailing
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: BrixNotificationDeliveryFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              template: tenant.owner.invitation.initial
+              outcome: rejected
+            exp_annotations:
+              summary: "通知 tenant.owner.invitation.initial 发送失败（rejected）"
+              description: "这次写入已经回滚，调用方拿到 notification.delivery.failed。到日志查 event=notification.delivery_failed：rejected 看 detail 里的回复码，timeout 是超时或截止时间到了，failed 是连不上、TLS 失败或连接中断。"
+      - eval_time: 25m
+        alertname: BrixNotificationDeliveryFailing
+        exp_alerts: []
+
+  # 超时和其他失败一样告警，按模板和结果分开。
+  - interval: 1m
+    input_series:
+      - series: 'brix_notification_sends_seconds_count{template="platform.admin.setup.initial",outcome="timeout",instance="host-shell:9081"}'
+        values: '0x2 1x10'
+      - series: 'brix_notification_sends_seconds_count{template="tenant.owner.setup.initial",outcome="failed",instance="host-shell:9081"}'
+        values: '0x5 2x10'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: BrixNotificationDeliveryFailing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              category: reliability
+              template: platform.admin.setup.initial
+              outcome: timeout
+            exp_annotations:
+              summary: "通知 platform.admin.setup.initial 发送失败（timeout）"
+              description: "这次写入已经回滚，调用方拿到 notification.delivery.failed。到日志查 event=notification.delivery_failed：rejected 看 detail 里的回复码，timeout 是超时或截止时间到了，failed 是连不上、TLS 失败或连接中断。"
+          - exp_labels:
+              severity: warning
+              category: reliability
+              template: tenant.owner.setup.initial
+              outcome: failed
+            exp_annotations:
+              summary: "通知 tenant.owner.setup.initial 发送失败（failed）"
+              description: "这次写入已经回滚，调用方拿到 notification.delivery.failed。到日志查 event=notification.delivery_failed：rejected 看 detail 里的回复码，timeout 是超时或截止时间到了，failed 是连不上、TLS 失败或连接中断。"

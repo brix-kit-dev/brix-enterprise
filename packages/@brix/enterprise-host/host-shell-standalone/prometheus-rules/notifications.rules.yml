@@ -1,0 +1,31 @@
+# ============================================================
+# Prometheus 告警规则：通知发送（NotificationCapability 经 SMTP）
+# ============================================================
+#
+# 用途：通知（首位超管的设置链接、首位 OWNER 的邀请与身份设置邮件）发送失败时告警（通知决定稿 D107，
+#       标准链路收尾方案第 14a 点）。发送失败时这次写入已经回滚，调用方拿到 notification.delivery.failed，
+#       不会自动重发：要查清原因，再让调用方重试。
+# 指标：brix_notification_sends_seconds_count{template,outcome}：发送次数，outcome 为 sent、rejected、timeout 或 failed
+#       （Micrometer brix.notification.sends，是 Timer，_sum 是耗时）
+# 标签：template（模板）、outcome（结果），取值都是有限集合；不带收件人、链接、变量或正文（超管 NOTIFY-001）。
+#       已知模板的四种结果启动时就以 0 出现，所以启动后的第一次失败也会算作增长。
+#
+# 处理：到日志查 event=notification.delivery_failed（带 outcome、templateKey、脱敏的收件人、traceId、detail）：
+#       rejected 是 SMTP 服务器拒收，detail 里有回复码（如 reply 550）；timeout 是连接、读写超时或调用的截止时间到了；
+#       failed 是连不上、TLS 失败或连接中断。
+# 前提：Prometheus 抓取 Host 管理端口的 /actuator/prometheus（host-shell:9081）
+# 测试：promtool test rules notifications.test.yml
+# ============================================================
+
+groups:
+  - name: brix-notifications
+    rules:
+      # 通知量很小，按失败次数告警，不按比率；15 分钟内没有新的失败就恢复。
+      - alert: BrixNotificationDeliveryFailing
+        expr: sum by (template, outcome) (increase(brix_notification_sends_seconds_count{outcome!="sent"}[15m])) > 0
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "通知 {{ $labels.template }} 发送失败（{{ $labels.outcome }}）"
+          description: "这次写入已经回滚，调用方拿到 notification.delivery.failed。到日志查 event=notification.delivery_failed：rejected 看 detail 里的回复码，timeout 是超时或截止时间到了，failed 是连不上、TLS 失败或连接中断。"
