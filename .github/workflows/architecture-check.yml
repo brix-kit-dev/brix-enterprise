@@ -55,6 +55,11 @@ on:
       - 'scripts/validate_architecture_baseline.py'
       - 'scripts/test_validate_architecture_baseline.py'
       - 'scripts/requirements-architecture.txt'
+      - 'scripts/check_contract_locks.py'
+      - 'scripts/test_check_contract_locks.py'
+      # A module that ships contracts locks them (standard-link plan queue item 3, D115)
+      - '**/src/main/resources/META-INF/brix/**'
+      - '**/src/main/brix/**'
       # Also trigger when ESLint config or this workflow changes
       - '.eslintrc.*'
       - 'eslint.config.*'
@@ -87,6 +92,11 @@ on:
       - 'scripts/validate_architecture_baseline.py'
       - 'scripts/test_validate_architecture_baseline.py'
       - 'scripts/requirements-architecture.txt'
+      - 'scripts/check_contract_locks.py'
+      - 'scripts/test_check_contract_locks.py'
+      # A module that ships contracts locks them (standard-link plan queue item 3, D115)
+      - '**/src/main/resources/META-INF/brix/**'
+      - '**/src/main/brix/**'
       - '.github/workflows/architecture-check.yml'
 
 # Concurrency: Cancel previous runs for the same PR/branch
@@ -116,6 +126,12 @@ jobs:
 
       - name: Test baseline validator
         run: python -m unittest scripts/test_validate_architecture_baseline.py
+
+      - name: Test contract lock check
+        run: python -m unittest scripts/test_check_contract_locks.py
+
+      - name: Every module that ships contracts is locked
+        run: python scripts/check_contract_locks.py
 
       - name: Validate active architecture context and AI instructions
         run: python scripts/validate_architecture_baseline.py --require-active --check-instructions
