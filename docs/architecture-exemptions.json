@@ -95,6 +95,37 @@
         "recordRef": "user-authorization:2026-11-09:bootstrap-session-delivery-d113",
         "approvedAt": "2026-11-09T15:55:01+09:00"
       }
+    },
+    {
+      "id": "EX-2026-006",
+      "title": "首位超管的设置链接和设置校验把令牌放在查询串，M1 切片 4 之前保留",
+      "ruleIds": [
+        "BRX-FE-ROUTE-004",
+        "FE-7"
+      ],
+      "artifacts": [
+        "brix platform-identity PlatformBootstrapAdministrationService.createFirstAdmin：设置邮件里的链接是 setup-base-url 加查询参数 token（INITIAL_SETUP 令牌）",
+        "brix platform-admin-web SetupOnlyGuard：从 /platform/setup?token= 读出令牌，换成不带查询串的地址，令牌放进路由状态",
+        "brix platform-admin-web PlatformSetupRepository.validate 与 platform-admin platform-operational.yaml 的 GET /api/platform/auth/setup/validate：令牌放在查询参数 token，ValidatePlatformSetupHandler 从查询参数取",
+        "brix-enterprise scripts/remote-deploy/bootstrap-e2e.sh：用 GET /api/platform/auth/setup/validate?token= 校验设置令牌"
+      ],
+      "owner": "platform-identity / platform-admin / platform-admin-web",
+      "reason": "身份认证 M1 切片 4 删掉旧设置页 /platform/setup 和 /api/platform/auth/setup/*（EX-2026-002），首位超管改在身份协议面的托管设置页设置（BRX-IA-ONBOARD-001）。在那之前改旧流程得不偿失：链接改成片段只去掉一处，校验仍把令牌放在查询串；校验改用 POST 正文要改 setup-token 端点和已锁定的 Schema，与单向门队列第 1 项、切片 4 重叠，改完随即删除。负责人 2026-11-13 选不改代码、登记豁免（标准链路收尾方案 §10.53，D127）。",
+      "risk": "令牌两次经查询串到服务端：打开设置链接时（/platform/setup?token=），以及控制台校验令牌时（GET /api/platform/auth/setup/validate?token=，每次加载设置页都校验）。沿途任何一处记下请求地址，或者有人看到浏览器历史记录里的设置链接，就能在令牌有效、未用的时候抢先设密码、绑自己的 TOTP，接管首位超管。令牌从地址栏换下后放在路由状态（history.state），同一标签页重新加载时还在。",
+      "compensatingControls": [
+        "只在 Stage A 签发：设置令牌只由建首位超管签发，要有效的 Bootstrap 会话；首位正式超管设置完成后 Bootstrap 永久关闭，不再签发。共享环境已在 Stage B",
+        "令牌是 32 字节随机数，库里只存 SHA-256；24 小时有效，设置完成即作废；校验失败的回答和日志都不带令牌",
+        "控制台先把地址换成不带查询串的 /platform/setup，之后才发接口请求；初始化 TOTP 和完成设置都放在 POST 正文；宿主页用 meta 设 no-referrer，设置路由在 UI 清单里声明 no-referrer（清单校验强制），请求都不带 Referer；从 /platform 打开时宿主不走 BFF，不会带着地址跳登录",
+        "沿途不记请求地址：Caddy 没配访问日志，前端开发服务器不记请求，主机日志只记路径。只有代理出错时，Caddy 的警告和开发服务器的 [HPM] 错误行带完整地址。2026-11-13 用一个编造的令牌在共享环境走了一遍，三处日志里都没有它",
+        "下一次全新安装之前改写超管 Bootstrap 运维手册时写明：入口代理的访问日志不记这两条路径的查询串（标准链路收尾方案 §11.1 待办）"
+      ],
+      "expiresOn": "2027-02-28",
+      "exitCriteria": "M1 切片 4 完成：首位超管的设置链接打开身份协议面的托管设置页，令牌放在片段里，只经 POST 正文提交；/platform/setup 和 /api/platform/auth/setup/* 删除（同 EX-2026-002）；本豁免移除。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-11-13:setup-link-query-token-d127",
+        "approvedAt": "2026-11-13T15:55:46+09:00"
+      }
     }
   ]
 }
