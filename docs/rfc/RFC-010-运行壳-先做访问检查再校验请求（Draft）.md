@@ -1,7 +1,7 @@
 # RFC-010：Dispatcher 先做访问检查、再校验请求（Draft）
 
 > **文档类型**：RFC（根级 Minor RFC，按根 §12.2"新增向后兼容 Capability/Manifest/红线"一行：改写 MANIFEST-022 的拦截顺序，通过访问检查的调用不受影响）
-> **状态**：Draft。2026-11-08 负责人同意方向（方案 A），正式审批（architecture-committee、security、SRE）与根 3.4.0 的发布同 RFC-009 一起，排在标准链路收尾方案 §11.1 的单向门队列里。批准前**不指导施工**；施工依据仍是现行根蓝图 v3.3.0 的 MANIFEST-022（请求 Schema 校验在认证之前）
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-010`）。条款随根 3.4.0 那一批写进蓝图、生效（标准链路收尾方案 §10.53 第 2 项的 9c～9i），之后按 §4 施工；生效前本文是决策背景，**不指导施工**，施工依据仍是现行根蓝图 v3.3.0 的 MANIFEST-022（请求 Schema 校验在认证之前）
 > **起草日期**：2026-11-08
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；identity-auth 1.0.1、frontend 1.2.1、super-admin 4.0.1、multi-tenant 5.1.3（ACTIVE）
 > **来源**：[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §11 第 12 点、§8 第 13 项、§10.7 第 3 项
@@ -24,7 +24,7 @@
 4. 本 RFC 把整段访问检查（认证、tenant context、权限）移到请求规范化与 Schema 校验之前，其余各步的先后不变。请求正文的解析属于请求规范化，也排在访问检查之后。
 5. 通过访问检查的调用，回答与现在相同。变的只是访问检查不通过、请求又不合格的调用：现在答 400，改后答 401 或 403，不再给出违反项。
 6. 现行的访问检查只用 Runtime 验证过的调用方属性，不读请求正文。改顺序不用改插件代码、Manifest、Handler 签名或错误码。
-7. 建议与 RFC-009 一起发布根 v3.4.0（Minor，`compatibilityEpoch` 保持 1）。RFC-009 已经为四份专项各安排一个只改继承版本的 Patch，本 RFC 不用另出。
+7. 建议与 RFC-009 一起发布根 v3.4.0（Minor，`compatibilityEpoch` 保持 1）。四份专项的新版本由 RFC-009 §3 的清单统一安排，本 RFC 不另出。
 
 ---
 
@@ -57,7 +57,7 @@ route snapshot + in-flight admission
 | 环节 | 现在怎么做 | 出处 |
 |---|---|---|
 | 令牌 | 主机的 `SecurityContextFilter` 校验 Bearer 令牌。令牌无效或过期时只记 debug、不拒绝，请求按"没有已验证身份"往下走。所以没带令牌和令牌无效走的是同一条路 | brix `platform-auth-servlet`，过滤器挂在 `/api/*`；企业主机 `host-shell-standalone` 依赖这个模块 |
-| 正文解析 | Spring 在 Dispatcher 之前把 JSON 正文解析成对象 | `RuntimeShellEndpointController` 的 `@RequestBody(required = false) Object body` |
+| 正文解析 | Spring 在 Dispatcher 之前把 JSON 正文解析成对象。单向门队列第 7 项（D123）起同时留下原文字节，类型化 Handler 的请求按原文读数字 | `RuntimeShellEndpointController` 的 `@RequestBody(required = false) Object body`；`EndpointJsonBodyAdvice` |
 | 顺序 | Dispatcher 先做请求规范化与 Schema 校验，再做访问检查（认证、令牌策略、tenant context、权限），然后是截止时间、并发上限、幂等、Handler | `DefaultPluginEndpointDispatcher.dispatch` |
 | 访问检查的输入 | 只有 Runtime 验证过的调用方属性：身份、tenant、令牌的角色、类型和范围、权限、tenant 角色类型和成员 id。不读请求正文、路径参数或查询参数 | `EndpointAccessGuard.enforce(route, caller, grants)` |
 | 400 的回答 | `errorCode`、`message`、`violations`、`traceId`。每条违反项是字段路径和规则名，不带值，例如 `additionalProperties`、`maximum`、`minLength` | `RuntimeShellEndpointController.failure`；`TypedEndpointDispatcherTest` |
@@ -117,7 +117,7 @@ route snapshot + in-flight admission
 
 ## 3. 专项蓝图
 
-不另出版本。四份 ACTIVE 专项都不依赖这个顺序（§1.1）。与 RFC-009 一起发布时，RFC-009 §3 的四个 Patch 已经覆盖继承版本的变化。如果本 RFC 单独发布，四份专项要各出一个只改继承版本的 Patch，做法同 RFC-009 §3。
+不另出版本。四份 ACTIVE 专项都不依赖这个顺序（§1.1）。与 RFC-009 一起发布时，RFC-009 §3 的清单已经让四份专项都继承根 3.4.0。如果本 RFC 单独发布，四份专项要各出一个只改继承版本的 Patch。
 
 ---
 
@@ -125,7 +125,7 @@ route snapshot + in-flight admission
 
 | 层 / 模块 | 影响 |
 |---|---|
-| L2B runtime-orchestrator | Dispatcher 先做访问检查，再规范化和校验请求；协议适配器把正文原样交给 Dispatcher，在访问检查之后解析；正文不能解析时答 400 `endpoint.invalid_request` |
+| L2B runtime-orchestrator | Dispatcher 先做访问检查，再规范化和校验请求；协议适配器把正文原样交给 Dispatcher，在访问检查之后解析，类型化端点仍按原文读数字（D123）；正文不能解析时答 400 `endpoint.invalid_request` |
 | 插件 | 不用改。Handler 拿到的仍是校验后的输入和访问判定 |
 | 测试 | 新增：没有身份、请求不合格时答 401；没有权限的答 403；两者都不带违反项；通过访问检查的仍答 400 并列出违反项；没有身份、正文不是 JSON 时答 401。现有断言 `endpoint.invalid_request` 的测试和回归脚本，调用方都通过了访问检查或入口是匿名的，不用改 |
 | 一次性回归 | 加一项：经入口不带身份、请求不合格，答 401 |
@@ -166,7 +166,7 @@ route snapshot + in-flight admission
 
 - **坏 JSON 答 500**：正文由 Spring 在 Dispatcher 之前解析，解析失败落到主机的全局兜底异常处理，答 500 `PLATFORM-S-001`"Internal server error"，记一行带堆栈的 ERROR，也不是运行壳的错误信封。2026-11-08 用临时探针在 MockMvc 上实测（用的是主机同一个异常处理器），主机上没有实测。本 RFC 施工时会一并改掉（§2.2）；本 RFC 不批准的话，单独修。记在标准链路收尾方案 §11.1 的待办。
 - **请求正文没有大小上限**：HTTPS 入口（Caddy）和主机配置里都没有找到 JSON 正文的上限，只有 multipart 有。没有实测。同样记在待办。
-- 单向门队列里"类型化端点的小数是否丢位"（第 10a 点发现）也出在 Spring 先解析正文这一步。本 RFC 施工后由 Dispatcher 解析正文，核实时一并看。
+- 单向门队列里"类型化端点的小数是否丢位"（第 10a 点发现）也出在 Spring 先解析正文这一步，已由该队列第 7 项解决（D123、D124，标准链路收尾方案 §10.50）：Spring 照旧先解析，同时留下原文，类型化端点按原文读数字。本 RFC 施工、改由 Dispatcher 解析正文时，要保住这一点。
 
 ---
 
@@ -188,6 +188,8 @@ route snapshot + in-flight admission
 
 | 角色 | 记录 | 批准时间 |
 |---|---|---|
-| architecture-committee | 待批 | — |
-| security | 待批 | — |
-| sre | 待批 | — |
+| architecture-committee | `user-authorization:2026-11-13:rfc-010:architecture-committee` | `2026-11-13T21:06:32+09:00` |
+| security | `user-authorization:2026-11-13:rfc-010:security` | `2026-11-13T21:06:32+09:00` |
+| sre | `user-authorization:2026-11-13:rfc-010:sre` | `2026-11-13T21:06:32+09:00` |
+
+批准人：`jsq`。负责人 2026-11-13 答"全部批准，合并推送"（标准链路收尾方案 §10.54）。

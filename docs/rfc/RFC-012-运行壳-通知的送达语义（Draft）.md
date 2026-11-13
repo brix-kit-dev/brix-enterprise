@@ -1,11 +1,11 @@
 # RFC-012：通知的送达语义（Draft）
 
 > **文档类型**：RFC（根级 Minor RFC，按根 §12.2"新增向后兼容 Capability/Manifest/红线"一行：给已有的 `NotificationCapability` 写明送达语义，插件面的方法签名不变）
-> **状态**：Draft。2026-11-08 负责人按推荐批准[通知送达语义决定稿](../v3.3.0-运行壳-通知送达语义-设计方案.md)的 D103～D108，本 RFC 按 D108 起草；2026-11-09 负责人同意本 RFC 的方向（方案 A）。正式审批（architecture-committee、security、SRE）与根 3.4.0 的发布同 RFC-009、RFC-010、RFC-011 一起，排在标准链路收尾方案 §11.1 的单向门队列里。批准前**不指导施工**；施工依据仍是现行根蓝图 v3.3.0。其中 RESILIENCE-001 已经要求的发送时间上限和决定稿 D107 的指标，已在标准链路第 14a 点施工
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-012`）。2026-11-08 负责人按推荐批准[通知送达语义决定稿](../v3.3.0-运行壳-通知送达语义-设计方案.md)的 D103～D108，本 RFC 按 D108 起草。条款随根 3.4.0 那一批写进蓝图、生效（标准链路收尾方案 §10.53 第 2 项的 9c～9i），之后按 §4 施工；生效前本文是决策背景，**不指导施工**，施工依据仍是现行根蓝图 v3.3.0。其中 RESILIENCE-001 已经要求的发送时间上限和决定稿 D107 的指标，已在标准链路第 14a 点施工
 > **起草日期**：2026-11-09
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；identity-auth 1.0.1、frontend 1.2.1、super-admin 4.0.1、multi-tenant 5.1.3（ACTIVE）
 > **来源**：通知送达语义决定稿 D103～D108、§6 第 2 项；[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §11 第 14b 点
-> **拟决定**：根 §4.7 加 Notification 一行和新条款 `BRX-RS-ERROR-017`，附录 A 的 ERROR 组加一个 gate；super-admin 4.0.2 的 NOTIFY-003、§15.4 末段和 §18 关系表的通知一行改为引用它；与 [RFC-009](RFC-009-运行壳-命令幂等的请求指纹、结果与状态（Draft）.md)、[RFC-010](RFC-010-运行壳-先做访问检查再校验请求（Draft）.md)、[RFC-011](RFC-011-多租户-运维模块经内部契约读取租户数据（Draft）.md) 一起发布根 v3.4.0
+> **拟决定**：根 §4.7 加 Notification 一行和新条款 `BRX-RS-ERROR-017`，附录 A 的 ERROR 组加一个 gate；super-admin 5.0.0 的 NOTIFY-003、§15.4 末段和 §18 关系表的通知一行改为引用它；与 [RFC-009](RFC-009-运行壳-命令幂等的请求指纹、结果与状态（Draft）.md)、[RFC-010](RFC-010-运行壳-先做访问检查再校验请求（Draft）.md)、[RFC-011](RFC-011-多租户-运维模块经内部契约读取租户数据（Draft）.md)、[RFC-013](RFC-013-超管-Bootstrap会话交给BFF（Draft）.md) 一起发布根 v3.4.0
 
 本文沿用根蓝图的 RFC 2119 关键词约定。
 
@@ -26,7 +26,7 @@
    - **跨 Owner 发信**：首位 OWNER 受邀人的身份设置邮件，是 platform-tenant 调用 platform-identity 时，由 platform-identity 在自己的 Unit of Work 里发出的。按 DATA-029，这个 Unit of Work 先于调用方提交。调用方之后失败，邮件里的链接是有效的，不是 D105 说的"从没生效"。新条款的残余窗口按"发信的 Owner 自己的 Unit of Work"来写，两种情况都写明；并要求同一用途重发时作废旧令牌，现有代码已经这样做（§1.2）。
    - **DATA-029 说的通知**：DATA-029 写着"需要独立于主事务提交的副作用（如审计、通知）MUST 经 Outbox / Integration Event"。新条款的通知不独立于主事务：发送失败就让它回滚，所以不在这句的范围内。要独立于主事务的通知（例如身份认证 ABUSE-002 将来的安全通知）仍按 DATA-029 走事件，由 Event Handler 在自己的 Unit of Work 里按新条款发送。新条款写明了这一点，两条不冲突。
 4. 插件面的方法签名不变。三处发信的 Owner 代码都不捕获 `NotificationException`，不用改。
-5. 建议与 RFC-009、RFC-010、RFC-011 一起发布根 v3.4.0（Minor，`compatibilityEpoch` 保持 1）。super-admin 4.0.2 同时含 RFC-009 §3 的继承版本改动和本 RFC 的三处；另外三份专项不因本 RFC 改动。
+5. 建议与 RFC-009、RFC-010、RFC-011、RFC-013 一起发布根 v3.4.0（Minor，`compatibilityEpoch` 保持 1）。本 RFC 的三处写进 super-admin 的下一版，它因 RFC-013 是 5.0.0；另外三份专项不因本 RFC 改动。这一批的完整清单见 RFC-009 §3。
 
 ---
 
@@ -48,7 +48,7 @@
 | frontend 1.2.1 | ROUTE-004、FE-7 | 安全 Token 不得进入查询串、存储、日志和遥测 |
 | identity-auth 1.0.1 | ABUSE-002 | 新设备登录、凭证变更、MFA 重置、会话撤销 MUST 通知身份持有人 |
 
-### 1.2 现行实现（2026-11-09 核实）
+### 1.2 现行实现（2026-11-09 核实，2026-11-13 复核未变）
 
 | 环节 | 现在 | 出处 |
 |---|---|---|
@@ -58,7 +58,7 @@
 | 三处发信 | 都在 Owner 的 Unit of Work 里、提交之前：建首位超管（发信之后还要消费 Bootstrap 会话、写两条审计事实）；建邀请、重发邀请（之后由端点保存答案）；受邀人设置完成后补发邀请（事件 Handler，之后与 Inbox 一起提交）。没有一处捕获 `NotificationException` | platform-identity、platform-tenant |
 | 跨 Owner | 建邀请、重发邀请时，如果受邀邮箱还没有已激活的身份，platform-tenant 调用 platform-identity 的契约，由它发身份设置邮件。platform-identity 的 Unit of Work 挂起调用方的事务、另开一个，返回时就提交。这一步是 platform-tenant 服务方法的最后一步 | `IdentityFirstOwnerInviteeSetupCapabilityImpl`、`OwnerUnitOfWork`、`FirstOwnerInvitationService` |
 | 重发作废旧令牌 | platform-identity 签发新的设置令牌之前，先把同一用途的有效令牌标为已用；邀请的重发也作废旧邀请（multi-tenant §5.7） | `issueTenantOwnerSetupToken`、`FirstOwnerInvitationService.resend` |
-| 链接里的令牌 | 邀请邮件、身份设置邮件放在片段 `#token=`；首位超管的设置链接放在查询串 `?token=`（决定稿 §5，已在标准链路收尾方案 §11.1 的待办） | 同上；`PlatformBootstrapAdministrationService` |
+| 链接里的令牌 | 邀请邮件、身份设置邮件放在片段 `#token=`；首位超管的设置链接放在查询串 `?token=`（决定稿 §5；2026-11-13 登记为豁免 EX-2026-006，D127） | 同上；`PlatformBootstrapAdministrationService` |
 
 ### 1.3 问题
 
@@ -107,16 +107,16 @@
 
 | 现行 ACTIVE | 新版本 | 本 RFC 的改动 |
 |---|---|---|
-| super-admin 4.0.1 | 4.0.2 | 三处改为引用根 ERROR-017（见下）；继承版本的改动同 RFC-009 §3 |
-| identity-auth 1.0.1、frontend 1.2.1、multi-tenant 5.1.3 | 1.0.2、1.2.2、5.1.4 | 不因本 RFC 改动：ABUSE-002、ROUTE-004 与 FE-7、§5.7 都与新条款一致 |
+| super-admin 4.0.1 | 5.0.0 | 三处改为引用根 ERROR-017（见下）；同一版里的其余改动见 RFC-009 §3 |
+| identity-auth 1.0.1、frontend 1.2.1、multi-tenant 5.1.3 | 1.1.0、1.2.2、5.1.4 | 不因本 RFC 改动：ABUSE-002、ROUTE-004 与 FE-7、§5.7 都与新条款一致 |
 
-super-admin 4.0.2 的三处：
+super-admin 5.0.0 的三处：
 
 1. NOTIFY-003 改为："邮件不是 MFA。SMTP 接受不等于送达。同步 fail-closed、提交后的残余窗口和不自动重试按根 `BRX-RS-ERROR-017` 执行，本文不另行声明，也不得保留隐式 Outbox/重试方案。"
 2. §15.4 末段改为："邮件提交失败和事务提交后的残余窗口按根 `BRX-RS-ERROR-017` 处理。不得通过返回 URL、日志打印或假通知 Adapter 补偿。"
 3. §18 关系表的"通知活动计划/未来专项"一行：文档一栏改为"根 `BRX-RS-ERROR-017`（RFC-012）"，关系一栏改为"NotificationCapability 的送达语义；渠道、偏好与退信处理等到需要时另立通知专项。不得被本文重定义"。
 
-规则编号、红线与兼容代际（`3`）不变，`rebaseRequired=true` 不变。按根 §12.2，这是"纠错但不改变可观察契约/红线"的 Patch，由本 RFC 的批准一并覆盖。RFC-009 §3 写的是专项"只改继承版本"，发布前要把这三处写进去，做法与 RFC-011 的五处相同。登记按 super-admin §18.2 的做法：先写出 4.0.2（Freeze Candidate），在 lock 中登记为不指导施工的 CANDIDATE；批准后登记哈希、commit 与批准记录，4.0.1 转为 SUPERSEDED。
+这三处不改规则编号和红线，单看属于根 §12.2"纠错但不改变可观察契约/红线"的 Patch，由本 RFC 的批准覆盖。super-admin 的下一版因 RFC-013 是 5.0.0（Major，兼容代际 3 → 4），三处随之写进 5.0.0，`rebaseRequired=true` 不变；这一批的完整清单见 RFC-009 §3。登记按 super-admin §18.2 的做法：先写出 5.0.0（Freeze Candidate），在 lock 中登记为不指导施工的 CANDIDATE；批准后登记哈希、commit 与批准记录，4.0.1 转为 SUPERSEDED。
 
 ---
 
@@ -176,10 +176,12 @@ super-admin 4.0.2 的三处：
 
 ## 7. 审批
 
-需要 architecture-committee、security、SRE 批准。批准范围：§2 的根蓝图改动与 §3 的 super-admin 4.0.2 三处，随根 v3.4.0 发布。批准记录写入本文状态行和 lock，施工提交引用本 RFC。
+需要 architecture-committee、security、SRE 批准。批准范围：§2 的根蓝图改动与 §3 的 super-admin 5.0.0 三处，随根 v3.4.0 发布。批准记录写入本文状态行和 lock，施工提交引用本 RFC。
 
 | 角色 | 记录 | 批准时间 |
 |---|---|---|
-| architecture-committee | 待批 | — |
-| security | 待批 | — |
-| sre | 待批 | — |
+| architecture-committee | `user-authorization:2026-11-13:rfc-012:architecture-committee` | `2026-11-13T21:06:32+09:00` |
+| security | `user-authorization:2026-11-13:rfc-012:security` | `2026-11-13T21:06:32+09:00` |
+| sre | `user-authorization:2026-11-13:rfc-012:sre` | `2026-11-13T21:06:32+09:00` |
+
+批准人：`jsq`。负责人 2026-11-13 答"全部批准，合并推送"（标准链路收尾方案 §10.54）。

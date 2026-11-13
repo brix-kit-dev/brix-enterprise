@@ -1,7 +1,7 @@
 # RFC-013：Bootstrap 会话交给 BFF（Draft）
 
 > **文档类型**：RFC（super-admin Major 修订、identity-auth Minor 修订的提案；不修订根蓝图）
-> **状态**：Draft。2026-11-09 负责人按推荐批准[Bootstrap 会话交付决定稿](../v3.3.0-运行壳-Bootstrap会话交付-设计方案.md)的 D109～D113，本 RFC 按决定稿 §6 起草；2026-11-09 负责人同意本 RFC 的方向（方案 A）。正式审批（architecture-committee、security、SRE）与根 3.4.0 的发布同 RFC-009～RFC-012 一起，排在标准链路收尾方案 §11.1 的单向门队列里。批准前**不指导施工**；施工依据仍是 super-admin 4.0.1 与 identity-auth 1.0.1
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-013`）。公示期按 §5（D128）。2026-11-09 负责人按推荐批准[Bootstrap 会话交付决定稿](../v3.3.0-运行壳-Bootstrap会话交付-设计方案.md)的 D109～D113，本 RFC 按决定稿 §6 起草。修订随根 3.4.0 那一批写进 super-admin 5.0.0 与 identity-auth 1.1.0、生效（标准链路收尾方案 §10.53 第 2 项的 9c～9i），之后按 §4 施工（单向门队列第 2 项）；生效前本文是决策背景，**不指导施工**，施工依据仍是 super-admin 4.0.1 与 identity-auth 1.0.1
 > **起草日期**：2026-11-09
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；super-admin 4.0.1（ACTIVE，`rebaseRequired=true`）、identity-auth 1.0.1、frontend 1.2.1、multi-tenant 5.1.3（ACTIVE）
 > **来源**：决定稿 D109～D113 与 §6、§8 第 1 项；[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §10.41、§11.1
@@ -18,7 +18,7 @@
 3. 版本（§5）：
    - super-admin 下一版是 5.0.0，兼容代际由 3 升为 4：删掉一个 Runtime 入口，会话的交付方式也变了，调用方（控制台、脚本）都要改。v4.0 删除平台登录和 setup 的 Runtime 入口时，就是这样升的兼容代际；
    - identity-auth 下一版是 1.1.0：只新增条款和契约，兼容代际仍是 1；
-   - RFC-009 §3 计划的 super-admin 4.0.2、identity-auth 1.0.2，以及 RFC-012 §3 写的 super-admin 4.0.2，发布时分别改为 5.0.0 和 1.1.0。
+   - RFC-009 §3、RFC-012 §3 原来写的 super-admin 4.0.2、identity-auth 1.0.2，2026-11-13 已改为 5.0.0 和 1.1.0（标准链路收尾方案 §11.1 单向门队列第 9 项的 9b）。
 4. 根不改：S-20、SECURITY-011、SECURITY-012 已经覆盖。新能力是平台内部的 L2A 契约，不在 CAP-001 的插件能力目录里。
 
 ---
@@ -75,7 +75,7 @@ identity-auth 1.0.1：
 1. §9 新增：
    - **[BRX-IA-ONBOARD-004]** 平台 Bootstrap 的开会话在身份协议面完成（super-admin §15）：`POST /bff/bootstrap/session` 收 setup code，BFF 经身份 Owner 的 L2A 契约核对 setup code、签发 BOOTSTRAP_SETUP 会话；令牌 MUST 只保存在加密的服务端 BFF 会话里，浏览器只拿到会话 Cookie 和 CSRF 令牌，回答里只有有效期和 CSRF 令牌。这个 BFF 会话只用于 super-admin 的 `create-first-admin`，与令牌同时到期；它不是登录会话，不签发 Access/Refresh Token。开会话 MUST 按来源限流（根 SECURITY-011），MUST 只收同源的 JSON 请求，MUST NOT 保存或重放答案。
 2. §2 表 L2A 契约行加一项："Bootstrap 会话的开启（`BootstrapSessionCapability`，由 platform-identity 实现，只给身份协议面用）"。
-3. 附录 C 新增"v1.1.0 相对 v1.0.1 的变更"：继承的根改为 3.4.0（RFC-009 §3）；本节两处；兼容代际（`1`）与 `rebaseRequired=false` 不变。
+3. 新增附录 C"v1.1.0 相对 v1.0.1 的变更"：继承的根改为 3.4.0（RFC-009 §3）；本节两处；兼容代际（`1`）与 `rebaseRequired=false` 不变。
 
 `BootstrapSessionCapability` 的要点：一个方法，收 setup code，返回会话令牌和有效期；setup code 不对、Bootstrap 已关闭或未开启时，抛带稳定错误码的异常，由 BFF 转成稳定的错误回答；platform-identity 照旧在自己的 Unit of Work 里核对、签发、记单例行和平台审计。
 
@@ -108,7 +108,7 @@ identity-auth 1.0.1：
 
 | 文档 | 下一版 | 类型 | 同一版里的全部改动 |
 |---|---|---|---|
-| super-admin | 5.0.0 | Major，兼容代际 3 → 4 | 继承根 3.4.0（RFC-009 §3）；D95 对 BOOT-004 的解读（标准链路收尾方案 §10.32、§11.1）；RFC-012 §3 的三处；本 RFC §2 的五处 |
+| super-admin | 5.0.0 | Major，兼容代际 3 → 4 | 继承根 3.4.0（RFC-009 §3）；D95 对 BOOT-004 的解读（标准链路收尾方案 §10.32、§11.1）；RFC-012 §3 的三处；本 RFC §2 的五处；过期引用（RFC-009 §3） |
 | identity-auth | 1.1.0 | Minor，兼容代际 1 不变 | 继承根 3.4.0（RFC-009 §3）；本 RFC §3 的两处 |
 | frontend、multi-tenant | 1.2.2、5.1.4 | 同 RFC-009 §3 与 RFC-011 | 本 RFC 不改 |
 | 根 | 3.4.0 | 同 RFC-009 | 本 RFC 不改 |
@@ -116,6 +116,11 @@ identity-auth 1.0.1：
 为什么 super-admin 是 Major：根 §12.2 把"纠错但不改变可观察契约"算 Patch、"新增向后兼容"算 Minor、"破坏兼容"算 Major。代码违反的虽然是 super-admin 自己的 SEC-004 和 §6 末段，但 §6 表里的入口要删、会话的交付方式要变，控制台和脚本都得改，这是可观察契约的不兼容变化。v4.0 删除平台登录和 setup 的 Runtime 入口、改变 Platform Token 的交付方式时，兼容代际就由 2 升为 3（super-admin 文首）。
 
 `rebaseRequired=true` 不变：根 v3.1.0 起要求的 §7 持久化复核不在本次范围。
+
+公示期：根 GOVERNANCE-008 要求 Major 有迁移计划和公示期，迁移计划见 §4、§6。公示期从本 RFC 草稿推送到 main（2026-11-09）起，到 super-admin 5.0.0 随根 3.4.0 生效为止，不另设等待。理由：
+- 开会话的调用方只有同仓的控制台和两个脚本（一次性回归的 Bootstrap 段、企业仓的 `scripts/remote-deploy/bootstrap-e2e.sh`），没有仓外的调用方，它们随施工同一次改；
+- 5.0.0 生效后旧入口仍在，直到单向门队列第 2 项施工完成，期间由过渡期豁免 EX-2026-005 覆盖；
+- 共享环境已在 Stage B，开会话只会答 409。
 
 按 super-admin §18.2、identity-auth §15 的做法登记：先写出两个新版本（Freeze Candidate），在 lock 中登记为不指导施工的 CANDIDATE；架构、安全、SRE 批准后登记哈希、commit 与批准记录，旧版本转为 SUPERSEDED。
 
@@ -131,10 +136,12 @@ identity-auth 1.0.1：
 
 ## 7. 审批
 
-需要 architecture-committee、security、SRE 批准。批准范围：§2 的 super-admin 5.0.0 五处、§3 的 identity-auth 1.1.0 两处与 `BootstrapSessionCapability`、§5 的版本类型，随根 v3.4.0 那一批发布。批准记录写入本文状态行和 lock。
+需要 architecture-committee、security、SRE 批准。批准范围：§2 的 super-admin 5.0.0 五处、§3 的 identity-auth 1.1.0 两处与 `BootstrapSessionCapability`、§5 的版本类型与公示期，随根 v3.4.0 那一批发布。批准记录写入本文状态行和 lock。
 
 | 角色 | 记录 | 批准时间 |
 |---|---|---|
-| architecture-committee | 待批 | — |
-| security | 待批 | — |
-| sre | 待批 | — |
+| architecture-committee | `user-authorization:2026-11-13:rfc-013:architecture-committee` | `2026-11-13T21:06:32+09:00` |
+| security | `user-authorization:2026-11-13:rfc-013:security` | `2026-11-13T21:06:32+09:00` |
+| sre | `user-authorization:2026-11-13:rfc-013:sre` | `2026-11-13T21:06:32+09:00` |
+
+批准人：`jsq`。负责人 2026-11-13 答"全部批准，合并推送"（标准链路收尾方案 §10.54）。

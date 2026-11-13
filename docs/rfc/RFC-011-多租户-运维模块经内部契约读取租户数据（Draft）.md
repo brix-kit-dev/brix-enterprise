@@ -1,7 +1,7 @@
 # RFC-011：运维模块经内部契约读取租户数据（Draft）
 
 > **文档类型**：RFC（多租户专项 Patch 修订提案）
-> **状态**：Draft。2026-11-08 负责人同意方向（方案 A），正式审批（architecture、security、SRE）与 multi-tenant 5.1.4 的发布同 RFC-009、RFC-010 一起，排在标准链路收尾方案 §11.1 的单向门队列里。批准前**不指导施工**。现行施工以根为准（根 `BRX-RS-AUTH-003`、multi-tenant 文首"冲突裁决"）：运维模块只经内部契约访问数据，代码已经这样做
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-011`）。五处修订随 multi-tenant 5.1.4 写进蓝图、生效（标准链路收尾方案 §10.53 第 2 项的 9f、9g、9i）；生效前本文是决策背景，**不指导施工**。现行施工以根为准（根 `BRX-RS-AUTH-003`、multi-tenant 文首"冲突裁决"）：运维模块只经内部契约访问数据，代码已经这样做
 > **起草日期**：2026-11-08
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；multi-tenant 5.1.3（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0.1、super-admin 4.0.1、frontend 1.2.1（ACTIVE）
 > **来源**：[同步查询通道标准化设计方案](../v3.3.0-运行壳-同步查询通道标准化-设计方案.md) §9.2 R1 与 D36（2026-11-02 负责人同意 D36～D63 按推荐落实）；[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §11 第 13 点、§8 第 2 项
@@ -95,7 +95,7 @@
 | multi-tenant | 5.1.4 | Patch（根 §12.2"纠错但不改变可观察契约/红线"），兼容代际保持 `3` | 消除与根的冲突，使五处与根、super-admin 4.0.1 和本专项 §6.4、§10.1 一致；DDL、Token、权限码、红线编号与隔离语义不变 |
 | 根与其他专项 | 不因本 RFC 改版 | — | 不涉及 |
 
-与 RFC-009 同批发布时，multi-tenant 5.1.4 同时含 RFC-009 §3 的继承版本改动。RFC-009 §3 写的是专项"只改继承版本"，发布前要把本 RFC 的五处写进去，批准范围一并覆盖。
+与 RFC-009 同批发布：multi-tenant 5.1.4 同时继承根 3.4.0，RFC-009 §3 的清单已列入本 RFC 的五处和同一版里的其余改动（过期引用）。
 
 `rebaseRequired=true` 不变：根 v3.1.0 起要求的 §7 持久化复核不在本次范围。
 
@@ -123,6 +123,8 @@
 
 | 角色 | 记录 | 批准时间 |
 |---|---|---|
-| architecture-committee | 待批 | — |
-| security | 待批 | — |
-| sre | 待批 | — |
+| architecture-committee | `user-authorization:2026-11-13:rfc-011:architecture-committee` | `2026-11-13T21:06:32+09:00` |
+| security | `user-authorization:2026-11-13:rfc-011:security` | `2026-11-13T21:06:32+09:00` |
+| sre | `user-authorization:2026-11-13:rfc-011:sre` | `2026-11-13T21:06:32+09:00` |
+
+批准人：`jsq`。负责人 2026-11-13 答"全部批准，合并推送"（标准链路收尾方案 §10.54）。
