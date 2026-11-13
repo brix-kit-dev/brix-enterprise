@@ -883,6 +883,29 @@
       "decisionRef": "user-authorization:2026-11-13:rfc-013",
       "approvals": [],
       "effectiveDate": null
+    },
+    {
+      "id": "frontend-1.2.2",
+      "domain": "frontend",
+      "kind": "SPECIALIZED",
+      "status": "CANDIDATE",
+      "path": "docs/v1.2.2-前端架构-设计蓝图.md",
+      "version": "1.2.2",
+      "compatibilityEpoch": 1,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": false,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.4.0",
+        "version": "3.4.0"
+      },
+      "sha256": "0f2d7575e4cfeb0f25b225014b5971f47bd76d7845aad6173872b78ca6ad508c",
+      "gitBlob": "94cb898ec6f1974e963ce6821a52c85634851f39",
+      "gitCommit": "cc181f17f0e2729522c2ddf83a05f6221262ab5d",
+      "decisionRef": "user-authorization:2026-11-13:rfc-009",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }
