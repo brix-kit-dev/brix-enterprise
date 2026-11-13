@@ -840,6 +840,26 @@
         }
       ],
       "effectiveDate": "2026-10-28"
+    },
+    {
+      "id": "runtime-shell-3.4.0",
+      "domain": "runtime-shell",
+      "kind": "ROOT",
+      "status": "CANDIDATE",
+      "path": "docs/v3.4.0-运行壳架构设计蓝图.md",
+      "version": "3.4.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "non-conformant",
+      "rebaseRequired": false,
+      "effective": false,
+      "inherits": null,
+      "sha256": "1a59611610aae1c3448d57b456ee3c4a9379b2be75cdbe9cfbd408c20c20b905",
+      "gitBlob": "efd1a32df29ec072e03ba63b5dea66d7b29f3de6",
+      "gitCommit": "32c7a438d14926fd4bde0ef70ca80a7f37ba1103",
+      "decisionRef": "user-authorization:2026-11-13:rfc-009",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }

@@ -110,6 +110,7 @@ route snapshot + in-flight admission
 ### 2.3 其余同步
 
 - 附录 A 不变：MANIFEST 组的 gate 和登记方式不变，版本号随 RFC-009 改为 3.4.0。
+- 勘误（2026-11-13，9c，负责人确认）：附录 A 的 `rootConstraints.httpDispatcher.interceptorOrder` 是 MANIFEST-022 顺序的机器可读副本，随 §2.1 一起改，`request-schema-validation` 挪到 `authorization` 之后，否则根自相矛盾。上一条说的不变，指 MANIFEST 组的 gate 和登记方式（标准链路收尾方案 §10.55）。
 - Changelog 记录本次修订；§12.2 的说明与 RFC-009 合写为"v3.4.0 是对 v3.3.0 的 Minor 修订（命令幂等的请求指纹、结果与状态，RFC-009；Dispatcher 先做访问检查、再校验请求，RFC-010）"。
 - 其余正文不变。
 
