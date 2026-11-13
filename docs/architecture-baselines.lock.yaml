@@ -860,6 +860,29 @@
       "decisionRef": "user-authorization:2026-11-13:rfc-009",
       "approvals": [],
       "effectiveDate": null
+    },
+    {
+      "id": "identity-auth-1.1.0",
+      "domain": "identity-auth",
+      "kind": "SPECIALIZED",
+      "status": "CANDIDATE",
+      "path": "docs/v1.1.0-身份认证功能最小实现-设计蓝图.md",
+      "version": "1.1.0",
+      "compatibilityEpoch": 1,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "pending",
+      "rebaseRequired": false,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.4.0",
+        "version": "3.4.0"
+      },
+      "sha256": "52cfe49286fd166d3072a518102797f5197febb9db897a9d29f1137649b905c4",
+      "gitBlob": "bf47e930731acc2076dfc5d1ab2fdc329f8e6809",
+      "gitCommit": "9ea490ff7fb5d7bfa0a701af4e2909ac49af6d2d",
+      "decisionRef": "user-authorization:2026-11-13:rfc-013",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }
