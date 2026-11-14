@@ -877,9 +877,9 @@
         "id": "runtime-shell-3.4.0",
         "version": "3.4.0"
       },
-      "sha256": "52cfe49286fd166d3072a518102797f5197febb9db897a9d29f1137649b905c4",
-      "gitBlob": "bf47e930731acc2076dfc5d1ab2fdc329f8e6809",
-      "gitCommit": "9ea490ff7fb5d7bfa0a701af4e2909ac49af6d2d",
+      "sha256": "c2c18044a66e05fed4dc3cb1f2de7c11360ede48ad873a9cf675df8afb8c4d55",
+      "gitBlob": "6e83fee5e26f063cd697c424ce38c426d69915bd",
+      "gitCommit": "0ce61978c30b361b23aa3f11b173c82b908a18c1",
       "decisionRef": "user-authorization:2026-11-13:rfc-013",
       "approvals": [],
       "effectiveDate": null
@@ -923,9 +923,9 @@
         "id": "runtime-shell-3.4.0",
         "version": "3.4.0"
       },
-      "sha256": "683aebfbeab347c19afaa2ea0c40f9b1a9006cfad3113f75bb9930c4047818ce",
-      "gitBlob": "525560a0c7eff00394d9b82051caa6e90ca019c0",
-      "gitCommit": "f27fba14e3d1d516d41fa140cf3c06314a88113c",
+      "sha256": "0d205482d63b7e86425ee38e02bb6445e66372f60333b07da16a5737793c2270",
+      "gitBlob": "1b5d6cd2a6c27552a778fedc01e1e27ad02d0018",
+      "gitCommit": "0ce61978c30b361b23aa3f11b173c82b908a18c1",
       "decisionRef": "user-authorization:2026-11-13:rfc-011",
       "approvals": [],
       "effectiveDate": null
