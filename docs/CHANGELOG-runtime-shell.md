@@ -4,6 +4,18 @@
 
 ---
 
+## v3.4.0（2026-11-14）— 命令幂等的请求指纹与结果、先做访问检查再校验请求、通知的送达语义
+
+- 来源：`docs/rfc/RFC-009-运行壳-命令幂等的请求指纹、结果与状态（Draft）.md`、`docs/rfc/RFC-010-运行壳-先做访问检查再校验请求（Draft）.md`、`docs/rfc/RFC-012-运行壳-通知的送达语义（Draft）.md`，负责人 2026-11-13 以 architecture-committee、security、SRE 三个角色批准（`user-authorization:2026-11-13:rfc-009`、`rfc-010`、`rfc-012`）。
+- 替代 v3.3.0。Minor 修订，`compatibilityEpoch` 保持 1。
+- MESSAGE-014 改写命令幂等（请求指纹、结果与状态），新增 MESSAGE-030、MESSAGE-031（§6.3）；MANIFEST-022 的拦截顺序改为先认证、tenant context、权限，后请求规范化与 Schema 校验（§5.4）；新增 ERROR-017（`NotificationCapability` 的送达语义）与 §4.7 的 Notification 一行；附录 A 同步；`BRX-RS-GOVERNANCE-027` 记录裁决。
+- 按 RFC-009 §3 更新 §0.6、附录 A、附录 B 的专项版本与过期引用，不再登记 `v3.1.3-多租户功能最小实现-开发落地计划（v4.0）.md`（这份计划随这一批移进 `docs/archived/`）。其余正文沿用 v3.3.0。
+- 四份专项同批发布：identity-auth 1.1.0、frontend 1.2.2、super-admin 5.0.0、multi-tenant 5.1.4，见 `CHANGELOG-architecture-specialized.md`。
+- 生效时代码还没跟上的规则都进了豁免清单（D129）：EX-2026-007（MANIFEST-022 的拦截顺序）、EX-2026-008（ERROR-017 第 1 项）；EX-2026-006 补 ERROR-017（第 6 项），EX-2026-005 补 super-admin UI-002 与 identity-auth ONBOARD-004。
+- 状态：Architecture Frozen，自 2026-11-14 生效。Architecture Committee、Security、SRE 三个批准角色均由 `jsq` 明确批准（`user-authorization:2026-11-14:runtime-shell-3.4.0-freeze`）；冻结正文 commit 为 `5cd72d6d04d426dca1f916e59c908b0601642a2c`，raw bytes SHA-256 为 `0f7d7b7bad58354dc5228d91c7ac42772e0199e072d3935111a5cc9df17a96d8`，Git blob 为 `cfba349a55f73fab04b70b8f4531b18c83ac3d90`。v3.3.0 转为 SUPERSEDED，原字节移进 `docs/archived/`。
+
+---
+
 ## v3.3.0-changelog-gate（2026-11-05）— ACTIVE 版本必须有变更记录
 
 - 来源：`BRX-RS-GOVERNANCE-009` 要求每次修订都有 Changelog，但 2026-10-28 那批 5 个版本都漏记了，一周多没有检查发现。

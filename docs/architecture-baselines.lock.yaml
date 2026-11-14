@@ -638,14 +638,14 @@
       "id": "runtime-shell-3.3.0",
       "domain": "runtime-shell",
       "kind": "ROOT",
-      "status": "ACTIVE",
-      "path": "docs/v3.3.0-运行壳架构设计蓝图.md",
+      "status": "SUPERSEDED",
+      "path": "docs/archived/v3.3.0-运行壳架构设计蓝图.md",
       "version": "3.3.0",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "non-conformant",
       "rebaseRequired": false,
-      "effective": true,
+      "effective": false,
       "inherits": null,
       "sha256": "2ab132bfde67330e161b3b53bf3d03de8b7066864f1850cb71efc23ed47d769b",
       "gitBlob": "996ff8270cf9fb56a9196b70498b7ab353addd9d",
@@ -677,14 +677,14 @@
       "id": "identity-auth-1.0.1",
       "domain": "identity-auth",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
-      "path": "docs/v1.0.1-身份认证功能最小实现-设计蓝图.md",
+      "status": "SUPERSEDED",
+      "path": "docs/archived/v1.0.1-身份认证功能最小实现-设计蓝图.md",
       "version": "1.0.1",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": false,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.3.0",
         "version": "3.3.0"
@@ -719,14 +719,14 @@
       "id": "frontend-1.2.1",
       "domain": "frontend",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
-      "path": "docs/v1.2.1-前端架构-设计蓝图.md",
+      "status": "SUPERSEDED",
+      "path": "docs/archived/v1.2.1-前端架构-设计蓝图.md",
       "version": "1.2.1",
       "compatibilityEpoch": 1,
       "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
       "rebaseRequired": false,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.3.0",
         "version": "3.3.0"
@@ -761,14 +761,14 @@
       "id": "super-admin-4.0.1",
       "domain": "super-admin",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
-      "path": "docs/v4.0.1-平台超管功能最小实现-设计蓝图.md",
+      "status": "SUPERSEDED",
+      "path": "docs/archived/v4.0.1-平台超管功能最小实现-设计蓝图.md",
       "version": "4.0.1",
       "compatibilityEpoch": 3,
       "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
       "rebaseRequired": true,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.3.0",
         "version": "3.3.0"
@@ -803,14 +803,14 @@
       "id": "multi-tenant-5.1.3",
       "domain": "multi-tenant",
       "kind": "SPECIALIZED",
-      "status": "ACTIVE",
-      "path": "docs/v5.1.3-多租户功能最小实现-设计蓝图.md",
+      "status": "SUPERSEDED",
+      "path": "docs/archived/v5.1.3-多租户功能最小实现-设计蓝图.md",
       "version": "5.1.3",
       "compatibilityEpoch": 3,
       "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": true,
-      "effective": true,
+      "effective": false,
       "inherits": {
         "id": "runtime-shell-3.3.0",
         "version": "3.3.0"
@@ -845,113 +845,208 @@
       "id": "runtime-shell-3.4.0",
       "domain": "runtime-shell",
       "kind": "ROOT",
-      "status": "CANDIDATE",
+      "status": "ACTIVE",
       "path": "docs/v3.4.0-运行壳架构设计蓝图.md",
       "version": "3.4.0",
       "compatibilityEpoch": 1,
-      "architectureState": "freeze-candidate",
+      "architectureState": "architecture-frozen",
       "implementationStatus": "non-conformant",
       "rebaseRequired": false,
-      "effective": false,
+      "effective": true,
       "inherits": null,
-      "sha256": "1a59611610aae1c3448d57b456ee3c4a9379b2be75cdbe9cfbd408c20c20b905",
-      "gitBlob": "efd1a32df29ec072e03ba63b5dea66d7b29f3de6",
-      "gitCommit": "32c7a438d14926fd4bde0ef70ca80a7f37ba1103",
-      "decisionRef": "user-authorization:2026-11-13:rfc-009",
-      "approvals": [],
-      "effectiveDate": null
+      "sha256": "0f7d7b7bad58354dc5228d91c7ac42772e0199e072d3935111a5cc9df17a96d8",
+      "gitBlob": "cfba349a55f73fab04b70b8f4531b18c83ac3d90",
+      "gitCommit": "5cd72d6d04d426dca1f916e59c908b0601642a2c",
+      "decisionRef": "user-authorization:2026-11-14:runtime-shell-3.4.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:runtime-shell-3.4.0:architecture-committee",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:runtime-shell-3.4.0:security",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:runtime-shell-3.4.0:sre",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        }
+      ],
+      "effectiveDate": "2026-11-14"
     },
     {
       "id": "identity-auth-1.1.0",
       "domain": "identity-auth",
       "kind": "SPECIALIZED",
-      "status": "CANDIDATE",
+      "status": "ACTIVE",
       "path": "docs/v1.1.0-身份认证功能最小实现-设计蓝图.md",
       "version": "1.1.0",
       "compatibilityEpoch": 1,
-      "architectureState": "freeze-candidate",
+      "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": false,
-      "effective": false,
+      "effective": true,
       "inherits": {
         "id": "runtime-shell-3.4.0",
         "version": "3.4.0"
       },
-      "sha256": "c2c18044a66e05fed4dc3cb1f2de7c11360ede48ad873a9cf675df8afb8c4d55",
-      "gitBlob": "6e83fee5e26f063cd697c424ce38c426d69915bd",
-      "gitCommit": "0ce61978c30b361b23aa3f11b173c82b908a18c1",
-      "decisionRef": "user-authorization:2026-11-13:rfc-013",
-      "approvals": [],
-      "effectiveDate": null
+      "sha256": "dd2d1cd16d9ec264d8c0e36b856032bec57942e4eb570df040272d50bb6e79c1",
+      "gitBlob": "4c3a76e9c4382bc6687ddf9f48088e598c998d90",
+      "gitCommit": "5cd72d6d04d426dca1f916e59c908b0601642a2c",
+      "decisionRef": "user-authorization:2026-11-14:identity-auth-1.1.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:identity-auth-1.1.0:architecture-committee",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:identity-auth-1.1.0:security",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:identity-auth-1.1.0:sre",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        }
+      ],
+      "effectiveDate": "2026-11-14"
     },
     {
       "id": "frontend-1.2.2",
       "domain": "frontend",
       "kind": "SPECIALIZED",
-      "status": "CANDIDATE",
+      "status": "ACTIVE",
       "path": "docs/v1.2.2-前端架构-设计蓝图.md",
       "version": "1.2.2",
       "compatibilityEpoch": 1,
-      "architectureState": "freeze-candidate",
+      "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
       "rebaseRequired": false,
-      "effective": false,
+      "effective": true,
       "inherits": {
         "id": "runtime-shell-3.4.0",
         "version": "3.4.0"
       },
-      "sha256": "0f2d7575e4cfeb0f25b225014b5971f47bd76d7845aad6173872b78ca6ad508c",
-      "gitBlob": "94cb898ec6f1974e963ce6821a52c85634851f39",
-      "gitCommit": "cc181f17f0e2729522c2ddf83a05f6221262ab5d",
-      "decisionRef": "user-authorization:2026-11-13:rfc-009",
-      "approvals": [],
-      "effectiveDate": null
+      "sha256": "1145bb59c65c3f0c7959cc948ae735180d3c692171e699caaa86a4b77874decf",
+      "gitBlob": "cfd2dcd7f361d34a99b2919c49e48d57d0e7d730",
+      "gitCommit": "5cd72d6d04d426dca1f916e59c908b0601642a2c",
+      "decisionRef": "user-authorization:2026-11-14:frontend-1.2.2-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:frontend-1.2.2:architecture-committee",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:frontend-1.2.2:security",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:frontend-1.2.2:sre",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        }
+      ],
+      "effectiveDate": "2026-11-14"
     },
     {
       "id": "multi-tenant-5.1.4",
       "domain": "multi-tenant",
       "kind": "SPECIALIZED",
-      "status": "CANDIDATE",
+      "status": "ACTIVE",
       "path": "docs/v5.1.4-多租户功能最小实现-设计蓝图.md",
       "version": "5.1.4",
       "compatibilityEpoch": 3,
-      "architectureState": "freeze-candidate",
+      "architectureState": "architecture-frozen",
       "implementationStatus": "pending",
       "rebaseRequired": true,
-      "effective": false,
+      "effective": true,
       "inherits": {
         "id": "runtime-shell-3.4.0",
         "version": "3.4.0"
       },
-      "sha256": "0d205482d63b7e86425ee38e02bb6445e66372f60333b07da16a5737793c2270",
-      "gitBlob": "1b5d6cd2a6c27552a778fedc01e1e27ad02d0018",
-      "gitCommit": "0ce61978c30b361b23aa3f11b173c82b908a18c1",
-      "decisionRef": "user-authorization:2026-11-13:rfc-011",
-      "approvals": [],
-      "effectiveDate": null
+      "sha256": "47296495aa55e31d0e36ab2288c80c8ad6d21d11e43fc20226f3ba9934437932",
+      "gitBlob": "638c8acb283fc673d64dde18d6e536c5e4c828e1",
+      "gitCommit": "5cd72d6d04d426dca1f916e59c908b0601642a2c",
+      "decisionRef": "user-authorization:2026-11-14:multi-tenant-5.1.4-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:multi-tenant-5.1.4:architecture-committee",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:multi-tenant-5.1.4:security",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:multi-tenant-5.1.4:sre",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        }
+      ],
+      "effectiveDate": "2026-11-14"
     },
     {
       "id": "super-admin-5.0.0",
       "domain": "super-admin",
       "kind": "SPECIALIZED",
-      "status": "CANDIDATE",
+      "status": "ACTIVE",
       "path": "docs/v5.0.0-平台超管功能最小实现-设计蓝图.md",
       "version": "5.0.0",
       "compatibilityEpoch": 4,
-      "architectureState": "freeze-candidate",
+      "architectureState": "architecture-frozen",
       "implementationStatus": "not-assessed",
       "rebaseRequired": true,
-      "effective": false,
+      "effective": true,
       "inherits": {
         "id": "runtime-shell-3.4.0",
         "version": "3.4.0"
       },
-      "sha256": "0aa0f8386ca4fafa24bac19a12d63ae00aaccae68061954b682306b53a13118e",
-      "gitBlob": "1abe9d7c241ed768b1e96a97954232a0613d425b",
-      "gitCommit": "8db009bc2d109fe82ffff6703402335d000fab1e",
-      "decisionRef": "user-authorization:2026-11-13:rfc-013",
-      "approvals": [],
-      "effectiveDate": null
+      "sha256": "a91c9a23ae008ad5b19f6ec6999edd8a9af99019ba17e3dca7e678a85a7b651c",
+      "gitBlob": "a86526e1d376e5aa305fe7905b49b04d9546b137",
+      "gitCommit": "5cd72d6d04d426dca1f916e59c908b0601642a2c",
+      "decisionRef": "user-authorization:2026-11-14:super-admin-5.0.0-freeze",
+      "approvals": [
+        {
+          "role": "architecture-committee",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:super-admin-5.0.0:architecture-committee",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "security",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:super-admin-5.0.0:security",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        },
+        {
+          "role": "sre",
+          "reviewer": "jsq",
+          "recordRef": "user-authorization:2026-11-14:super-admin-5.0.0:sre",
+          "approvedAt": "2026-11-14T11:34:07+09:00"
+        }
+      ],
+      "effectiveDate": "2026-11-14"
     }
   ]
 }

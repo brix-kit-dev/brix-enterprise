@@ -1,5 +1,50 @@
 # Specialized Architecture Changelog
 
+## 2026-11-14
+
+### Identity Auth 1.1.0 Architecture Frozen
+
+- Supersession target: `identity-auth-1.0.1`.
+- Minor revision (runtime-shell §12.2): inherits runtime-shell 3.4.0 (RFC-009 §3); adds `BRX-IA-ONBOARD-004` (the platform Bootstrap session opens on the identity protocol surface and its token stays in the server-side BFF session) and `BootstrapSessionCapability` in the §2 L2A contracts (RFC-013 §3); the §0.2 table names sibling blueprints without versions (RFC-009 §3 addendum). Compatibility epoch remains `1`.
+- Appendix C records the change. `rebaseRequired` stays `false`.
+- Decision background: RFC-013 and RFC-009, approved under `user-authorization:2026-11-13:rfc-013` and `user-authorization:2026-11-13:rfc-009`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-11-14:identity-auth-1.1.0-freeze`.
+- Locked at commit `5cd72d6d04d426dca1f916e59c908b0601642a2c`, SHA-256 `dd2d1cd16d9ec264d8c0e36b856032bec57942e4eb570df040272d50bb6e79c1`, Git blob `4c3a76e9c4382bc6687ddf9f48088e598c998d90`, effective 2026-11-14.
+- Registered as the unique ACTIVE identity-auth blueprint; identity-auth 1.0.1 is SUPERSEDED, moved into `docs/archived/` and remains byte-for-byte unchanged.
+
+### Frontend 1.2.2 Architecture Frozen
+
+- Supersession target: `frontend-1.2.1`.
+- Patch revision (runtime-shell §12.2): inherits runtime-shell 3.4.0 and fixes two stale references: the identity-auth link points at 1.1.0, and appendix A no longer lists four documents that no longer exist (RFC-009 §3). Compatibility epoch remains `1`.
+- Rules and red lines are unchanged; §9 records the change. `rebaseRequired` stays `false`.
+- Decision background: RFC-009, approved under `user-authorization:2026-11-13:rfc-009`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-11-14:frontend-1.2.2-freeze`.
+- Locked at commit `5cd72d6d04d426dca1f916e59c908b0601642a2c`, SHA-256 `1145bb59c65c3f0c7959cc948ae735180d3c692171e699caaa86a4b77874decf`, Git blob `cfd2dcd7f361d34a99b2919c49e48d57d0e7d730`, effective 2026-11-14.
+- Registered as the unique ACTIVE frontend blueprint; frontend 1.2.1 is SUPERSEDED, moved into `docs/archived/` and remains byte-for-byte unchanged.
+
+### Super Admin 5.0.0 Architecture Frozen
+
+- Supersession target: `super-admin-4.0.1`.
+- Major revision (runtime-shell §12.2, GOVERNANCE-008): the Bootstrap session moves to the BFF (RFC-013 §2). The §6 table drops `POST /api/platform/bootstrap/session`; the note under it, the §9 BootstrapOnlyGuard row, the §9 frontend red line and UI-002 say the BFF holds the session. Compatibility epoch moves from `3` to `4`. The migration plan is RFC-013 §4 and §6; the notice period ran from the RFC-013 draft on main (2026-11-09) to this release (RFC-013 §5, D128).
+- The same version inherits runtime-shell 3.4.0, refers to root ERROR-017 in NOTIFY-003, the end of §15.4 and the §18 notification row (RFC-012 §3), states D95 in BOOT-004 and fixes ten dead links (RFC-009 §3). §18.0b records the change.
+- Keeps `rebaseRequired=true` because the persistence review required since runtime-shell 3.1.0 is not complete.
+- Until queue item 2 is built, the code still opens the Bootstrap session under `/api`; EX-2026-005 now also names UI-002 and identity-auth ONBOARD-004 (D129).
+- Decision background: RFC-013, RFC-012 and RFC-009, approved under `user-authorization:2026-11-13:rfc-013`, `user-authorization:2026-11-13:rfc-012` and `user-authorization:2026-11-13:rfc-009`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-11-14:super-admin-5.0.0-freeze`.
+- Locked at commit `5cd72d6d04d426dca1f916e59c908b0601642a2c`, SHA-256 `a91c9a23ae008ad5b19f6ec6999edd8a9af99019ba17e3dca7e678a85a7b651c`, Git blob `a86526e1d376e5aa305fe7905b49b04d9546b137`, effective 2026-11-14.
+- Registered as the unique ACTIVE super-admin blueprint; super-admin 4.0.1 is SUPERSEDED, moved into `docs/archived/` and remains byte-for-byte unchanged.
+
+### Multi Tenant 5.1.4 Architecture Frozen
+
+- Supersession target: `multi-tenant-5.1.3`.
+- Patch revision (runtime-shell §12.2): `platform-admin` reads and writes tenant data through the internal contract `brix.internal.tenant.administration`, never a typed Query (RFC-011 §3 and its addendum: §6.3 item 4, the §11.2 TenantUsageQuery row, CONTRACT-005, §11.5 item 2, T-3 whose gate is the descriptor schema plus an access-policy test, the §18 and §0.2 rows). It inherits runtime-shell 3.4.0, fixes stale references and names sibling blueprints without versions (RFC-009 §3 and its addendum). Compatibility epoch remains `3`.
+- DDL, tokens, the permission catalog, the T-1 to T-30 numbering and §6.4 are unchanged; §0.0e and appendix I record the change.
+- Keeps `rebaseRequired=true` because the §7 review required since runtime-shell 3.1.0 is not complete.
+- Decision background: RFC-011 and RFC-009, approved under `user-authorization:2026-11-13:rfc-011` and `user-authorization:2026-11-13:rfc-009`.
+- Approved by architecture-committee, security, and sre under `user-authorization:2026-11-14:multi-tenant-5.1.4-freeze`.
+- Locked at commit `5cd72d6d04d426dca1f916e59c908b0601642a2c`, SHA-256 `47296495aa55e31d0e36ab2288c80c8ad6d21d11e43fc20226f3ba9934437932`, Git blob `638c8acb283fc673d64dde18d6e536c5e4c828e1`, effective 2026-11-14.
+- Registered as the unique ACTIVE multi-tenant blueprint; multi-tenant 5.1.3 is SUPERSEDED, moved into `docs/archived/` and remains byte-for-byte unchanged.
+
 ## 2026-10-28
 
 These four entries were recorded on 2026-11-05. The freeze left them out, so they are written from the lock, the freeze evidence and the text differences between versions.
