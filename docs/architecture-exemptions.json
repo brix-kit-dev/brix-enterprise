@@ -131,32 +131,6 @@
       }
     },
     {
-      "id": "EX-2026-007",
-      "title": "Dispatcher 先校验请求、再做访问检查，单向门队列第 10 项施工之前保留",
-      "ruleIds": [
-        "BRX-RS-MANIFEST-022"
-      ],
-      "artifacts": [
-        "brix runtime-orchestrator DefaultPluginEndpointDispatcher.dispatch：类型化请求先规范化、按 Schema 校验，之后才经 EndpointAccessGuard 做认证、tenant context 和权限检查，是根 3.3.0 的顺序",
-        "brix 宿主的 HTTP 协议适配：正文由 Spring 在 Dispatcher 之前解析，不是 JSON 时落到全局兜底异常处理，答 500 PLATFORM-S-001，记一行带堆栈的 ERROR"
-      ],
-      "owner": "runtime-orchestrator（L2B Dispatcher）/ 宿主的 HTTP 协议适配",
-      "reason": "根 3.4.0 MANIFEST-022 把认证、tenant context 和权限排到请求规范化与 Schema 校验之前（RFC-010）。施工只能在根 3.4.0 发布之后做（RFC-010 §4），是标准链路收尾方案 §11.1 单向门队列第 10 项；在那之前 Dispatcher 保持 3.3.0 的顺序（D129）。",
-      "risk": "没有身份或没有权限的调用方，请求不合格时拿到 400 和违反项，而不是 401 或 403，能看出这个入口的请求要哪些字段、各守什么规则。正文不是 JSON 时，任何人都能让主机答 500、记一行带堆栈的 ERROR，日志里多出这类噪声。",
-      "compensatingControls": [
-        "访问检查仍在 Handler 之前：没通过认证、tenant context 和权限检查的调用，Handler 不会执行，不会读写任何数据",
-        "违反项只带字段路径和规则名（EndpointSchemas.Violation 只有 path、rule），不回显请求里的值",
-        "坏 JSON 的 500 回答只有统一的 PLATFORM-S-001，不带堆栈和内部信息；堆栈只在主机日志里"
-      ],
-      "expiresOn": "2027-02-28",
-      "exitCriteria": "单向门队列第 10 项完成：Dispatcher 先做访问检查，再规范化和校验请求；没有身份的调用不论请求是否合格都答 401，没有权限的答 403，都不带违反项；正文不是 JSON 时，没有身份答 401，通过访问检查的答 400 endpoint.invalid_request，不再答 500（RFC-010 §4、§5）；本豁免移除。",
-      "approval": {
-        "reviewer": "jsq",
-        "recordRef": "user-authorization:2026-11-14:activation-deviations-d129",
-        "approvedAt": "2026-11-14T11:14:03+09:00"
-      }
-    },
-    {
       "id": "EX-2026-008",
       "title": "通知在调用时就发出、不在提交前最后一刻，单向门队列第 11 项施工之前保留",
       "ruleIds": [
