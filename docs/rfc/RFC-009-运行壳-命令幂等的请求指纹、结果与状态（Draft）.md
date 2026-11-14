@@ -1,7 +1,7 @@
 # RFC-009：命令幂等的请求指纹、结果与状态（Draft）
 
 > **文档类型**：RFC（根级 Minor RFC，按根 §12.2"新增向后兼容 Capability/Manifest/红线"）
-> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-009`）。条款随根 3.4.0 那一批写进蓝图、生效（标准链路收尾方案 §10.53 第 2 项的 9c～9i）；生效前本文是决策背景，**不指导施工**，施工依据仍是现行根蓝图 v3.3.0 与[幂等记录与命令结果设计方案](../v3.3.0-运行壳-幂等记录与命令结果-设计方案.md)
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-009`）。条款已并入根蓝图 v3.4.0，§3 的发布清单已于 2026-11-14 随这一批生效（标准链路收尾方案 §10.63）；本文是决策背景，**不指导施工**，施工依据是根蓝图 v3.4.0 与[幂等记录与命令结果设计方案](../v3.3.0-运行壳-幂等记录与命令结果-设计方案.md)
 > **起草日期**：2026-11-04
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；identity-auth 1.0.1、frontend 1.2.1、super-admin 4.0.1、multi-tenant 5.1.3（ACTIVE；super-admin、multi-tenant `rebaseRequired=true`）
 > **来源**：[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §11 第 6 点；设计方案 §8

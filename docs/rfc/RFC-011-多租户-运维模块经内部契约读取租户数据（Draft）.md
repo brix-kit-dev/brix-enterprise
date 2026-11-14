@@ -1,7 +1,7 @@
 # RFC-011：运维模块经内部契约读取租户数据（Draft）
 
 > **文档类型**：RFC（多租户专项 Patch 修订提案）
-> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-011`）。五处修订随 multi-tenant 5.1.4 写进蓝图、生效（标准链路收尾方案 §10.53 第 2 项的 9f、9g、9i）；生效前本文是决策背景，**不指导施工**。现行施工以根为准（根 `BRX-RS-AUTH-003`、multi-tenant 文首"冲突裁决"）：运维模块只经内部契约访问数据，代码已经这样做
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-011`）。五处修订和 §3 的补充已并入 multi-tenant 5.1.4，2026-11-14 生效（标准链路收尾方案 §10.63）；本文是决策背景，**不指导施工**，施工依据是 multi-tenant 5.1.4 与根蓝图 v3.4.0。运维模块只经内部契约访问数据，代码已经这样做
 > **起草日期**：2026-11-08
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；multi-tenant 5.1.3（ACTIVE，`rebaseRequired=true`）；identity-auth 1.0.1、super-admin 4.0.1、frontend 1.2.1（ACTIVE）
 > **来源**：[同步查询通道标准化设计方案](../v3.3.0-运行壳-同步查询通道标准化-设计方案.md) §9.2 R1 与 D36（2026-11-02 负责人同意 D36～D63 按推荐落实）；[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §11 第 13 点、§8 第 2 项

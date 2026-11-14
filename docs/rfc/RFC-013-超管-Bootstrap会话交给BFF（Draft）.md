@@ -1,7 +1,7 @@
 # RFC-013：Bootstrap 会话交给 BFF（Draft）
 
 > **文档类型**：RFC（super-admin Major 修订、identity-auth Minor 修订的提案；不修订根蓝图）
-> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-013`）。公示期按 §5（D128）。2026-11-09 负责人按推荐批准[Bootstrap 会话交付决定稿](../v3.3.0-运行壳-Bootstrap会话交付-设计方案.md)的 D109～D113，本 RFC 按决定稿 §6 起草。修订随根 3.4.0 那一批写进 super-admin 5.0.0 与 identity-auth 1.1.0、生效（标准链路收尾方案 §10.53 第 2 项的 9c～9i），之后按 §4 施工（单向门队列第 2 项）；生效前本文是决策背景，**不指导施工**，施工依据仍是 super-admin 4.0.1 与 identity-auth 1.0.1
+> **状态**：已批准（2026-11-13，architecture-committee、security、SRE，决定记录 `user-authorization:2026-11-13:rfc-013`）。公示期按 §5（D128）。2026-11-09 负责人按推荐批准[Bootstrap 会话交付决定稿](../v3.3.0-运行壳-Bootstrap会话交付-设计方案.md)的 D109～D113，本 RFC 按决定稿 §6 起草。修订已并入 super-admin 5.0.0 与 identity-auth 1.1.0，2026-11-14 生效（标准链路收尾方案 §10.63），公示期到此结束；按 §4 施工是单向门队列第 2 项，完成前开会话的旧入口仍在，由豁免 EX-2026-005 覆盖。本文是决策背景，**不指导施工**，施工依据是 super-admin 5.0.0 与 identity-auth 1.1.0
 > **起草日期**：2026-11-09
 > **依据基线**：runtime-shell 3.3.0（ACTIVE 根蓝图）；super-admin 4.0.1（ACTIVE，`rebaseRequired=true`）、identity-auth 1.0.1、frontend 1.2.1、multi-tenant 5.1.3（ACTIVE）
 > **来源**：决定稿 D109～D113 与 §6、§8 第 1 项；[标准链路收尾方案](../v3.3.0-运行壳-标准链路收尾-设计方案.md) §10.41、§11.1
