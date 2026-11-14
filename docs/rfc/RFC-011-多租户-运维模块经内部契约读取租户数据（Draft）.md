@@ -82,6 +82,8 @@
 4. §11.5 第 2 条改为："**跨租户只读查询与聚合由对应 Data Owner 经版本化内部契约提供给 `platform-admin`**，每次调用记 Platform Audit（§10.1），涉及租户表的访问按 §6.4 登记。插件的 typed Query 不跨租户：作用域由 Runtime 从调用方的 Invocation Context 派生（§11.1）。"
 5. T-3 改为："platform-operational 的跨租户读写必须是 allowlist internal contract，并记录平台审计；其余跨租户访问只能是 §6.4 登记的项"。门禁列改为"descriptor Schema（运维描述文件不能声明查询）+ access-policy test"，"阻断发布"不变。
 
+补充（2026-11-14，9g，负责人确认）：写候选稿时通读 5.1.3，又找到两行把 typed Query 写成跨租户读取途径，按本节同一口径一起改：§18 运行壳对齐表 platform-operational 一行改为"`platform-admin` 的读取与运维写都通过 `OperationalContext → TenantAdministration`（内部契约）"；§0.2 对标表"默认安全 + 显式跨租户"一行改为"全栈隔离 + Owner 内部契约与 §6.4 登记的访问 + 审计"。
+
 不变：DDL、Token、权限码目录与默认授予、T-1～T-30 的编号与隔离语义、§6.4 各行、`TenantReferenceQuery` 与 `TenantDirectoryQuery` 的行。
 
 与 D36 推荐文字的出入：D36 给 T-3 的推荐写法是"插件不得跨租户读取"。§6.4 已登记了平台插件按 Runtime 绑定的访问键做的跨租户访问（登录期 Actor 发现、FIRST_OWNER 邀请解析、受邀人设置完成后补发），照搬那句会与 §6.4 冲突，所以改为"其余跨租户访问只能是 §6.4 登记的项"，与 §6.4"表外的跨租户访问一律禁止"一致。

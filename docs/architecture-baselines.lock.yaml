@@ -906,6 +906,29 @@
       "decisionRef": "user-authorization:2026-11-13:rfc-009",
       "approvals": [],
       "effectiveDate": null
+    },
+    {
+      "id": "multi-tenant-5.1.4",
+      "domain": "multi-tenant",
+      "kind": "SPECIALIZED",
+      "status": "CANDIDATE",
+      "path": "docs/v5.1.4-多租户功能最小实现-设计蓝图.md",
+      "version": "5.1.4",
+      "compatibilityEpoch": 3,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "pending",
+      "rebaseRequired": true,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.4.0",
+        "version": "3.4.0"
+      },
+      "sha256": "683aebfbeab347c19afaa2ea0c40f9b1a9006cfad3113f75bb9930c4047818ce",
+      "gitBlob": "525560a0c7eff00394d9b82051caa6e90ca019c0",
+      "gitCommit": "f27fba14e3d1d516d41fa140cf3c06314a88113c",
+      "decisionRef": "user-authorization:2026-11-13:rfc-011",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }
