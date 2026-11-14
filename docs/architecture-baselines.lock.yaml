@@ -929,6 +929,29 @@
       "decisionRef": "user-authorization:2026-11-13:rfc-011",
       "approvals": [],
       "effectiveDate": null
+    },
+    {
+      "id": "super-admin-5.0.0",
+      "domain": "super-admin",
+      "kind": "SPECIALIZED",
+      "status": "CANDIDATE",
+      "path": "docs/v5.0.0-平台超管功能最小实现-设计蓝图.md",
+      "version": "5.0.0",
+      "compatibilityEpoch": 4,
+      "architectureState": "freeze-candidate",
+      "implementationStatus": "not-assessed",
+      "rebaseRequired": true,
+      "effective": false,
+      "inherits": {
+        "id": "runtime-shell-3.4.0",
+        "version": "3.4.0"
+      },
+      "sha256": "0aa0f8386ca4fafa24bac19a12d63ae00aaccae68061954b682306b53a13118e",
+      "gitBlob": "1abe9d7c241ed768b1e96a97954232a0613d425b",
+      "gitCommit": "8db009bc2d109fe82ffff6703402335d000fab1e",
+      "decisionRef": "user-authorization:2026-11-13:rfc-013",
+      "approvals": [],
+      "effectiveDate": null
     }
   ]
 }
