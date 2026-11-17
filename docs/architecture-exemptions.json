@@ -132,7 +132,7 @@
     },
     {
       "id": "EX-2026-009",
-      "title": "两个平台 Owner 的 Spring 自动配置用 @Value 读配置的 5 个成员，在改由插件 SPI 装配之前保留",
+      "title": "三个平台插件的 Spring 自动配置用 @Value 读配置的 6 个成员，在改由插件 SPI 装配之前保留",
       "ruleIds": [
         "A-2",
         "architecture-guard PluginProfile.noSpringValue"
@@ -140,21 +140,22 @@
       "artifacts": [
         "brix platform-identity：io.brix.platform.identity.config.PlatformIdentityAutoConfiguration 的 platformIdentityIdGenerator（brix.identity.worker-id）、platformIdentityPasswordPolicy（brix.identity.password.min-length、max-length）、firstOwnerInviteeIdentitySetupCapability（brix.identity.first-owner-invitee-setup.setup-base-url）",
         "brix platform-tenant：io.brix.platform.tenant.config.TenantAutoConfiguration 的字段 workerId（brix.tenant.worker-id）和 tenantCapability（brix.tenant.default-id）",
-        "两个模块测试资源里的 META-INF/brix/guard/spring-value-readers.txt：按成员列出上面 5 个"
+        "brix platform-auth：io.brix.platform.auth.password.PasswordCapabilityAutoConfiguration 的 passwordCapability（brix.security.password.bcrypt.strength）",
+        "三个模块测试资源里的 META-INF/brix/guard/spring-value-readers.txt：按成员列出上面 6 个"
       ],
-      "owner": "platform-identity / platform-tenant",
-      "reason": "标准链路收尾第 15 项让平台 Owner 跑插件档案（D134）。这两个模块现在由 Spring Boot 自动配置装配，不经插件 SPI 和 PluginContext，配置从 Spring 属性读；改成在清单里声明、经 ConfigCapability 读，要先把模块改由插件 SPI 装配，那是主线的平台模块迁移，不在第 15 项范围。负责人 2026-11-17 定：就地改不了的按成员冻结并登记豁免（D135）。",
-      "risk": "这 5 处配置不经 ConfigCapability：不在清单里声明，不受类型化配置的约束，换配置来源要改这两个类。同一个原因，两个自动配置还经 Spring 容器拿能力（例如带 @Qualifier(\"ownerOutboxEventBus\") 的 EventBusCapability），违反根 A-2，守卫查不到：NoSpringContainerApiRule 只查 ApplicationContext、BeanFactory 的调用。",
+      "owner": "platform-identity / platform-tenant / platform-auth",
+      "reason": "标准链路收尾第 15 项让平台 Owner 跑插件档案（D134）。platform-identity、platform-tenant（第 15f 点）和 platform-auth（第 15g 点）现在由 Spring Boot 自动配置装配，不经插件 SPI 和 PluginContext，配置从 Spring 属性读；改成在清单里声明、经 ConfigCapability 读，要先把模块改由插件 SPI 装配，那是主线的平台模块迁移，不在第 15 项范围。负责人 2026-11-17 定：就地改不了的按成员冻结并登记豁免（D135）。",
+      "risk": "这 6 处配置不经 ConfigCapability：不在清单里声明，不受类型化配置的约束，换配置来源要改这三个类。同一个原因，identity、tenant 的自动配置还经 Spring 容器拿能力（例如带 @Qualifier(\"ownerOutboxEventBus\") 的 EventBusCapability），违反根 A-2，守卫查不到：NoSpringContainerApiRule 只查 ApplicationContext、BeanFactory 的调用。",
       "compensatingControls": [
-        "清单按成员列出这 5 处，只减不增；同一个类里新加的 @Value 字段、方法或参数，以及别的类里的任何 @Value，都让构建失败（ConfigViaCapabilityRule.noSpringValue，第 15 项 15e）",
-        "两个模块跑插件档案和平台档案的其余规则全部生效：不读环境变量和系统属性、不发 Spring 事件、不用 ApplicationContext 和 BeanFactory、不依赖 L2B 实现、业务插件和主机",
-        "这几个配置项都不是密钥：worker id、默认租户 id、密码长度上下限、设置页的基础地址"
+        "清单按成员列出这 6 处，只减不增；同一个类里新加的 @Value 字段、方法或参数，以及别的类里的任何 @Value，都让构建失败（ConfigViaCapabilityRule.noSpringValue，第 15 项 15e）",
+        "三个模块跑插件档案和平台档案的其余规则全部生效：不读环境变量和系统属性、不发 Spring 事件、不用 ApplicationContext 和 BeanFactory、不依赖 L2B 实现、业务插件和主机",
+        "这几个配置项都不是密钥：worker id、默认租户 id、密码长度上下限、设置页的基础地址、BCrypt 的强度"
       ],
       "expiresOn": "2027-02-28",
-      "exitCriteria": "platform-identity、platform-tenant 改由插件 SPI 装配：配置在清单里声明并经 ConfigCapability 读取，能力经 PluginContext 取得；两个模块的 spring-value-readers.txt 清空并删除，本豁免移除。",
+      "exitCriteria": "platform-identity、platform-tenant、platform-auth 改由插件 SPI 装配：配置在清单里声明并经 ConfigCapability 读取，能力经 PluginContext 取得；三个模块的 spring-value-readers.txt 清空并删除，本豁免移除。",
       "approval": {
         "reviewer": "jsq",
-        "recordRef": "user-authorization:2026-11-17:standard-link-queue-item-15-d135",
+        "recordRef": "user-authorization:2026-11-17:standard-link-queue-item-15-d135-d137",
         "approvedAt": "2026-11-17T12:44:00+09:00"
       }
     }
