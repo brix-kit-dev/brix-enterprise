@@ -72,9 +72,12 @@ jobs:
           echo "brix main at $(git rev-parse HEAD)"
           mvn -B -ntp install -DskipTests -Dmaven.javadoc.skip=true
 
+      # host-standalone-web bundles the host console with rspack and needs brix's frontend packages built
+      # (shared-runtime-web and others, linked as ../brix/...), which the brix install above does not build. It stays out
+      # until queue item 19 builds them in CI (D142); no other module depends on it.
       - name: Run tests with coverage
         working-directory: brix-enterprise
-        run: mvn verify -Pcoverage -B -ntp --fail-at-end
+        run: mvn verify -Pcoverage -B -ntp --fail-at-end -pl '!:host-standalone-web'
 
       - name: Annotate failed tests
         if: failure()
