@@ -66,84 +66,18 @@ on:
       - '.github/workflows/architecture-check.yml'
   push:
     branches: [main, develop]
-    paths:
-      - 'packages/@brix/enterprise-solutions/**/*.ts'
-      - 'packages/@brix/enterprise-solutions/**/*.tsx'
-      - 'packages/@brix/enterprise-solutions/**/*.js'
-      - 'packages/@brix/enterprise-solutions/**/*.jsx'
-      - 'packages/@brix/enterprise-solutions/**/*.java'
-      - 'packages/@brix/enterprise-solutions/**/pom.xml'
-      - 'packages/@brix/enterprise-solutions/**/package.json'
-      - 'packages/@brix/enterprise-solutions/**/*.sql'
-      - 'packages/@brix/enterprise-solutions/**/*.yml'
-      - 'packages/@brix/enterprise-solutions/**/*.yaml'
-      - 'packages/@brix/enterprise-host/**/*.java'
-      - 'packages/@brix/enterprise-host/**/pom.xml'
-      - 'packages/@brix/enterprise-host/**/package.json'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pom.xml'
-      - 'AGENTS.md'
-      - 'CLAUDE.md'
-      - '.gitattributes'
-      - 'docs/**/*.md'
-      - 'docs/architecture-baselines.lock.yaml'
-      - 'docs/.schemas/architecture-baseline-lock.schema.json'
-      - 'scripts/validate_architecture_baseline.py'
-      - 'scripts/test_validate_architecture_baseline.py'
-      - 'scripts/requirements-architecture.txt'
-      - 'scripts/check_contract_locks.py'
-      - 'scripts/test_check_contract_locks.py'
-      # A module that ships contracts locks them (standard-link plan queue item 3, D115)
-      - '**/src/main/resources/META-INF/brix/**'
-      - '**/src/main/brix/**'
-      - '.github/workflows/architecture-check.yml'
+    # Every push but a docs-only one (standard-link plan queue item 16, 16j, D143): the checks below read code and
+    # resources across the repository, and a docs push runs only the Architecture Baseline workflow.
+    paths-ignore:
+      - 'docs/**'
 
-# Concurrency: Cancel previous runs for the same PR/branch
+# Concurrency: cancel superseded pull request runs; a push runs to the end, so each push to main has a result of
+# its own (16j).
 concurrency:
-  group: architecture-check-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: architecture-check-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  root-architecture-baseline:
-    name: Architecture Context Control Plane
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install baseline validator dependencies
-        run: python -m pip install --requirement scripts/requirements-architecture.txt
-
-      - name: Test baseline validator
-        run: python -m unittest scripts/test_validate_architecture_baseline.py
-
-      - name: Test contract lock check
-        run: python -m unittest scripts/test_check_contract_locks.py
-
-      - name: Every module that ships contracts is locked
-        run: python scripts/check_contract_locks.py
-
-      - name: Validate active architecture context and AI instructions
-        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions
-
-      - name: Validate pull request baseline transition
-        if: github.event_name == 'pull_request'
-        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions --base-ref "${{ github.event.pull_request.base.sha }}"
-
-      - name: Validate pushed baseline transition
-        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
-        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions --base-ref "${{ github.event.before }}"
-
   zero-tolerance-red-lines:
     name: Phase 0 Zero Tolerance Red Lines
     runs-on: ubuntu-latest

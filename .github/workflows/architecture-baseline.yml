@@ -1,0 +1,68 @@
+# ============================================================================
+# Architecture Baseline (standard-link plan queue item 16, 16j, D143)
+# ============================================================================
+#
+# The control plane checks: the baseline validator and its tests, the contract
+# lock check and its tests, and the baseline transition of a push or pull
+# request. They run on every push, docs included, and take about a minute. The
+# build (Code Coverage) and the code checks (Architecture Guard) skip a push that
+# changes only docs/, so a docs push runs only these.
+#
+# The job moved here unchanged from Architecture Guard, where it ran on every
+# push that touched docs and took the whole code-check workflow with it.
+# ============================================================================
+
+name: Architecture Baseline
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+# Cancel superseded pull request runs; a push runs to the end, so each push to
+# main has a result of its own.
+concurrency:
+  group: architecture-baseline-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  root-architecture-baseline:
+    name: Architecture Context Control Plane
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install baseline validator dependencies
+        run: python -m pip install --requirement scripts/requirements-architecture.txt
+
+      - name: Test baseline validator
+        run: python -m unittest scripts/test_validate_architecture_baseline.py
+
+      - name: Test contract lock check
+        run: python -m unittest scripts/test_check_contract_locks.py
+
+      - name: Every module that ships contracts is locked
+        run: python scripts/check_contract_locks.py
+
+      - name: Validate active architecture context and AI instructions
+        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions
+
+      - name: Validate pull request baseline transition
+        if: github.event_name == 'pull_request'
+        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions --base-ref "${{ github.event.pull_request.base.sha }}"
+
+      - name: Validate pushed baseline transition
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: python scripts/validate_architecture_baseline.py --require-active --check-instructions --base-ref "${{ github.event.before }}"
