@@ -4,7 +4,15 @@
 # Enforces minimum 80% line coverage and 70% branch coverage on all PRs.
 # Uses JaCoCo for Java (Maven) and Vitest for TypeScript (pnpm).
 #
-# Trigger: Pull requests to main/develop branches
+# Trigger: Pull requests to main/develop branches. The Java job also runs on every push to main/develop that changes
+# more than docs/ (standard-link plan queue item 16, 16h, D143), and by hand: the sessions push to main directly, and
+# this build is the only place the enterprise modules' tests run, the ArchUnit tests of the plugin cores and hosts among
+# them. A push runs to the end; only superseded pull request runs are cancelled.
+#
+# The enterprise build needs brix's artifacts, which are not published anywhere (the pom's private repository is a
+# placeholder). The Java job checks brix out next to this repository, at the tip of its main branch, and installs it
+# without tests first; brix's own CI tests it (D143). A failed test is written as an annotation by brix's
+# scripts/ci-test-annotations.mjs.
 # ============================================================================
 
 name: Code Coverage
@@ -19,19 +27,34 @@ on:
       - '**/pom.xml'
       - '**/package.json'
       - '**/vitest.config.*'
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:
 
 concurrency:
-  group: coverage-${{ github.ref }}
-  cancel-in-progress: true
+  group: coverage-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # ========== Java Coverage (JaCoCo) ==========
   java-coverage:
     name: Java Coverage (JaCoCo ≥ 80%)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: brix-enterprise
+
+      - name: Checkout brix (main)
+        uses: actions/checkout@v4
+        with:
+          repository: brix-kit-dev/brix
+          ref: main
+          path: brix
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -39,23 +62,38 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: maven
+          cache-dependency-path: |
+            brix/**/pom.xml
+            brix-enterprise/**/pom.xml
+
+      - name: Install brix without tests
+        working-directory: brix
+        run: |
+          echo "brix main at $(git rev-parse HEAD)"
+          mvn -B -ntp install -DskipTests -Dmaven.javadoc.skip=true
 
       - name: Run tests with coverage
-        run: mvn verify -Pcoverage -B --fail-at-end
+        working-directory: brix-enterprise
+        run: mvn verify -Pcoverage -B -ntp --fail-at-end
+
+      - name: Annotate failed tests
+        if: failure()
+        working-directory: brix-enterprise
+        run: node ../brix/scripts/ci-test-annotations.mjs
 
       - name: Upload JaCoCo reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-reports
-          path: '**/target/site/jacoco/'
+          path: 'brix-enterprise/**/target/site/jacoco/'
           retention-days: 14
 
       - name: Add coverage summary to PR
         if: github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.6
         with:
-          paths: '**/target/site/jacoco/jacoco.xml'
+          paths: 'brix-enterprise/**/target/site/jacoco/jacoco.xml'
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 80
           min-coverage-changed-files: 80
@@ -64,6 +102,7 @@ jobs:
   # ========== TypeScript Coverage (Vitest) ==========
   ts-coverage:
     name: TypeScript Coverage (Vitest ≥ 80%)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
