@@ -23,24 +23,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { InboxScreen } from './screens/InboxScreen';
 import { MessageDetailScreen } from './screens/MessageDetailScreen';
 import { ComposeScreen } from './screens/ComposeScreen';
+import { MessengerRoutes, type MessengerStackParamList } from './routes';
 
-/**
- * Route name constants
- */
-export const MessengerRoutes = {
-  Inbox: 'Inbox',
-  MessageDetail: 'MessageDetail',
-  Compose: 'Compose',
-} as const;
-
-/**
- * Route parameter types
- */
-export type MessengerStackParamList = {
-  [MessengerRoutes.Inbox]: undefined;
-  [MessengerRoutes.MessageDetail]: { messageId: string };
-  [MessengerRoutes.Compose]: { receiverId?: string } | undefined;
-};
+export { MessengerRoutes };
+export type { MessengerStackParamList };
 
 const Stack = createNativeStackNavigator<MessengerStackParamList>();
 

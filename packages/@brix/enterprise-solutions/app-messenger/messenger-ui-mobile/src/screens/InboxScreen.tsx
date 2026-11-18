@@ -50,7 +50,7 @@ import {
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MessageDTO, MessageStatus } from '../types';
 import { useInbox } from '../hooks';
-import { MessengerRoutes } from '../navigation';
+import { MessengerRoutes } from '../routes';
 
 type InboxScreenNavigationProp = NativeStackNavigationProp<any, 'Inbox'>;
 
