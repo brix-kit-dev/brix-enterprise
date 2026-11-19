@@ -1,0 +1,15 @@
+# Secret Scan allow-list (root S-4, D149). One gitleaks fingerprint per line, the reason above it. A fingerprint
+# names the commit, the file, the rule and the line, so it allows that one finding and nothing else.
+
+# The developer guide's authentication examples: the access_token and refresh_token values were truncated JWT
+# headers ({"alg":"RS256"} followed by "..."), not tokens. They became placeholders on 2026-11-19 (plan §10.97).
+33a1aeae8b0ce3b58e2c7c1482cf1ba035216fe7:docs-dev/开发者指南-运行壳平台系统.md:generic-api-key:626
+33a1aeae8b0ce3b58e2c7c1482cf1ba035216fe7:docs-dev/开发者指南-运行壳平台系统.md:generic-api-key:627
+33a1aeae8b0ce3b58e2c7c1482cf1ba035216fe7:docs-dev/开发者指南-运行壳平台系统.md:generic-api-key:654
+a1f851c6c802948c736ee861cb83afa82e0ff59a:docs-dev/开发者指南-运行壳平台系统.md:generic-api-key:626
+a1f851c6c802948c736ee861cb83afa82e0ff59a:docs-dev/开发者指南-运行壳平台系统.md:generic-api-key:627
+a1f851c6c802948c736ee861cb83afa82e0ff59a:docs-dev/开发者指南-运行壳平台系统.md:generic-api-key:654
+
+# The initial commit's ExportKeys.java wrote a key store's key out as PEM: the header and footer are strings in
+# the code and the key was read at run time (plan §10.96). The file has since left the repository.
+7a4bc7fc9c7aeb827cefeb74fccb4a98bd53bed6:packages/@brix/enterprise-host/host-shell-standalone/src/main/resources/keys/ExportKeys.java:private-key:15
