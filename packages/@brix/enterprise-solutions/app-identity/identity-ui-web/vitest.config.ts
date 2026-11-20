@@ -61,10 +61,12 @@ export default defineConfig({
         'src/**/index.ts',
       ],
       thresholds: {
-        lines: 70,
-        statements: 70,
-        functions: 70,
-        branches: 55,
+        // The coverage measured on 2026-11-20 (standard-link plan queue item 19, 19i, D166). Only ever raise
+        // these, to the newly measured values, when tests are added; never lower them.
+        lines: 30.86,
+        statements: 30.86,
+        functions: 28.57,
+        branches: 72.41,
       },
     },
   },

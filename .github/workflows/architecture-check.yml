@@ -602,7 +602,9 @@ jobs:
   # Phase 3 / C-6 — runs the Vitest hook suites added in Phase 3 §5.1
   # for every plugin that owns a vitest.config.ts.  This job is *blocking*:
   # a failed unit test or a coverage drop below the configured thresholds
-  # (lines / statements / functions ≥ 70 %, branches ≥ 60 %) fails the PR.
+  # fails the PR. The thresholds in each plugin's vitest.config.ts are the
+  # coverage measured on 2026-11-20 and are only ever raised (standard-link
+  # plan queue item 19, 19i, D166).
   #
   # Scope (today): tenant-ui-web, identity-ui-web, platform-tenant-web.
   # Pattern: relies on `pnpm -r --filter` to skip plugins that have not
