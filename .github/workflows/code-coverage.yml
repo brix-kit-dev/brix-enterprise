@@ -72,12 +72,37 @@ jobs:
           echo "brix main at $(git rev-parse HEAD)"
           mvn -B -ntp install -DskipTests -Dmaven.javadoc.skip=true
 
-      # host-standalone-web bundles the host console with rspack and needs brix's frontend packages built
-      # (shared-runtime-web and others, linked as ../brix/...), which the brix install above does not build. It stays out
-      # until queue item 19 builds them in CI (D142); no other module depends on it.
+      # host-standalone-web bundles the host console with rspack and needs brix's frontend packages built (shared-runtime-
+      # web and others, linked as ../brix/...), which the Maven install above does not build. brix's
+      # build-type-dependencies.mjs builds them, the same list Frontend Stability builds (standard-link plan queue item 19,
+      # 19j, D165); the module's frontend-maven-plugin then installs this repository and runs the host's build.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: |
+            brix/pnpm-lock.yaml
+            brix-enterprise/pnpm-lock.yaml
+
+      - name: Install brix frontend dependencies
+        working-directory: brix
+        run: pnpm install --frozen-lockfile
+
+      - name: Build brix type dependencies
+        working-directory: brix
+        run: node scripts/build-type-dependencies.mjs
+        env:
+          CI: true
+
       - name: Run tests with coverage
         working-directory: brix-enterprise
-        run: mvn verify -Pcoverage -B -ntp --fail-at-end -pl '!:host-standalone-web'
+        run: mvn verify -Pcoverage -B -ntp --fail-at-end
 
       - name: Annotate failed tests
         if: failure()
