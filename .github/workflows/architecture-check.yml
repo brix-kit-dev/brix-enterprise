@@ -513,6 +513,95 @@ jobs:
           echo "| useTheme() correct usage | $USE_THEME_COUNT |" >> $GITHUB_STEP_SUMMARY
 
   # ==========================================================================
+  # Job: Frontend Lint (standard-link plan queue item 19, 19f, D163)
+  #
+  # Each package's lint script with its ESLint configuration: the plugin UIs
+  # lint with the configs.ui preset of @brix-sdk/eslint-config-architecture,
+  # which the packages reach through link: dependencies into brix. So brix
+  # main is checked out next to this repository, as for Code Coverage, and
+  # installed first: the linked rule package resolves its own dependencies
+  # (the TypeScript parser, jsx-a11y) from brix's node_modules. The script is
+  # brix's: a package with TypeScript sources under src/ but no lint script,
+  # or a lint script but no configuration, fails the step. The app roots
+  # only run their members' lint. The shared, mobile and runtime-profile
+  # packages below get their configuration in 19g, which removes them here.
+  # ==========================================================================
+  frontend-lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: brix-enterprise
+
+      - name: Checkout brix (main)
+        uses: actions/checkout@v4
+        with:
+          repository: brix-kit-dev/brix
+          ref: main
+          path: brix
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: |
+            brix/pnpm-lock.yaml
+            brix-enterprise/pnpm-lock.yaml
+
+      - name: Install brix dependencies
+        working-directory: brix
+        run: |
+          echo "brix main at $(git rev-parse HEAD)"
+          pnpm install --frozen-lockfile
+
+      - name: Install dependencies
+        working-directory: brix-enterprise
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: brix-enterprise
+        run: >-
+          node ../brix/scripts/lint-configured-packages.mjs
+          --skip @brix-sdk/enterprise-carousel-app
+          --skip @brix-sdk/enterprise-contracts-app
+          --skip @brix-sdk/enterprise-identity-app
+          --skip @brix-sdk/enterprise-messenger-app
+          --skip @brix-sdk/enterprise-partners-app
+          --skip @brix-sdk/enterprise-products-app
+          --skip @brix-sdk/enterprise-storage-app
+          --skip @brix-sdk/app-tenant
+          --skip @brix-sdk/enterprise-carousel-shared
+          --skip @brix-sdk/enterprise-case-shared
+          --skip @brix-sdk/enterprise-compliance-shared
+          --skip @brix-sdk/enterprise-contracts-shared
+          --skip @brix-sdk/enterprise-identity-shared
+          --skip @brix-sdk/enterprise-intake-shared
+          --skip @brix-sdk/enterprise-messenger-shared
+          --skip @brix-sdk/enterprise-partners-shared
+          --skip @brix-sdk/enterprise-products-shared
+          --skip @brix-sdk/enterprise-storage-shared
+          --skip @brix-sdk/tenant-shared
+          --skip @brix-sdk/enterprise-carousel-ui-mobile
+          --skip @brix-sdk/enterprise-case-ui-mobile
+          --skip @brix-sdk/enterprise-identity-ui-mobile
+          --skip @brix-sdk/enterprise-messenger-ui-mobile
+          --skip @brix-sdk/enterprise-partners-ui-mobile
+          --skip @brix-sdk/enterprise-products-ui-mobile
+          --skip @brix-sdk/enterprise-standalone-web-runtime-profile
+        env:
+          CI: true
+
+  # ==========================================================================
   # Job: Frontend Stability Tests
   #
   # Phase 3 / C-6 — runs the Vitest hook suites added in Phase 3 §5.1

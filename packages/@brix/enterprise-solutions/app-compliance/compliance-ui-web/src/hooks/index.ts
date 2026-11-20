@@ -61,3 +61,5 @@ export type {
   AuditListState,
   AuditFilters,
 } from './useComplianceCheck';
+// The statistics useComplianceStatistics returns: views take the type from the hooks, never from a repository.
+export type { ComplianceStatistics } from '../repositories';

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "rspack serve",
     "build": "rspack build",
-    "lint": "eslint --config eslint.config.cjs src/",
+    "lint": "eslint src",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {},

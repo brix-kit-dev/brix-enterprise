@@ -149,7 +149,7 @@ export function useTimeline(caseId: number | string): UseTimelineResult {
     if (numericCaseId) {
       loadEvents(false);
     }
-  }, [numericCaseId, params]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [numericCaseId, params]);
 
   /**
    * Refresh timeline (reload from beginning)

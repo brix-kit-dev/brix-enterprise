@@ -21,7 +21,7 @@
  * @module compliance-ui-web/repositories/complianceCheckRepository
  */
 
-import type { HttpCapability } from '@brix-sdk/runtime-sdk-react';
+import type { HttpCapability } from '@brix-sdk/runtime-sdk-api-web';
 import type {
   ComplianceCheckResult,
   ComplianceAuditRecord,

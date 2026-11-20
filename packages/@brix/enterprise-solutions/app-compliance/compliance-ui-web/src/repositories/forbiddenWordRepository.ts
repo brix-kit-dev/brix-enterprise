@@ -20,7 +20,7 @@
  * @module compliance-ui-web/repositories/forbiddenWordRepository
  */
 
-import type { HttpCapability } from '@brix-sdk/runtime-sdk-react';
+import type { HttpCapability } from '@brix-sdk/runtime-sdk-api-web';
 import type {
   ForbiddenWord,
   ForbiddenWordListQueryParams,

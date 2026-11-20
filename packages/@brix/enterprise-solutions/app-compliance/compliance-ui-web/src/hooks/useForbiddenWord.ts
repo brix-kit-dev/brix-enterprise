@@ -240,7 +240,7 @@ export function useForbiddenWordList(
     if (autoFetch) {
       fetchWords(1, state.pageSize);
     }
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   return {
     state,
@@ -392,7 +392,7 @@ export function useForbiddenWordDetail(wordId: string, autoFetch: boolean = true
     if (autoFetch && wordId) {
       fetchWord();
     }
-  }, [autoFetch, wordId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoFetch, wordId]);
 
   return {
     state,

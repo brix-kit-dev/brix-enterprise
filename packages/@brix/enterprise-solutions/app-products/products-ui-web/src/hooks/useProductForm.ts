@@ -241,7 +241,6 @@ export function useProductForm(options?: {
     };
 
     loadProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options?.id, options?.code, isEditMode]);
 
   // ─────────────────────────────────────────────────────────

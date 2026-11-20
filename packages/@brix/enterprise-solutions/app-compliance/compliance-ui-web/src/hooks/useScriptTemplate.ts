@@ -195,7 +195,7 @@ export function useScriptTemplateList(
     if (autoFetch) {
       fetchTemplates(1, state.pageSize);
     }
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   return {
     state,
@@ -360,7 +360,7 @@ export function useScriptTemplateDetail(templateId: string, autoFetch: boolean =
     if (autoFetch && templateId) {
       fetchTemplate();
     }
-  }, [autoFetch, templateId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoFetch, templateId]);
 
   return {
     state,

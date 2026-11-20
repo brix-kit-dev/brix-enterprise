@@ -124,7 +124,7 @@ export function useParameters(caseId: number | string): UseParametersResult {
     if (numericCaseId) {
       loadParameters();
     }
-  }, [numericCaseId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [numericCaseId]);
 
   /**
    * Set a parameter value (creates if not exists, updates if exists)

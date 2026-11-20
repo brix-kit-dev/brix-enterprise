@@ -19,7 +19,7 @@
  */
 
 import React, { memo, useMemo } from 'react';
-import type { ComplianceStatistics } from '../repositories';
+import type { ComplianceStatistics } from '../hooks';
 
 /**
  * Props interface for ComplianceStatsDashboard component.

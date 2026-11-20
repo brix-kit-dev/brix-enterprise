@@ -486,7 +486,7 @@ export function useComplianceAuditList(
     if (autoFetch) {
       fetchRecords(1, state.pageSize);
     }
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   return {
     state,
@@ -540,7 +540,7 @@ export function useComplianceStatistics(days: number = 30, autoFetch: boolean = 
     if (autoFetch) {
       fetchStatistics(days);
     }
-  }, [autoFetch, days]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoFetch, days]);
 
   return {
     loading,

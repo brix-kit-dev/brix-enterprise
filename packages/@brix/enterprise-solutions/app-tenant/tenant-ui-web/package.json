@@ -26,6 +26,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "eslint": "^9.0.0",
     "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
     "@rspack/cli": "^1.0.0",
     "@rspack/core": "^1.0.0",

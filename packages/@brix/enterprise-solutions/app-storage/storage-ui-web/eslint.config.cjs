@@ -1,27 +1,13 @@
 /**
- * @file ESLint Configuration for storage-ui-web
- * @description Extends architecture ESLint config with UI-specific rules
- * @module @brix-sdk/enterprise-storage-ui-web
+ * ESLint for this plugin UI: the UI preset of @brix-sdk/eslint-config-architecture on the package's own files, with
+ * TypeScript parsed (standard-link queue item 19, D162): red lines, Page/Hook/Repository layers, BrixUI and design
+ * tokens, role literals and role checks, the super-admin red lines, accessibility warnings.
  */
-const architectureConfig = require('@brix-sdk/eslint-config-architecture');
+const architecture = require('@brix-sdk/eslint-config-architecture');
 
 module.exports = [
-  ...architectureConfig,
   {
-    files: ['src/**/*.{ts,tsx}'],
-    rules: {
-      // Enforce v3.0.4 front-end separation rules
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['axios', 'fetch', 'ky', 'got'],
-              message: 'Direct HTTP clients are forbidden. Use HttpCapability via Repository layer.',
-            },
-          ],
-        },
-      ],
-    },
+    ignores: ['dist/**', 'node_modules/**'],
   },
+  ...architecture.configs.ui,
 ];

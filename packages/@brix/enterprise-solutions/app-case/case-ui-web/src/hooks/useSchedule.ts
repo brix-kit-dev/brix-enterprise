@@ -140,7 +140,7 @@ export function useSchedule(caseId: number | string): UseScheduleResult {
     if (numericCaseId) {
       loadDays();
     }
-  }, [numericCaseId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [numericCaseId]);
 
   /**
    * Select a day

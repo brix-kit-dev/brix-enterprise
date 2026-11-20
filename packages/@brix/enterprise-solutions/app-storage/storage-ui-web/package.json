@@ -12,6 +12,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
     "@rspack/cli": "^1.1.0",
     "@rspack/core": "^1.1.0",
     "@rspack/plugin-react-refresh": "^1.0.0",

@@ -603,6 +603,9 @@ importers:
         specifier: link:../../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web
         version: link:../../../../../../brix/packages/@brix/shared-runtime/shared-runtime-web
     devDependencies:
+      '@brix-sdk/eslint-config-architecture':
+        specifier: link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture
+        version: link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture
       '@brix-sdk/runtime-sdk-api-web':
         specifier: link:../../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web
         version: link:../../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web
@@ -1089,6 +1092,9 @@ importers:
         specifier: ^6.22.0
         version: 6.30.3(react-dom@18.3.1)(react@18.3.1)
     devDependencies:
+      '@brix-sdk/eslint-config-architecture':
+        specifier: link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture
+        version: link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture
       '@rspack/cli':
         specifier: ^1.1.0
         version: 1.7.10(@rspack/core@1.7.10)(tslib@2.8.1)
@@ -1174,6 +1180,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^1.2.0
         version: 1.6.1(vitest@1.6.1)
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.4
       jsdom:
         specifier: ^24.0.0
         version: 24.1.3

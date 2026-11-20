@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "rspack serve --mode=development",
     "build": "rspack build --mode=production",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
