@@ -522,9 +522,9 @@ jobs:
   # installed first: the linked rule package resolves its own dependencies
   # (the TypeScript parser, jsx-a11y) from brix's node_modules. The script is
   # brix's: a package with TypeScript sources under src/ but no lint script,
-  # or a lint script but no configuration, fails the step. The app roots
-  # only run their members' lint. The shared, mobile and runtime-profile
-  # packages below get their configuration in 19g, which removes them here.
+  # or a lint script but no configuration, fails the step (19g: every
+  # frontend package of this repository has both). The standalone host's
+  # guard runs after it.
   # ==========================================================================
   frontend-lint:
     name: Frontend Lint
@@ -568,38 +568,19 @@ jobs:
         working-directory: brix-enterprise
         run: pnpm install --frozen-lockfile
 
+      # The root lint script: brix's lint-configured-packages.mjs, skipping the app roots, which only run their
+      # members' lint.
       - name: Lint
         working-directory: brix-enterprise
-        run: >-
-          node ../brix/scripts/lint-configured-packages.mjs
-          --skip @brix-sdk/enterprise-carousel-app
-          --skip @brix-sdk/enterprise-contracts-app
-          --skip @brix-sdk/enterprise-identity-app
-          --skip @brix-sdk/enterprise-messenger-app
-          --skip @brix-sdk/enterprise-partners-app
-          --skip @brix-sdk/enterprise-products-app
-          --skip @brix-sdk/enterprise-storage-app
-          --skip @brix-sdk/app-tenant
-          --skip @brix-sdk/enterprise-carousel-shared
-          --skip @brix-sdk/enterprise-case-shared
-          --skip @brix-sdk/enterprise-compliance-shared
-          --skip @brix-sdk/enterprise-contracts-shared
-          --skip @brix-sdk/enterprise-identity-shared
-          --skip @brix-sdk/enterprise-intake-shared
-          --skip @brix-sdk/enterprise-messenger-shared
-          --skip @brix-sdk/enterprise-partners-shared
-          --skip @brix-sdk/enterprise-products-shared
-          --skip @brix-sdk/enterprise-storage-shared
-          --skip @brix-sdk/tenant-shared
-          --skip @brix-sdk/enterprise-carousel-ui-mobile
-          --skip @brix-sdk/enterprise-case-ui-mobile
-          --skip @brix-sdk/enterprise-identity-ui-mobile
-          --skip @brix-sdk/enterprise-messenger-ui-mobile
-          --skip @brix-sdk/enterprise-partners-ui-mobile
-          --skip @brix-sdk/enterprise-products-ui-mobile
-          --skip @brix-sdk/enterprise-standalone-web-runtime-profile
+        run: pnpm run lint
         env:
           CI: true
+
+      # The standalone host's own guard (FE-12): no business pages, hooks, repositories or services, no transport,
+      # tokens or provider packages in its source.
+      - name: Standalone host guard
+        working-directory: brix-enterprise
+        run: pnpm --filter @brix-sdk/enterprise-host-standalone-web run lint:arch
 
   # ==========================================================================
   # Job: Frontend Stability Tests

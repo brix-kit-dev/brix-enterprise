@@ -81,16 +81,8 @@ export const PartnerList: React.FC<PartnerListProps> = ({
     refresh();
   };
 
-  return (
-    <View style={styles.container}>
-      {/* Search and Filter Bar */}
-      <View style={styles.searchBar}>
-        <Searchbar
-          placeholder="搜索名称或编码"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-        />
+  /**
+   * Render a partner card
    */
   const renderPartnerCard = ({ item }: { item: PartnerDTO }) => {
     const typeConfig = PARTNER_TYPES[item.partnerType];

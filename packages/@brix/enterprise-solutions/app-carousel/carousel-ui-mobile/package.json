@@ -7,7 +7,7 @@
   "types": "src/index.tsx",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@react-navigation/native": "^6.1.9",
@@ -17,6 +17,8 @@
     "react-native-paper": "^5.12.3"
   },
   "devDependencies": {
+    "eslint": "^9.0.0",
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
     "@types/react": "^18.3.1",
     "@types/react-native": "^0.73.0",
     "typescript": "^5.7.2"

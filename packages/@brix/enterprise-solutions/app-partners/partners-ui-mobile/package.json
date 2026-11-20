@@ -9,7 +9,7 @@
     "start": "expo start --port 4004",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "lint": "eslint src --ext ts,tsx",
+    "lint": "eslint src",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -20,6 +20,8 @@
     "react-native-vector-icons": "^10.0.0"
   },
   "devDependencies": {
+    "eslint": "^9.0.0",
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
     "@types/react": "^18.2.0",
     "@types/react-native": "^0.73.0",
     "typescript": "^5.3.0"

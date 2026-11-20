@@ -7,6 +7,13 @@
   "main": "src/index.ts",
   "module": "src/index.ts",
   "types": "src/index.ts",
+  "scripts": {
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@brix-sdk/eslint-config-architecture": "link:../../../../../brix/packages/@brix/platform-devtools/eslint-config-architecture",
+    "eslint": "^9.0.0"
+  },
   "dependencies": {
     "@brix-sdk/runtime-orchestrator-web": "link:../../../../../brix/packages/@brix/runtime-sdk/runtime-orchestrator-web",
     "@brix-sdk/runtime-sdk-api-web": "link:../../../../../brix/packages/@brix/runtime-sdk/runtime-sdk-api-web",
