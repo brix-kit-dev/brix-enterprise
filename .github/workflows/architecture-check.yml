@@ -57,6 +57,10 @@ on:
       - 'scripts/requirements-architecture.txt'
       - 'scripts/check_contract_locks.py'
       - 'scripts/test_check_contract_locks.py'
+      # The frontend type-error baseline (standard-link plan queue item 19, 19h, D165)
+      - 'scripts/frontend_typecheck_baseline.py'
+      - 'scripts/test_frontend_typecheck_baseline.py'
+      - 'scripts/frontend-typecheck-baseline.json'
       # A module that ships contracts locks them (standard-link plan queue item 3, D115)
       - '**/src/main/resources/META-INF/brix/**'
       - '**/src/main/brix/**'
@@ -585,6 +589,16 @@ jobs:
   # ==========================================================================
   # Job: Frontend Stability Tests
   #
+  # Typecheck (standard-link plan queue item 19, 19h, D165): every package
+  # with a `typecheck` script is checked against the registered baseline of
+  # existing type errors, scripts/frontend-typecheck-baseline.json. An error
+  # the baseline does not list fails, and so does a listed one that no longer
+  # occurs (the change that fixes it removes it from the baseline). The plugins
+  # import brix's frontend packages, so brix main is checked out beside this
+  # repository and the packages whose declarations live in dist/ are built
+  # first (brix's build-type-dependencies.mjs, the list brix's own Typecheck
+  # job builds), then this repository's plugin shared packages.
+  #
   # Phase 3 / C-6 — runs the Vitest hook suites added in Phase 3 §5.1
   # for every plugin that owns a vitest.config.ts.  This job is *blocking*:
   # a failed unit test or a coverage drop below the configured thresholds
@@ -599,11 +613,20 @@ jobs:
   frontend-stability-tests:
     name: Frontend Stability Tests (Vitest + Coverage)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: brix-enterprise
+
+      - name: Checkout brix (main)
+        uses: actions/checkout@v4
+        with:
+          repository: brix-kit-dev/brix
+          ref: main
+          path: brix
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -615,16 +638,43 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+          cache-dependency-path: |
+            brix/pnpm-lock.yaml
+            brix-enterprise/pnpm-lock.yaml
+
+      - name: Install brix dependencies
+        working-directory: brix
+        run: |
+          echo "brix main at $(git rev-parse HEAD)"
+          pnpm install --frozen-lockfile
+
+      - name: Build brix type dependencies
+        working-directory: brix
+        run: node scripts/build-type-dependencies.mjs
+        env:
+          CI: true
 
       - name: Install dependencies
+        working-directory: brix-enterprise
         run: pnpm install --frozen-lockfile
 
+      - name: Build the plugin shared packages
+        working-directory: brix-enterprise
+        run: pnpm run build:shared
+        env:
+          CI: true
+
+      - name: Typecheck baseline script tests
+        working-directory: brix-enterprise
+        run: python3 -m unittest scripts/test_frontend_typecheck_baseline.py
+
       # ----------------------------------------------------------------------
-      # Step: Typecheck — every plugin with a `typecheck` script must pass.
-      # `--if-present` keeps the gate friendly to new plugins.
+      # Step: Typecheck — each package's `typecheck` script, against the
+      # baseline (the root script runs scripts/frontend_typecheck_baseline.py).
       # ----------------------------------------------------------------------
       - name: Typecheck (all plugins)
-        run: pnpm -r --if-present run typecheck
+        working-directory: brix-enterprise
+        run: pnpm run typecheck
         env:
           CI: true
 
@@ -636,6 +686,7 @@ jobs:
       # threshold is breached, which fails the job here.
       # ----------------------------------------------------------------------
       - name: Vitest (all plugins, with coverage)
+        working-directory: brix-enterprise
         run: pnpm -r --if-present run test:coverage
         env:
           CI: true
@@ -649,6 +700,6 @@ jobs:
         with:
           name: frontend-coverage
           path: |
-            packages/**/coverage/**
+            brix-enterprise/packages/**/coverage/**
           retention-days: 14
           if-no-files-found: ignore

@@ -8,7 +8,7 @@
     "build": "rspack build --mode production",
     "preview": "rspack serve --mode production",
     "lint": "eslint src",
-    "type-check": "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@brix-sdk/enterprise-intake-shared": "workspace:*"

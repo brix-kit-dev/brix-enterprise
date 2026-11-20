@@ -7,7 +7,7 @@
     "dev": "rspack serve",
     "build": "rspack build",
     "lint": "eslint src",
-    "type-check": "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@brix-sdk/enterprise-products-shared": "link:../products-shared",

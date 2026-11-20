@@ -8,7 +8,7 @@
     "dev": "rspack serve --mode development",
     "build": "rspack build --mode production",
     "preview": "cross-env NODE_ENV=production rspack serve --mode production",
-    "type-check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:arch": "python3 ../../../../scripts/frontend_standalone_host_guard.py --host ."
   },

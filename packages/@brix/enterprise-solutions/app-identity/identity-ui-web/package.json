@@ -8,7 +8,6 @@
     "build": "rspack build",
     "lint": "eslint src",
     "lint:ci": "eslint --config eslint.config.cjs src/ --max-warnings 0",
-    "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
