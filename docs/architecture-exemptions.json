@@ -158,6 +158,36 @@
         "recordRef": "user-authorization:2026-11-17:standard-link-queue-item-15-d135-d137",
         "approvedAt": "2026-11-17T12:44:00+09:00"
       }
+    },
+    {
+      "id": "EX-2026-010",
+      "title": "platform-auth 的 3 个类直接用 JWT 库和 Spring 加密库，在能力实现移到 L2C 之前保留",
+      "ruleIds": [
+        "S-1",
+        "BRX-RS-LAYER-007",
+        "architecture-guard PluginProfile.noDirectJwtUsage",
+        "architecture-guard PluginProfile.noDirectCryptoUsage"
+      ],
+      "artifacts": [
+        "brix platform-auth：io.brix.platform.auth.jwt.JwtValidator（io.jsonwebtoken，校验平台自己签发的令牌，platform-auth-servlet 的入口过滤器调用它）",
+        "brix platform-auth：io.brix.platform.auth.password.BCryptPasswordCapability、PasswordCapabilityAutoConfiguration（org.springframework.security.crypto，PasswordCapability 的实现和它的自动配置）",
+        "platform-auth 测试资源里的 META-INF/brix/guard/jwt-library-users.txt、spring-crypto-users.txt：按类列出上面 3 个"
+      ],
+      "owner": "platform-auth",
+      "reason": "标准链路收尾第 21 项 21a 让插件档案的安全规则查模块的每一个类（D173），原来只查名叫 core 的包，platform-auth 没有这样的包，一个类也没查到。platform-auth 在清单里是 plugin-server，却提供平台自己的令牌校验和 PasswordCapability 的实现，这两件事要用密码学库；按根分层表，能力的实现应在 L2C Adapter。移过去要新建适配器、改主机装配，超出第 21 项。负责人 2026-11-25 按推荐批准按类冻结并登记豁免（D175）。",
+      "risk": "JWT 库和口令散列库留在 L2C 适配器之外：更换库或算法要改 platform-auth。这 3 个类里新加的同类用法，守卫查不到（清单按类放行）。",
+      "compensatingControls": [
+        "两份清单各对一条规则，只减不增：JWT 清单上的类用 Spring 加密库、加密清单上的类用 JWT 库，都让构建失败；platform-auth 的其他类，以及别的插件模块的任何类，用 JWT、Auth0、Spring 加密库或 OAuth2 客户端都让构建失败（SecurityBoundaryRule，第 21 项 21a）",
+        "插件只经 L2A 的 AuthCapability、PasswordCapability 用令牌和口令；能力接口不暴露库的类型",
+        "库的类型不外露：JwtValidator 只在私有方法里用 JWT 库，对外给 AuthenticatedUser；BCryptPasswordCapability 只做散列和比对，对外是 L2A 的 PasswordCapability"
+      ],
+      "expiresOn": "2027-02-28",
+      "exitCriteria": "令牌校验和口令散列的实现移到 L2C Adapter（或这 3 个类随旧平台登录删除），platform-auth 不再依赖 jjwt 和 spring-security-crypto；两份清单清空并删除，本豁免移除。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-11-25:standard-link-queue-item-21-d175",
+        "approvedAt": "2026-11-25T20:55:00+09:00"
+      }
     }
   ]
 }
