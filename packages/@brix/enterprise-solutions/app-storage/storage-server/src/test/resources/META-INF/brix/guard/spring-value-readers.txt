@@ -1,0 +1,5 @@
+# Members that read configuration with @Value from before the guard reached this server: exemption EX-2026-011
+# (standard-link queue item 21, 21e). Remove a member when it reads through ConfigCapability; do not add any.
+io.brix.enterprise.app.storage.config.StorageAutoConfiguration#localStorageAdapter
+io.brix.enterprise.app.storage.controller.FileUploadController#allowedExtensions
+io.brix.enterprise.app.storage.controller.FileUploadController#maxFileSize

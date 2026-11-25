@@ -70,7 +70,7 @@ public class LocalStorageAdapter implements StorageAdapter {
             getObservability().info("[LocalStorage] 初始化成功: basePath={}, baseUrl={}", basePath, baseUrl);
         } catch (IOException e) {
             getObservability().error("[LocalStorage] 创建基础目录失败: {}", basePath, e);
-            throw new RuntimeException("创建存储目录失败: " + e.getMessage(), e);
+            throw new UncheckedIOException("创建存储目录失败: " + e.getMessage(), e);
         }
     }
 
@@ -94,7 +94,7 @@ public class LocalStorageAdapter implements StorageAdapter {
             
         } catch (IOException e) {
             getObservability().error("[LocalStorage] 文件上传失败: path={}", storagePath, e);
-            throw new RuntimeException("文件上传失败: " + e.getMessage(), e);
+            throw new UncheckedIOException("文件上传失败: " + e.getMessage(), e);
         }
     }
 
@@ -114,10 +114,10 @@ public class LocalStorageAdapter implements StorageAdapter {
             
         } catch (FileNotFoundException e) {
             getObservability().error("[LocalStorage] 文件下载失败: path={}", storagePath, e);
-            throw new RuntimeException("文件不存在: " + storagePath, e);
+            throw new UncheckedIOException("文件不存在: " + storagePath, e);
         } catch (IOException e) {
             getObservability().error("[LocalStorage] 文件下载失败: path={}", storagePath, e);
-            throw new RuntimeException("文件读取失败: " + storagePath, e);
+            throw new UncheckedIOException("文件读取失败: " + storagePath, e);
         }
     }
 
@@ -134,7 +134,7 @@ public class LocalStorageAdapter implements StorageAdapter {
             }
         } catch (IOException e) {
             getObservability().error("[LocalStorage] 文件删除失败: path={}", storagePath, e);
-            throw new RuntimeException("文件删除失败: " + e.getMessage(), e);
+            throw new UncheckedIOException("文件删除失败: " + e.getMessage(), e);
         }
     }
 
@@ -174,7 +174,7 @@ public class LocalStorageAdapter implements StorageAdapter {
             getObservability().info("[LocalStorage] 文件复制成功: source={}, target={}", sourcePath, targetPath);
         } catch (IOException e) {
             getObservability().error("[LocalStorage] 文件复制失败: source={}, target={}", sourcePath, targetPath, e);
-            throw new RuntimeException("文件复制失败: " + e.getMessage(), e);
+            throw new UncheckedIOException("文件复制失败: " + e.getMessage(), e);
         }
     }
 
@@ -186,7 +186,7 @@ public class LocalStorageAdapter implements StorageAdapter {
             return Files.size(fullPath);
         } catch (IOException e) {
             getObservability().error("[LocalStorage] 获取文件大小失败: path={}", storagePath, e);
-            throw new RuntimeException("获取文件大小失败: " + e.getMessage(), e);
+            throw new UncheckedIOException("获取文件大小失败: " + e.getMessage(), e);
         }
     }
 }

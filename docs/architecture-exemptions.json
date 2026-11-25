@@ -188,6 +188,44 @@
         "recordRef": "user-authorization:2026-11-25:standard-link-queue-item-21-d175",
         "approvedAt": "2026-11-25T20:55:00+09:00"
       }
+    },
+    {
+      "id": "EX-2026-011",
+      "title": "企业仓 9 个插件 server 的 15 个 Spring MVC 控制器和 storage-server 的 3 处 @Value，在迁到 Runtime 入口和 ConfigCapability 之前保留",
+      "ruleIds": [
+        "BRX-RS-MANIFEST-016",
+        "BRX-RS-MANIFEST-021",
+        "A-2",
+        "architecture-guard PluginProfile.noSpringMvcController",
+        "architecture-guard PluginProfile.noSpringValue"
+      ],
+      "artifacts": [
+        "brix-enterprise carousel-server：CarouselController",
+        "brix-enterprise case-server：CaseController",
+        "brix-enterprise compliance-server：ComplianceCheckController、ForbiddenWordController、ScriptTemplateController",
+        "brix-enterprise contracts-server：ContractController、ContractTemplateController",
+        "brix-enterprise intake-server：IntakeTaskController",
+        "brix-enterprise messenger-server：MessageController",
+        "brix-enterprise partners-server：PartnerController",
+        "brix-enterprise products-server：ProductController",
+        "brix-enterprise storage-server：AvatarController、FileDownloadController、FileMetadataController、FileUploadController；FileUploadController 的 allowedExtensions、maxFileSize 和 StorageAutoConfiguration 的 localStorageAdapter 用 @Value 读配置",
+        "九个模块测试资源里的 META-INF/brix/guard/spring-mvc-controllers.txt，storage-server 的 spring-value-readers.txt：按类、按成员列出上面各项"
+      ],
+      "owner": "app-carousel / app-case / app-compliance / app-contracts / app-intake / app-messenger / app-partners / app-products / app-storage",
+      "reason": "标准链路收尾第 21 项 21e 让企业仓 12 个插件 server 跑插件档案（D178），以前守卫档案只在 core 上跑，server 模块没有人管。9 个 server 的旧端点还是 Spring MVC 控制器，由主机自动发布，不经 L2B Dispatcher；改成清单里声明的 Runtime 入口是主线的端点迁移，不在第 21 项范围。storage-server 由 Spring 自动配置装配，配置从 Spring 属性读，改成经 ConfigCapability 读要先改由插件 SPI 装配。负责人 2026-11-25 按推荐批准按类、按成员冻结并登记豁免（D178）。",
+      "risk": "这 15 个控制器的请求不经 Dispatcher 的统一拦截（认证、租户、授权、Schema、幂等、错误映射由旧的 Spring 链路处理）；storage-server 的 3 处配置不在清单里声明，不受类型化配置的约束。",
+      "compensatingControls": [
+        "清单按类、按成员列出，只减不增：九个 server 里新加的控制器，别的 server 里的任何控制器，storage-server 里新加的 @Value，都让构建失败（NoSpringMvcControllerRule、ConfigViaCapabilityRule.noSpringValue）",
+        "12 个 server 跑插件档案的其余规则全部生效：不用 Redis、消息、对象存储、云厂商 SDK、JDBC 驱动和 HTTP 客户端，不碰 L2B 实现、适配器和别的插件的实现",
+        "这 9 个 server 的旧端点迁走一个，就从清单删一个；清单只减不增，由评审看"
+      ],
+      "expiresOn": "2027-02-28",
+      "exitCriteria": "9 个 server 的旧端点迁成清单里声明的 Runtime 入口，storage-server 改由插件 SPI 装配并经 ConfigCapability 读配置；各模块的清单清空并删除，本豁免移除。",
+      "approval": {
+        "reviewer": "jsq",
+        "recordRef": "user-authorization:2026-11-25:standard-link-queue-item-21-d178",
+        "approvedAt": "2026-11-25T20:55:00+09:00"
+      }
     }
   ]
 }

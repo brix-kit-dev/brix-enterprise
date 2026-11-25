@@ -1,0 +1,5 @@
+# Spring MVC controllers from before the guard reached this server: exemption EX-2026-011 (standard-link queue
+# item 21, 21e). Remove a class when its endpoints move to the runtime's endpoint handlers; do not add any.
+io.brix.enterprise.app.compliance.controller.ComplianceCheckController
+io.brix.enterprise.app.compliance.controller.ForbiddenWordController
+io.brix.enterprise.app.compliance.controller.ScriptTemplateController
